@@ -1,0 +1,4 @@
+[
+  ["09_agent", "Now the other side, a support person's login. There's no audit log and no settings in this menu, only the work. The case the agent passed on is waiting here. Claim it, so two people don't answer the same customer."],
+  ["09b_resolve", "Open the case, and everything the agent did is already there, so nobody starts from zero. Write the reply, resolve it, and the customer has their answer. It lands on the audit trail too, with who did it."]
+]

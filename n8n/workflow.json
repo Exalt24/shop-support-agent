@@ -1,0 +1,172 @@
+{
+  "id": "support-agent-demo",
+  "name": "Shop support agent",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "Customer message",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "support-agent-demo",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "support",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "n2",
+      "name": "Ask the support agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8008/support",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Agent-Key",
+              "value": "={{ $env.SUPPORT_AGENT_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ message: $json.body.message, email: $json.body.email }) }}",
+        "options": {
+          "timeout": 90000
+        }
+      }
+    },
+    {
+      "id": "n3",
+      "name": "Needs a person?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        520,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.action }}",
+              "operation": "equal",
+              "value2": "escalated"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "n4",
+      "name": "Hand off to a human",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        -120
+      ],
+      "parameters": {
+        "jsCode": "const r = $input.first().json;\nconst sent = $('Customer message').first().json.body;\n// the ticket a helpdesk node would receive: who, why, what the agent already did. No order details.\nreturn [{ json: {\n  ticket: { customer_email: sent.email, reason: r.escalation_reason, intent: r.intent,\n            agent_steps: r.steps, customer_message: sent.message },\n  action: r.action, reply: r.reply, escalation_reason: r.escalation_reason } }];"
+      }
+    },
+    {
+      "id": "n5",
+      "name": "Reply, escalated",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1040,
+        -120
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ action: $json.action, reply: $json.reply, escalation_reason: $json.escalation_reason, ticket_created: true }) }}"
+      }
+    },
+    {
+      "id": "n6",
+      "name": "Reply, answered",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        780,
+        120
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ action: $json.action, reply: $json.reply, order: $json.order, ticket_created: false }) }}"
+      }
+    }
+  ],
+  "connections": {
+    "Customer message": {
+      "main": [
+        [
+          {
+            "node": "Ask the support agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask the support agent": {
+      "main": [
+        [
+          {
+            "node": "Needs a person?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Needs a person?": {
+      "main": [
+        [
+          {
+            "node": "Hand off to a human",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply, answered",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hand off to a human": {
+      "main": [
+        [
+          {
+            "node": "Reply, escalated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

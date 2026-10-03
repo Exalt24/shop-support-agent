@@ -1,0 +1,4 @@
+[
+  ["08_stores", "The same console can run many stores. Switching to a second one, it has its own customers and its own policy, and nothing from the first one is reachable from here. The database itself refuses to hand it over, so it doesn't rely on the screen to hide anything. Adding another store is mostly setup, not a new build."],
+  ["10_close", "That's all of it. The agent answers what it can prove from the store and hands over what it shouldn't decide, and then a person takes it from there with everything laid out. It only ever ran on a test store, so poke at it all you want."]
+]

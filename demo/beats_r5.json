@@ -1,0 +1,6 @@
+[
+  [
+    "08_stores",
+    "The same console can run many stores. Switching to a second one, it has its own customers and its own policy, and nothing from the first one is reachable from here. The database itself refuses to hand it over, so it doesn't rely on the screen to hide anything. Adding another store is mostly setup, not a new build."
+  ]
+]

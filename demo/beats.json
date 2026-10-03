@@ -1,0 +1,46 @@
+[
+  [
+    "01_intro",
+    "An AI that answers customers is easy to build. One you can trust with real orders is the hard part. So this is a support agent for an online store, and the console a team uses to watch it work. Everything you'll see runs on a test store with made up customers, so there's no real data. First, the login. Every person has their own account, and what they can see depends on their role."
+  ],
+  [
+    "02_dashboard",
+    "So, I'm signed in as an admin, and this is the dashboard. This week there were thirteen conversations, and the agent answered about three out of four on its own, without anyone stepping in. The two on the right are the ones it passed to a person, and each one says why."
+  ],
+  [
+    "03_inbox",
+    "Here's one it handled. A customer asked where his order is. It looked the order up in the store and checked that the email matched. Then it said it's paid but hasn't shipped yet. On the right is the order it checked, and under that, every step it took, in plain words."
+  ],
+  [
+    "04_privacy",
+    "Now the part I care most about. Someone writes in from a different email and asks about that same order. The agent gives nothing away. It says it can't find the order under that address, which is exactly what it would say if the order didn't exist. So nobody can use it to find out what other people ordered."
+  ],
+  [
+    "05_legal",
+    "Then a customer who threatens to call a lawyer. I don't leave that one to the AI's judgment. A rule in code catches it before the AI even reads the message, and it goes straight to a person. The customer is told someone will reply, and nothing more."
+  ],
+  [
+    "06_audit",
+    "Everything gets written to an audit log, and it can only be added to. Only an admin can read it. It shows what the agent decided and who took each case, down to who looked up an order."
+  ],
+  [
+    "07_policy",
+    "The agent only says what the store has written down. This is the policy, in plain text. Change a line here, and what the agent tells customers changes with it. No developer needed."
+  ],
+  [
+    "08_stores",
+    "The same console can run many stores. Switching to a second one, it has its own customers and its own policy, and nothing from the first one is reachable from here. The database itself refuses to hand it over, so it doesn't rely on the screen to hide anything. Adding another store is mostly setup, not a new build."
+  ],
+  [
+    "09_agent",
+    "Now the other side, a support person's login. There's no audit log and no settings in this menu, only the work. The case the agent passed on is waiting here. Claim it, so two people don't answer the same customer."
+  ],
+  [
+    "09b_resolve",
+    "Open the case, and everything the agent did is already there, so nobody starts from zero. Write the reply, resolve it, and the customer has their answer. It lands on the audit trail too, with who did it."
+  ],
+  [
+    "10_close",
+    "That's all of it. The agent answers what it can prove from the store and hands over what it shouldn't decide, and then a person takes it from there with everything laid out. It only ever ran on a test store, so poke at it all you want."
+  ]
+]
