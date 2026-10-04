@@ -101,6 +101,30 @@ create table audit_log (
   created_at timestamptz not null default now()
 );
 
+-- What the agent remembers about a customer, per store. A hint, never a fact (see agent/memory.py):
+--   * a live_ref row is a POINTER ("shopify:order:#1019"), so it carries no body: the value is read from the store when needed;
+--   * a memory is never edited, a newer observation supersedes it, so the app role may only set superseded_by;
+--   * one current row per (store, customer, kind, key), enforced by a partial unique index and not by application code.
+create table customer_memories (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null references tenants(id) on delete cascade,
+  customer_email text not null check (customer_email = lower(customer_email)),
+  kind text not null check (kind in ('preference', 'fact', 'episode', 'live_ref')),
+  key text not null check (key ~ '^[a-z][a-z0-9_]{1,40}$'),
+  body text check (body is null or length(body) between 3 and 160),
+  ref text,
+  source text not null check (source in ('customer_said', 'agent_note', 'staff_note')),
+  conversation_id uuid references conversations(id) on delete set null,
+  observed_at timestamptz not null default now(),
+  superseded_by uuid,
+  created_at timestamptz not null default now(),
+  constraint live_ref_is_a_pointer check (
+    (kind = 'live_ref' and body is null and ref is not null) or (kind <> 'live_ref' and body is not null and ref is null))
+);
+create unique index customer_memories_one_current on customer_memories (tenant_id, customer_email, kind, key)
+  where superseded_by is null;
+create index customer_memories_lookup on customer_memories (tenant_id, customer_email, observed_at desc);
+
 -- every column a policy or a hot query touches is indexed
 create index conversations_inbox on conversations (tenant_id, status, updated_at desc);
 create index conversations_email on conversations (tenant_id, customer_email);
@@ -124,6 +148,7 @@ alter table conversations enable row level security; alter table conversations f
 alter table messages enable row level security;     alter table messages force row level security;
 alter table handoffs enable row level security;     alter table handoffs force row level security;
 alter table audit_log enable row level security;    alter table audit_log force row level security;
+alter table customer_memories enable row level security; alter table customer_memories force row level security;
 
 create policy memberships_own on memberships for select using (user_id = app_user());
 create policy users_self on users for select using (id = app_user());
@@ -143,6 +168,8 @@ create policy messages_tenant on messages for all
   using (tenant_id = app_tenant()) with check (tenant_id = app_tenant());
 create policy handoffs_tenant on handoffs for all
   using (tenant_id = app_tenant()) with check (tenant_id = app_tenant());
+create policy customer_memories_tenant on customer_memories for all
+  using (tenant_id = app_tenant()) with check (tenant_id = app_tenant());
 
 -- the audit log is append-only and admin-readable: agents can cause entries, never read or edit them
 create policy audit_admin_read on audit_log for select using (tenant_id = app_tenant() and app_role() = 'admin');
@@ -156,5 +183,7 @@ grant select on tenants to console_app;
 grant update (policy_md, updated_at) on tenants to console_app;
 grant select, insert, update on conversations, messages, handoffs to console_app;
 grant select, insert on audit_log to console_app;
+grant select, insert, delete on customer_memories to console_app;
+grant update (superseded_by) on customer_memories to console_app;
 grant usage on sequence audit_log_id_seq to console_app;
 grant execute on function login_lookup(text), app_tenant(), app_user(), app_role() to console_app;

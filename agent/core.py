@@ -16,6 +16,7 @@ from .audit import AuditLog, mask_email
 from .escalation import HOLDING_REPLY, decide
 from .guard import figures, verify_grounded
 from .llm import LLM, LLMError, parse_json
+from .memory import MAX_PER_TURN, Candidate, MemoryStore, clean_candidate, format_hints, last_order_number
 from .policy import PolicySection, retrieve
 from .shopify import Shop, ShopifyError
 
@@ -33,6 +34,14 @@ Answer ONLY from the FACTS below. Rules:
 - You cannot approve refunds, offer discounts, promise replacements or change orders. Explain the policy and the next step instead.
 - Describe an outcome (a refund, a cancellation, an email sent) only if the FACTS state that exact outcome. Never say something has already happened unless the FACTS say it did.
 - Two to four sentences. No greeting line, no sign-off."""
+
+MEMORY_EXTRACT_SYSTEM = """From the customer's message below, pick out at most three lasting things THEY said about themselves that a support
+agent should remember next time: a contact preference, or a plain fact about them. Reply with ONE JSON object and nothing else:
+{"memories": [{"kind": "preference" | "fact", "key": "short_snake_case_name", "body": "their own words, under 120 characters"}]}
+Use only words the customer wrote. Never include order numbers, prices, dates, card numbers, passwords or anything about a
+complaint or a refund. If there is nothing worth remembering, reply {"memories": []}."""
+
+ORDER_WORDS = {"order_status": "asked where order %s was", "return_request": "asked about returning order %s"}
 
 NEEDS_ORDER_REPLY = "Happy to help. Could you send me your order number (it looks like #1001)?"
 NOT_FOUND_REPLY = ("I couldn't find that order under this email address. Please check the order number, and that you're "
@@ -52,8 +61,13 @@ class Result:
 
 
 class SupportAgent:
-    def __init__(self, llm: LLM, shop: Shop, policy: list[PolicySection], audit: AuditLog | None = None):
-        self._llm, self._shop, self._policy, self._audit = llm, shop, policy, audit
+    def __init__(self, llm: LLM, shop: Shop, policy: list[PolicySection], audit: AuditLog | None = None,
+                 memory: MemoryStore | None = None):
+        self._llm, self._shop, self._policy, self._audit, self._memory = llm, shop, policy, audit, memory
+
+    def attach_memory(self, memory: MemoryStore | None) -> None:
+        """Memory is per request (it carries the tenant and the staff member), so the console attaches it per turn."""
+        self._memory = memory
 
     # -- public -----------------------------------------------------------------------------
 
@@ -67,6 +81,46 @@ class SupportAgent:
         return res
 
     # -- internals --------------------------------------------------------------------------
+
+    def _recall(self, email: str, res: Result) -> list:
+        if not self._memory:
+            return []
+        try:
+            memories = self._memory.recall(email)
+        except Exception as e:  # memory is a convenience: its outage must never block an answer
+            res.steps.append("memory unavailable: %s" % type(e).__name__)
+            return []
+        res.steps.append("memory: %d note(s) recalled, %d stale" % (len(memories), sum(1 for m in memories if m.stale)))
+        return memories
+
+    def _remember(self, email: str, message: str, res: Result) -> None:
+        """Runs only after a reply passed the guard. Escalated turns and unanswered turns store nothing."""
+        if not self._memory or res.action != "replied":
+            return
+        items: list[Candidate] = []
+        phrase = ORDER_WORDS.get(res.intent)
+        if phrase and res.order_name:
+            items.append(Candidate("episode", "last_" + res.intent, phrase % res.order_name, source="agent_note"))
+            items.append(Candidate("live_ref", "last_order", None, source="agent_note", ref="shopify:order:" + res.order_name))
+        elif res.intent == "policy_question":
+            items.append(Candidate("episode", "last_policy_question", "asked a policy question", source="agent_note"))
+        elif res.intent == "product_question":
+            items.append(Candidate("episode", "last_product_question", "asked about a product", source="agent_note"))
+        if len(message) >= 12:
+            try:
+                proposed = parse_json(self._llm.complete(MEMORY_EXTRACT_SYSTEM, message, max_tokens=400)).get("memories") or []
+                for raw in proposed[:MAX_PER_TURN]:
+                    kept = clean_candidate(raw, message)
+                    if kept:
+                        items.append(kept)
+            except (LLMError, AttributeError, TypeError) as e:
+                res.steps.append("memory: nothing extracted (%s)" % type(e).__name__)
+        if not items:
+            return
+        try:
+            res.steps.append("memory: wrote %d note(s)" % self._memory.remember(email, items))
+        except Exception as e:
+            res.steps.append("memory not saved: %s" % type(e).__name__)
 
     def _escalate(self, res: Result, reason: str) -> Result:
         res.action, res.reply, res.escalation_reason = "escalated", HOLDING_REPLY, reason
@@ -94,16 +148,29 @@ class SupportAgent:
         if reason:
             return self._escalate(res, reason)
 
+        # 2b. what we remember about this customer: hints and one pointer, never facts
+        memories = self._recall(email, res)
+
         # 3. facts
         facts: list[str] = []
         try:
             if res.intent in ("order_status", "return_request"):
                 number = re.sub(r"\D", "", str(triage.get("order_number") or ""))
+                from_memory = False
+                if not number:
+                    number = last_order_number(memories) or ""
+                    from_memory = bool(number)
+                    if from_memory:
+                        res.steps.append("order number taken from the memory pointer, to be verified live")
                 if not number:
                     res.reply = NEEDS_ORDER_REPLY
                     res.steps.append("asked for the order number")
                     return res
                 order = self._shop.find_order(number, email)
+                if order is None and from_memory:
+                    res.reply = NEEDS_ORDER_REPLY
+                    res.steps.append("remembered order not found for this email: asked for the number instead")
+                    return res
                 if order is None:
                     res.order_name = "#" + number
                     res.reply = NOT_FOUND_REPLY
@@ -141,12 +208,14 @@ class SupportAgent:
 
         # 4. write the reply, 5. refuse it if it is not grounded
         facts_text = "\n".join(facts)
+        notes = format_hints(memories)
+        notes_block = ("\n\n" + notes) if notes else ""
         allowed_extra = frozenset(figures(message))
         feedback = ""
         for attempt in (1, 2):
             try:
                 reply = self._llm.complete(
-                    ANSWER_SYSTEM, "FACTS:\n%s\n\nCUSTOMER MESSAGE:\n%s%s" % (facts_text, message, feedback),
+                    ANSWER_SYSTEM, "FACTS:\n%s%s\n\nCUSTOMER MESSAGE:\n%s%s" % (facts_text, notes_block, message, feedback),
                     max_tokens=1500)
             except LLMError as e:
                 res.steps.append("answer failed: %s" % e)
@@ -155,6 +224,7 @@ class SupportAgent:
             if check.ok:
                 res.reply = reply
                 res.steps.append("guard: passed on attempt %d" % attempt)
+                self._remember(email, message, res)
                 return res
             res.guard_violations = check.violations
             res.steps.append("guard: refused attempt %d (%s)" % (attempt, "; ".join(check.violations)))

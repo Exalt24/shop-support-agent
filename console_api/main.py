@@ -19,6 +19,7 @@ from agent.shopify import ShopifyError
 from . import auth, db
 from .auth import Member, admin_only, member
 from .engine import build_agent, store_shop
+from .memory_store import PgMemory, forget_customer, forget_one, list_for_staff
 
 EMAIL_RE = re.compile(r"^[^@\s]{1,64}@[^@\s]+\.[^@\s]{2,}$")
 ORDER_RE = re.compile(r"^#?\d{1,10}$")
@@ -244,7 +245,10 @@ def chat(body: ChatBody, request: Request, m: Member = Depends(member)) -> dict:
                 "intent": None, "steps": ["conversation already with a person: not answered by the agent"]}
 
     # phase 2: the engine (model and store calls run outside any database transaction)
-    result = request.app.state.agent_factory(tenant).handle(message, email)
+    agent = request.app.state.agent_factory(tenant)
+    if hasattr(agent, "attach_memory"):  # the memory carries this tenant and this staff member for this one turn
+        agent.attach_memory(PgMemory(m, conv_id))
+    result = agent.handle(message, email)
 
     # phase 3: record what happened
     meta ={"intent": result.intent, "action": result.action, "order": result.order_name, "steps": result.steps,
@@ -351,6 +355,55 @@ def product_lookup(request: Request, q: str = Query(min_length=2, max_length=80)
         raise HTTPException(502, "The store did not answer. Try again in a moment.")
     return {"items": [{"title": p.title, "price": p.price, "currency": p.currency, "in_stock": p.in_stock,
                        "description": p.description[:200]} for p in found]}
+
+
+# ---- customer memory (staff view and erasure) -----------------------------------------------------------------
+
+def _memory_view(n) -> dict:
+    use = ("pointer only: the value is read live from the store, no copy is kept" if n.kind == "live_ref"
+           else "stale: confirm with the customer before relying on it" if n.stale else "hint: may be out of date")
+    return {"id": n.id, "kind": n.kind, "key": n.key, "body": n.body, "ref": n.ref, "source": n.source,
+            "observed_at": n.observed_at, "age_days": n.age_days, "stale": n.stale, "use": use}
+
+
+def _valid_customer(email: str) -> str:
+    email = email.strip().lower()
+    if not EMAIL_RE.match(email):
+        raise HTTPException(422, "Enter a valid email address.")
+    return email
+
+
+@app.get("/api/t/{slug}/customers/{email}/memory")
+def customer_memory(email: str, m: Member = Depends(member)) -> dict:
+    email = _valid_customer(email)
+    notes = list_for_staff(m, email, actor=user_email(m))
+    return {"customer": email, "items": [_memory_view(n) for n in notes]}
+
+
+@app.delete("/api/t/{slug}/customers/{email}/memory")
+def forget_customer_memory(email: str, m: Member = Depends(member)) -> dict:
+    email = _valid_customer(email)
+    actor = user_email(m)
+    n = forget_customer(m, email)
+    with scoped(m) as c:
+        audit(c, m, actor, "memory.forget", {"scope": "customer", "notes": n})
+    return {"forgotten": n}
+
+
+@app.delete("/api/t/{slug}/memory/{memory_id}")
+def forget_memory(memory_id: str, m: Member = Depends(member)) -> dict:
+    actor = user_email(m)
+    try:
+        n = forget_one(m, memory_id)
+    except Exception as e:  # a malformed uuid is a 404, never a 500
+        if "invalid input syntax for type uuid" in str(e):
+            raise HTTPException(404, "Memory not found.")
+        raise
+    if n != 1:
+        raise HTTPException(404, "Memory not found.")  # the same answer for 'no such note' and 'another store's note'
+    with scoped(m) as c:
+        audit(c, m, actor, "memory.forget", {"scope": "one", "notes": 1})
+    return {"ok": True}
 
 
 # ---- admin: audit and settings --------------------------------------------------------------------------------
