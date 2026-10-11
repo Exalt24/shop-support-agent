@@ -69,7 +69,9 @@ def verify_grounded(reply: str, facts_text: str, *, allowed_extra: frozenset[str
     allowed = figures(facts_text) | set(allowed_extra)
     for fig in sorted(figures(reply) - allowed):
         problems.append("figure not in the facts: %s" % fig)
-    m = PROMISE_RE.search(reply)
+    # A model often writes typographic apostrophes ("we’ll"); the patterns are written with a straight one, so a
+    # curly apostrophe let "we’ll process the cancellation and refund" through (found 2026-10-12 reading the demo transcript).
+    m = PROMISE_RE.search(reply.replace("’", "'").replace("‘", "'").replace("ʼ", "'"))
     if m:
         problems.append("commitment outside the agent's authority: %r" % m.group(0))
     return GuardResult(ok=not problems, violations=tuple(problems))

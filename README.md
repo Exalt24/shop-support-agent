@@ -18,7 +18,7 @@ A customer-support agent for a Shopify store. It looks up orders and products th
 ## Proof
 
 ```
-./.venv/Scripts/python.exe -m pytest tests -q              # 86 tests, offline (scripted model, fake shop)
+./.venv/Scripts/python.exe -m pytest tests -q              # 87 tests, offline (scripted model, fake shop)
 ./.venv/Scripts/python.exe tests/mutation_check.py         # 25 mutants: each guard broken on purpose
 ./.venv/Scripts/python.exe demo.py                         # nine messages, live store + live model
 ./.venv/Scripts/python.exe demo_memory.py                  # five turns with memory, live store + model + Postgres

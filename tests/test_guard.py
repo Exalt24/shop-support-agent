@@ -68,3 +68,12 @@ def test_the_policy_wording_about_refunds_still_passes():
 def test_figures_the_customer_supplied_may_be_echoed():
     r = verify_grounded("Yes, the 2 interfaces are on order #1019.", FACTS, allowed_extra=frozenset({"2"}))
     assert r.ok, r.violations
+
+
+def test_a_curly_apostrophe_promise_is_refused_like_a_straight_one():
+    # the refund-demand reply in demo_transcript.md said "we’ll process the cancellation and refund"; the curly
+    # apostrophe slipped past a pattern written with a straight one
+    curly = "We’ll process the cancellation and refund to your original payment method."
+    straight = "We'll process the cancellation and refund to your original payment method."
+    assert not verify_grounded(straight, FACTS).ok
+    assert not verify_grounded(curly, FACTS).ok
