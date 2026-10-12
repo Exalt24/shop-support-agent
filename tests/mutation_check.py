@@ -17,7 +17,7 @@ MUTANTS = [
     # (file, original, replacement, what removing it would let through)
     ("agent/guard.py", "for fig in sorted(figures(reply) - allowed):", "for fig in sorted(set()):",
      "an invented figure reaches the shopper"),
-    ("agent/guard.py", "m = PROMISE_RE.search(reply)", "m = None",
+    ("agent/guard.py", 'm = PROMISE_RE.search(reply.replace("’", "\'").replace("‘", "\'").replace("ʼ", "\'"))', "m = None",
      "a refund or discount promise reaches the shopper"),
     ("agent/guard.py", "    for m in WORD_FIGURE_RE.finditer(text):", "    for m in ():",
      "'five business days' passes when the facts say 3 to 7 (a number written as a word)"),
