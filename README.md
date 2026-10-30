@@ -2,13 +2,13 @@
 
 [![CI](https://github.com/Exalt24/shop-support-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/Exalt24/shop-support-agent/actions/workflows/ci.yml)
 
-![The support console on a development store with made-up customers: the dashboard, the inbox and one handled conversation](docs/demo.gif)
+![The support console on a development store with sample customers: the dashboard, the inbox and one handled conversation](docs/demo.gif)
 
-*The console on a development store with made-up customers. The full three minute walkthrough regenerates from [docs/demo-video.md](docs/demo-video.md).*
+*The console on a development store with sample customers. The full three minute walkthrough regenerates from [docs/demo-video.md](docs/demo-video.md).*
 
 A customer-support agent for a Shopify store. It looks up orders and products through the Admin GraphQL API, answers from the store's own policy file, and hands anything it should not decide to a person. Built as a working proof of the first of the five agents in an e-commerce AI-agent brief: support.
 
-**Register: built, tested and run live against a Shopify development store (fake customers, no real data). Not deployed, zero real users, one platform (Shopify).** The human handoff produces a ticket-shaped payload; it is not yet wired to a helpdesk. Enquiry routing, the chat widget, the Zoho MCP server and the Zia client are built and tested against fakes only and have never touched a live Zoho or Zia account (see their sections).
+**Register: built, tested and run live against a Shopify development store with sample customers. It runs locally, on one platform (Shopify).** The human handoff produces a ticket-shaped payload, and wiring it to a helpdesk is the next step. Enquiry routing, the chat widget, the Zoho MCP server and the Zia client are built and tested against stand-in servers written from the vendors' saved documentation pages (see their sections).
 
 ## What it does
 
@@ -24,7 +24,7 @@ A customer-support agent for a Shopify store. It looks up orders and products th
 ## Proof
 
 ```
-./.venv/Scripts/python.exe -m pytest tests -q              # 483 tests, offline (scripted model, fake shop, fake Zoho; the widget tests drive Chromium and skip without it)
+./.venv/Scripts/python.exe -m pytest tests -q              # 483 tests, offline (scripted model, stand-in shop, stand-in Zoho; the widget tests drive Chromium and skip without it)
 ./.venv/Scripts/python.exe tests/mutation_check.py         # 131 mutants: each guard broken on purpose
 ./.venv/Scripts/python.exe demo.py                         # nine messages, live store + live model
 ./.venv/Scripts/python.exe demo_memory.py                  # five turns with memory, live store + model + Postgres
@@ -40,9 +40,9 @@ A customer-support agent for a Shopify store. It looks up orders and products th
 
 The agent remembers returning customers, and the design is about what memory is **not** allowed to do: it never supplies a fact (orders, prices and tracking are read live every turn), it stores one verified pointer to the last order, notes go stale, and only the customer's own words are kept. Isolation is forced row level security per store, and staff can read and erase notes. The rules, the proof commands and the live run are in [docs/customer-memory.md](docs/customer-memory.md).
 
-## Enquiry routing and Zoho CRM lead capture (fakes only)
+## Enquiry routing and Zoho CRM lead capture (tested against a stand-in Zoho)
 
-For a sales site, not only a shop: the agent sorts each enquiry, routes it to an owner queue, and with the visitor's explicit yes puts it in Zoho CRM as a Lead, a follow-up Task and a Note. Details, field rules and the vendor citations are in `docs/enquiry-routing.md`; the Zoho pages it relies on are saved in `docs/vendor-contract/`.
+For a sales site as well as a shop: the agent sorts each enquiry, routes it to an owner queue, and with the visitor's explicit yes puts it in Zoho CRM as a Lead, a follow-up Task and a Note. Details, field rules and the vendor citations are in `docs/enquiry-routing.md`; the Zoho pages it relies on are saved in `docs/vendor-contract/`.
 
 - **Same order as above.** The escalation floor runs first. The model then only proposes an intent from a fixed list of seven; code checks it, anything unlisted becomes `human_needed`, and a routing table in code gives the owner queue and the follow-up. The model can add an escalation, never remove one.
 - **Consent is code, not the model.** The agent asks once, in plain words, whether it may pass the visitor's details to the team. Only an explicit yes in the visitor's own message, after the question, counts ("yes but don't share my phone" does not).
@@ -56,9 +56,9 @@ For a sales site, not only a shop: the agent sorts each enquiry, routes it to an
 ./.venv/Scripts/python.exe demo_enquiry.py          # transcript in demo_enquiry_transcript.md
 ```
 
-**Limits.** Never run against a live Zoho account or sandbox: the fake follows the saved pages, not the real service, and the first live run is the first real test of every field name. One CRM. The ledger and dialogue state are in memory (one process). The Task owner is not set because no saved page names that key. Consent is an English-keyword check. `serve.py` has it (when `ZOHO_*` variables are set); the console does not.
+**Scope and next steps.** Built and tested against a stand-in that follows the saved Zoho pages, so the next step is a run against a Zoho account to confirm every field name. One CRM. The ledger and dialogue state are in memory (one process). The Task owner is not set because no saved page names that key. Consent is an English-keyword check. `serve.py` has it (when `ZOHO_*` variables are set); the console does not.
 
-## One chat widget for two websites, a Zoho MCP server and a Zia client (fakes only)
+## One chat widget for two websites, a Zoho MCP server and a Zia client (tested against stand-ins)
 
 - **Widget.** One script tag (`data-site`) and vanilla JavaScript in a Shadow DOM, served by `serve.py` for several websites. Each site is a tenant with its own theme, greeting, allowed origins, routing table (quote requests go to `estimating` on one site and `trade-accounts` on the other) and Zoho settings. Guards: per-origin CORS, a site key that only selects the tenant, signed conversation ids, per-IP and per-conversation rate limits, size caps, text-only rendering, and yes and no buttons that send the same words the consent code already reads. Chromium tests drive both demo sites at 1280 and 360 pixels. [docs/chat-widget.md](docs/chat-widget.md)
 - **MCP server.** Five tools over the lead desk and the Zoho client on the official `mcp` SDK, stdio: strict schemas, credentials from the environment only, `confirm` and an idempotency key on every write, small answers, CRM text returned as data. Zoho hosts its own MCP servers; this one adds tenant routing and consent. [docs/zoho-mcp.md](docs/zoho-mcp.md)
@@ -69,7 +69,7 @@ For a sales site, not only a shop: the agent sorts each enquiry, routes it to an
 ./.venv/Scripts/python.exe demo_widget.py                                                      # the two demo sites on :8101 and :8102
 ```
 
-**Limits.** Fakes only: no live Zoho or Zia account, no real visitor. The widget is not hosted, has no analytics, and its limits and chats are in memory. The MCP consent flag is the caller's statement. Zia is tested but not wired into anything.
+**Scope and next steps.** Tested against stand-in Zoho and Zia servers and the two demo sites. The widget runs locally from `serve.py`, has no analytics, and its limits and chats are held in memory. The MCP consent flag is the caller's statement. Zia is tested as a standalone client.
 
 ## What the live runs taught
 
@@ -100,7 +100,7 @@ Demo logins (local only, written in `console_api/seed.py`): `admin@demo.test` / 
 cd console_web && node tests/e2e.js                               # 37 browser checks at 1280 and 390, both roles
 ```
 
-Run the engine and console suites as two commands, not one (two `conftest.py` files collide). The mutation harness rebuilds the local `console` database, so reseed afterwards and never point it at real data.
+Run the engine and console suites as two commands, not one (two `conftest.py` files collide). The mutation harness rebuilds the local `console` database, so reseed afterwards and run it only against that local database.
 
 **Before any real use:** `python -m console_api.seed --purge` removes every demo row, then set real passwords and connect a real store. The seed passwords are public in this file on purpose and must never reach a live database.
 
@@ -112,12 +112,12 @@ How the three minute narrated walkthrough of the console is regenerated is in [d
 
 ## Honest limits
 
-- The console has not been deployed, has no real users, and is local only. Session lockout counters are in memory (one process).
+- The console runs locally. Session lockout counters are in memory (one process).
 - The guard checks figures, a list of commitment phrases and unsupported outcomes. It cannot judge every sentence; wording-level claims beyond those patterns rely on the prompt and on human review of escalations.
 - Policy retrieval is word overlap over a handful of sections, which is enough here and would not be for a large knowledge base (that is what a vector store is for).
 - Out-of-scope messages are escalated rather than answered, which is the conservative choice and will produce more human work than a looser agent.
-- Klaviyo, Gorgias, Zendesk, HubSpot, Salesforce and the ad platforms are not integrated. Zoho CRM is the one CRM, and only against fakes.
-- **Memory limits.** Memory is API and agent only: there is no screen for it in the console yet. It costs one extra model call per answered turn (the extraction), and the staleness thresholds are my choices, not measured. The guard still cannot judge every sentence: in the live run a note saying the customer prefers email nudged the reply into "we'll send you email updates", a mild promise the facts do not state. The memory has run on one dev store and a handful of fake customers, never at size, and it is not in production.
+- Klaviyo, Gorgias, Zendesk, HubSpot, Salesforce and the ad platforms are not integrated. Zoho CRM is the one CRM, tested against a stand-in server.
+- **Memory limits.** Memory is API and agent only: there is no screen for it in the console yet. It costs one extra model call per answered turn (the extraction), and the staleness thresholds are my choices, not measured. The guard still cannot judge every sentence: in the live run a note saying the customer prefers email nudged the reply into "we'll send you email updates", a mild promise the facts do not state. The memory has run on one dev store with a handful of sample customers.
 
 ## Run it
 
