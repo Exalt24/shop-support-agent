@@ -95,7 +95,9 @@ def test_nothing_is_reachable_without_a_session(api):
 def test_a_tampered_session_cookie_is_refused(api):
     c = client_for("agent-a@x.com", "pw-agent-a")
     assert c.get("/api/me").status_code == 200
-    c.cookies.set("console_session", c.cookies.get("console_session")[:-3] + "xyz")
+    good = c.cookies.get("console_session")
+    c.cookies.clear()  # replace the cookie. Setting a second one beside it sends both, and which one the server reads depends on the client's order
+    c.cookies.set("console_session", good[:-3] + "xyz")
     assert c.get("/api/me").status_code == 401
 
 
