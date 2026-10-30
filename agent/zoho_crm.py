@@ -31,6 +31,12 @@ quotes the line it comes from. Where a page did not say, the code does not guess
   Credits (zoho-crm-v8-api-limits-and-credits.txt): "Insert/Update/Upsert 1 credit for every 10 records", "All other APIs 1".
     One new lead costs three credits here (upsert, task, note).
 
+  Search (zoho-crm-v8-search-records.txt): "GET /{module_api_name}/search?email={{email_here}}", "The API searches across all email
+    fields in the specified module and returns matching records." The answer is {"data": [records], "info": {...}}; right after a
+    write "you may get a "204 NO CONTENT" error due to indexing delays", so a 204 is read as no match, never as an error.
+  Reading notes (zoho-crm-v8-get-notes.txt): "GET /{module_API_name}/{record_ID}/Notes" with "fieldsstring, mandatory", at most 200
+    per call, "the oldest note is displayed first".
+
 The Owner field of a Task is NOT sent: none of the saved pages names its API key for an insert. An optional assignment rule
 (lar_id, which is documented) is how a queue reaches a person.
 
@@ -159,6 +165,8 @@ class CrmClient(Protocol):
     def upsert_lead(self, record: dict, duplicate_check_fields: list[str]) -> UpsertResult: ...
     def create_task(self, record: dict, assignment_rule_id: str | None = None) -> str: ...
     def add_note(self, module: str, record_id: str, content: str) -> str: ...
+    def find_leads_by_email(self, email: str) -> list[dict]: ...
+    def list_notes(self, module: str, record_id: str) -> list[dict]: ...
 
 
 class ZohoCrmClient:
@@ -218,13 +226,13 @@ class ZohoCrmClient:
     def _delay(self, failures: int) -> float:
         return BACKOFF_BASE_SECONDS * (2 ** (failures - 1))
 
-    def _send(self, method: str, path: str, body: Any) -> dict:
+    def _send(self, method: str, path: str, body: Any, params: Mapping[str, str] | None = None, reader: Callable | None = None) -> Any:
         refreshed, failures = False, 0
         while True:
             token = self._access_token()
             try:
                 r = self._transport.request(method, "%s/crm/%s%s" % (self._api_domain, API_VERSION, path), headers={
-                    "Authorization": "Zoho-oauthtoken " + token, "Content-Type": "application/json"}, body=body)
+                    "Authorization": "Zoho-oauthtoken " + token, "Content-Type": "application/json"}, params=params, body=body)
             except TransportError as e:
                 failures += 1
                 if failures >= self._max_attempts:
@@ -233,7 +241,7 @@ class ZohoCrmClient:
                 continue
             status = r.status_code
             if 200 <= status < 300:
-                return self._first_record(r)
+                return (reader or self._first_record)(r)
             if status == 401 and not refreshed:
                 refreshed = True  # one refresh and one retry; a second 401 is a real failure
                 self._forget(token)
@@ -274,6 +282,16 @@ class ZohoCrmClient:
             raise ZohoError("%s: %s" % (code, scrub(first.get("message") or "no message")), status=r.status_code, code=code)
         return first
 
+    def _records(self, r: HttpResponse) -> list[dict]:
+        """A read answer: {"data": [records]}, or an empty 204. A read has no per-record status, unlike a write."""
+        if r.status_code == 204:
+            return []
+        body = self._body(r)
+        data = body.get("data") if isinstance(body, dict) else None
+        if not isinstance(data, list) or not all(isinstance(x, dict) for x in data):
+            raise ZohoError("unreadable answer from Zoho", status=r.status_code, code="BAD_RESPONSE")
+        return data
+
     # -- the three calls lead capture needs -------------------------------------------------------------------------
 
     def upsert_lead(self, record: dict, duplicate_check_fields: list[str]) -> UpsertResult:
@@ -297,3 +315,14 @@ class ZohoCrmClient:
         payload = {"data": [{"Parent_Id": {"module": {"api_name": module}, "id": record_id}, "Note_Content": content}]}
         first = self._send("POST", "/%s/%s/Notes" % (module, record_id), payload)
         return str((first.get("details") or {}).get("id") or "")
+
+    # -- the two reads the MCP tools add (zoho_mcp_server.py) ---------------------------------------------------------
+
+    def find_leads_by_email(self, email: str) -> list[dict]:
+        """Every Lead whose email fields match, as Zoho returns them (the caller keeps only the fields it needs)."""
+        return self._send("GET", "/Leads/search", None, {"email": email}, self._records)
+
+    def list_notes(self, module: str, record_id: str) -> list[dict]:
+        """The notes of one record, oldest first, at most the 200 one call returns. `fields` is mandatory on the page."""
+        return self._send("GET", "/%s/%s/Notes" % (module, record_id), None,
+                          {"fields": "Note_Content,Created_Time", "per_page": "200"}, self._records)

@@ -90,7 +90,7 @@ class FakeZoho:
                 return FakeResponse(status, scripted_body)
         if headers.get("Authorization") != "Zoho-oauthtoken %s" % self._valid or self._valid is None:
             return FakeResponse(401, {"code": "INVALID_OAUTHTOKEN", "message": "invalid oauth token", "status": "error"})
-        return self._route(method, path, body or {})
+        return self._route(method, path, body or {}, params or {})
 
     def _token(self, params) -> FakeResponse:
         if params.get("grant_type") != "refresh_token" or not params.get("refresh_token") or not params.get("client_id"):
@@ -100,9 +100,13 @@ class FakeZoho:
         return FakeResponse(200, {"access_token": self._valid, "expires_in": 3600, "api_domain": "https://" + self.api_host,
                                   "token_type": "Bearer"})
 
-    def _route(self, method: str, path: str, body: dict) -> FakeResponse:
+    def _route(self, method: str, path: str, body: dict, params: dict) -> FakeResponse:
         parts = [p for p in path.split("/") if p]  # crm, v8, ...
         rest = parts[2:]
+        if method == "GET" and rest == ["Leads", "search"]:
+            return self._search(params)
+        if method == "GET" and len(rest) == 3 and rest[0] == "Leads" and rest[2] == "Notes":
+            return self._read_notes(rest[1], params)
         if method != "POST":
             return FakeResponse(400, {"code": "INVALID_REQUEST_METHOD", "message": "the http request method type is not a valid one", "status": "error"})
         if rest == ["Leads", "upsert"]:
@@ -131,11 +135,36 @@ class FakeZoho:
         data.update({"duplicate_field": None, "action": "insert"})
         return FakeResponse(200, {"data": [data]})
 
+    def _search(self, params: dict) -> FakeResponse:
+        """GET /Leads/search?email=: the saved search page answers {"data": [...], "info": {...}}, and a 204 when nothing matches.
+        The records carry fields no tool asks for (Owner, Description, Secondary_Email), as the page's sample does."""
+        email = (params.get("email") or "").lower()
+        if not email:
+            return FakeResponse(400, {"code": "MANDATORY_NOT_FOUND", "message": "required parameter not found", "status": "error"})
+        hits = [{"id": i, "Owner": {"name": "Fake Owner", "id": "9000"}, "Secondary_Email": None, "Description": "internal text",
+                 **rec} for i, rec in self.leads.items() if (rec.get("Email") or "").lower() == email]
+        if not hits:
+            return FakeResponse(204, None)
+        return FakeResponse(200, {"data": hits, "info": {"per_page": 200, "count": len(hits), "page": 1, "more_records": False}})
+
+    def _read_notes(self, lead_id: str, params: dict) -> FakeResponse:
+        if not params.get("fields"):  # "fieldsstring, mandatory" on the saved page
+            return FakeResponse(400, {"code": "REQUIRED_PARAM_MISSING", "message": "fields is a required parameter", "status": "error"})
+        if lead_id not in self.leads:
+            return FakeResponse(400, {"code": "INVALID_DATA", "message": "the related id given seems to be invalid", "status": "error"})
+        rows = [{"id": "n%d" % i, "Note_Content": n["content"], "Created_Time": "2026-10-30T09:00:00+08:00", "Owner": {"name": "Fake Owner"}}
+                for i, n in enumerate(self.notes) if n["lead_id"] == lead_id]
+        if not rows:
+            return FakeResponse(204, None)
+        return FakeResponse(200, {"data": rows, "info": {"per_page": 200, "count": len(rows), "page": 1, "more_records": False}})
+
     def _task(self, body: dict) -> FakeResponse:
         rec = (body.get("data") or [{}])[0]
         if not rec.get("Subject"):
             return FakeResponse(400, {"code": "MANDATORY_NOT_FOUND", "message": "required field not found",
                                       "details": {"api_name": "Subject"}, "status": "error"})
+        if (rec.get("What_Id") or {}).get("id") not in self.leads:
+            return FakeResponse(400, {"code": "INVALID_DATA", "message": "the related id given seems to be invalid", "status": "error"})
         self.tasks.append({**rec, "_lar_id": body.get("lar_id")})
         return FakeResponse(200, {"data": [_ok(id=self._id())]})
 

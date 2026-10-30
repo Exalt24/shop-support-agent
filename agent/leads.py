@@ -63,6 +63,7 @@ class LeadOutcome:
     vendor_code: str     # SUCCESS, or the vendor's error code, or TRANSPORT / UNEXPECTED
     fields_sent: int = 0
     detail: str = ""     # failure only: the vendor's message with any email masked
+    lead_id: str | None = None  # the CRM's id for the lead, once there is one (the MCP tools hand it on)
 
 
 class LeadCapture:
@@ -85,7 +86,8 @@ class LeadCapture:
                 rec[dst] = fields[src]
         return rec
 
-    def capture(self, fields: dict[str, str], intent: str, summary: str) -> LeadOutcome:
+    def capture(self, fields: dict[str, str], intent: str, summary: str, *, channel: str = "Web chat",
+                consent: str | None = None) -> LeadOutcome:
         record = self.lead_record(fields)
         route = self._routes[intent]
         with self._lock:  # one capture at a time: two identical requests cannot both pass the ledger check
@@ -108,14 +110,16 @@ class LeadCapture:
                     entry.task_id = self._crm.create_task(task, self._rules.get(route.queue)) or "created"
                     did["task"] = True
                 if note_key not in entry.notes:
-                    content = "Web chat enquiry (%s, %s queue). The visitor wrote: \"%s\"" % (intent.replace("_", " "), route.queue, summary)
+                    content = "%s enquiry (%s, %s queue). The visitor wrote: \"%s\"" % (channel, intent.replace("_", " "), route.queue, summary)
+                    if consent:  # how the yes was given, recorded where the team will read it
+                        content += " Consent recorded: %s." % consent
                     self._crm.add_note("Leads", entry.lead_id, content)
                     entry.notes.add(note_key)
                     did["note"] = True
             except ZohoError as e:
-                return LeadOutcome("failed", e.code, sent, scrub(e))
+                return LeadOutcome("failed", e.code, sent, scrub(e), entry.lead_id)
             except Exception as e:  # lead capture is a convenience for the team: it must never cost the visitor an answer
-                return LeadOutcome("failed", "UNEXPECTED", sent, type(e).__name__)
+                return LeadOutcome("failed", "UNEXPECTED", sent, type(e).__name__, entry.lead_id)
             if did["upsert"]:
                 status = "created" if entry.action == "insert" else "updated"
             elif did["task"]:
@@ -124,7 +128,7 @@ class LeadCapture:
                 status = "noted"
             else:
                 status = "duplicate"
-            return LeadOutcome(status, "SUCCESS", sent if did["upsert"] else 0)
+            return LeadOutcome(status, "SUCCESS", sent if did["upsert"] else 0, "", entry.lead_id)
 
 
 def desk_from_env(env: dict[str, str] | None = None, transport=None) -> EnquiryDesk | None:
@@ -135,11 +139,16 @@ def desk_from_env(env: dict[str, str] | None = None, transport=None) -> EnquiryD
     env = os.environ if env is None else env
     if not all(env.get(n) for n in ("ZOHO_CLIENT_ID", "ZOHO_CLIENT_SECRET", "ZOHO_REFRESH_TOKEN")):
         return None
+    tenant = env.get("SUPPORT_TENANT") or "default"
+    crm = ZohoCrmClient(ZohoSettings.from_env(env), transport)
+    return EnquiryDesk(LeadCapture(crm, tenant=tenant, assignment_rules=rules_from_env(env)), tenant=tenant)
+
+
+def rules_from_env(env: dict[str, str]) -> dict[str, str]:
+    """ZOHO_ASSIGNMENT_RULES as `sales=<lar_id>,service=<lar_id>`: only the default queues, only with a rule id."""
     rules = {}
     for pair in (env.get("ZOHO_ASSIGNMENT_RULES") or "").split(","):
         queue, _, rule = pair.partition("=")
         if queue.strip() in {r.queue for r in ROUTES.values()} and rule.strip():
             rules[queue.strip()] = rule.strip()
-    tenant = env.get("SUPPORT_TENANT") or "default"
-    crm = ZohoCrmClient(ZohoSettings.from_env(env), transport)
-    return EnquiryDesk(LeadCapture(crm, tenant=tenant, assignment_rules=rules), tenant=tenant)
+    return rules

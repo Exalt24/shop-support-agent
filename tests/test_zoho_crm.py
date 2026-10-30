@@ -220,3 +220,50 @@ def test_an_unknown_region_is_refused_and_settings_come_only_from_named_variable
     s = ZohoSettings.from_env({"ZOHO_CLIENT_ID": "a", "ZOHO_CLIENT_SECRET": "b", "ZOHO_REFRESH_TOKEN": "c", "ZOHO_REGION": "AU"})
     assert s.region == "au" and s.accounts_url == "https://accounts.zoho.com.au"
     assert "b" not in repr(s) and "c" not in repr(s).replace("au", "")  # secrets stay out of a repr
+
+
+# ---- the two reads the MCP tools add: search by email and a record's notes ------------------------------------------------------------
+
+def test_search_by_email_is_a_get_on_the_documented_url_with_the_email_as_a_query_parameter():
+    c, http, _ = client()
+    lead = c.upsert_lead(LEAD, ["Email"])
+    hits = c.find_leads_by_email("jane@example.com")
+    method, url, params = http.api_calls()[-1]
+    assert (method, url, params) == ("GET", "https://www.zohoapis.com/crm/v8/Leads/search", {"email": "jane@example.com"})
+    assert [h["id"] for h in hits] == [lead.id] and hits[0]["Last_Name"] == "Doe"
+
+
+def test_a_204_from_search_is_no_match_not_an_error():
+    c, http, _ = client()
+    assert c.find_leads_by_email("nobody@example.com") == []     # the page: "204 NO CONTENT" right after a write, and when nothing matches
+    http.script(204, None, on="search")
+    assert c.find_leads_by_email("nobody@example.com") == []
+
+
+def test_a_search_answer_that_is_not_a_list_of_records_is_a_bad_response_and_a_429_is_retried():
+    c, http, sleeps = client()
+    http.script(200, {"data": "oops"}, on="search")
+    with pytest.raises(ZohoError) as e:
+        c.find_leads_by_email("a@b.co")
+    assert e.value.code == "BAD_RESPONSE"
+    http.script(429, {"code": "TOO_MANY_REQUESTS", "message": "slow", "status": "error"}, on="search")
+    assert c.find_leads_by_email("a@b.co") == [] and sleeps == [0.5]
+
+
+def test_notes_are_read_from_the_records_notes_url_with_the_mandatory_fields_parameter():
+    c, http, _ = client()
+    lead = c.upsert_lead(LEAD, ["Email"])
+    assert c.list_notes("Leads", lead.id) == []
+    c.add_note("Leads", lead.id, "hello")
+    notes = c.list_notes("Leads", lead.id)
+    method, url, params = http.api_calls()[-1]
+    assert (method, url) == ("GET", "https://www.zohoapis.com/crm/v8/Leads/%s/Notes" % lead.id)
+    assert params == {"fields": "Note_Content,Created_Time", "per_page": "200"}
+    assert [n["Note_Content"] for n in notes] == ["hello"]
+
+
+def test_an_expired_token_is_refreshed_once_for_a_read_too():
+    c, http, _ = client()
+    c.upsert_lead(LEAD, ["Email"])
+    http.expire_token()
+    assert len(c.find_leads_by_email("jane@example.com")) == 1 and http.tokens_issued == 2

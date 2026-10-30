@@ -7,3 +7,5 @@ bcrypt>=4.2
 itsdangerous>=2.2
 cryptography>=43
 playwright>=1.49
+mcp>=2.3
+jsonschema>=4.23
