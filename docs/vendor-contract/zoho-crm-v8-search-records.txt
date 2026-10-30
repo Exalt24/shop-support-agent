@@ -1,0 +1,1408 @@
+URL: https://www.zoho.com/crm/developer/docs/api/v8/search-records.html
+STATUS: 200
+
+Skip to product menu
+Zoho.com
+BiginCRM PlusDeskCampaignsFSMZia AgentsAll Products
+Sign In
+Skip to main content
+Home
+Features
+Resources
+Release Notes
+Community
+Version 2
+Version 2.1
+Version 3
+Version 4
+Version 5
+Version 6
+Version 7
+Version 8
+Overview
+What's New in V8?
+Changelog
+Open API Specification 3.0.0 (OAS) 
+API Directory
+API Collection
+APIs and References 
+OAuth
+API Limits and Credits
+Compliance
+Zoho CRM SDKs
+Metadata APIs
+Core APIs
+Records
+GETRecords
+POSTRecords
+PUTRecords
+DELETERecords
+POSTUpsert Records
+GETSearch Records
+POSTRecord Clone
+GETRich Text Fields
+GETTimeline of a Record
+GETList of Deleted Records
+GETRecord Count in a Module
+Record Locking
+Contact Roles
+Attachments
+Photos
+Change Owner
+Convert Lead
+Convert Inventory Records
+Merge Records
+Share Records
+Mail Merge
+Services
+Appointments
+Appointments Rescheduled History
+Fields Attachments
+Meeting Cancel
+Notes
+Mass Actions
+Related Records
+External ID
+Emails
+Subforms
+Linking Modules
+Others
+Bulk APIs
+Composite API
+Query API
+Notification APIs
+Home
+Core APIs
+Records
+GETSearch Records
+Search Records
+Purpose
+
+To retrieve records that match your search criteria within a single module.
+
+Request Details
+Request URL
+
+{api-domain}/crm/{version}/{module_api_name}/search
+
+Header
+
+Authorization: Zoho-oauthtoken d92d4xxxxxxxxxxxxx15f52
+
+Scope
+
+scope=ZohoCRM.modules.{module_name}.{operation_type}
+(and)
+scope=ZohoSearch.securesearch.READ
+
+Possible module names
+
+leads, accounts, contacts, users, deals, campaigns, tasks, cases, events, calls, solutions, products, vendors, pricebooks, quotes, salesorders, purchaseorders, invoices, custom, notes, appointments, appointments_rescheduled_history, and services.
+
+Possible operation types
+
+ALL - Full access to the record
+READ - Get records from the module
+
+Endpoints
+GET /{module_api_name}/search?criteria={{criteria_here}}
+GET /{module_api_name}/search?email={{email_here}}
+GET /{module_api_name}/search?phone={{phone_number_here}}
+GET /{module_api_name}/search?word={{search_word_here}}
+{module_api_name} : API name of the module whose records you want to search.
+Request Details: criteria
+Request URL:	{api-domain}/crm/v8/{module_api_name}/search?criteria={criteria_here}
+Parameters
+criteriastring
+Performs search by following the shown criteria. (({api_name}:{operator}:{value})and/or({api_name}:{operator}:{value}))
+Performs a search based on the following format:
+(({field_API_name}:{operator}:{value}) and/or ({field_API_name}:{operator}:{value}))
+Replace {field_API_name}, {operator}, and {value} with the appropriate field API name, condition, and value.
+You can search for a maximum of 10 criteria (with same or different columns).
+The only operator that is supported for encrypted fields is equals.
+When using the equals operator in the Search API, it behaves like contains, retrieving records that include the specified value.
+For single condition, If the condition is (Company:equals:ABC), the response will include records with "ABC" as well as "ABC Inc" in the Company field.
+For multiple conditions, equals still behaves like contains. 
+
+For example, ((Company:equals:ABC) and (First_Name:starts_with:M)), it retrieves records where the "First Name" starts with "M" and the "Company" contains "ABC" (e.g., "ABC" or "ABC Inc.").
+
+Note: The above behaviour does not apply to the picklist field type.
+
+The "in" operator checks if a field's value matches any value in a given list.
+For example, (Full_Name:in:Patricia,Boyle,Kate), it retrieves records where the Full Name is Patricia, Boyle, or Kate.
+When a single-line field value contains characters such as "{", "}", "[", "]", "^", ":", "-", "/", "!", "?", "*", "_", "@", space, the Search API returns records with similar-looking values, even if the characters are not an exact match.
+For example, if Record A has the field value sales-team@zoho.com and Record B has sales_team@zoho.com, a search using equals:sales-team@zoho.com may return both records.
+When using parentheses (()), commas (,), or a backslash (\) as the last character in a search value, follow these steps:
+Escape special characters using a backslash (\).
+
+Encode the value before making the API request. Select the value of the criteria, right-click the value, and choose the EncodeURIComponent option.
+
+Example 1 : Escaping Parentheses and Commas
+
+Search term: ((Last_Name:equals:Burns,B) and (First_Name:starts_with:M))
+
+Escape the comma (\,): ((Last_Name:equals:Burns\,B) and (First_Name:starts_with:M))
+Encode the value:((Last_Name:equals:Burns%5C%2CB) and (First_Name:starts_with:M))
+
+Example 2 : Escaping a Backslash at the End
+
+Search term: (Last_Name:equals:K\)
+
+Escape the backslash (\\): (Last_Name:equals:K\\)
+Encode the value: (Last_Name:equals:K%5C%5C)
+The supported data types are
+picklist
+owner_lookup
+user_lookup
+lookup
+phone
+email
+date
+datetime
+text
+textarea
+integer
+currency
+decimal
+multiselectpicklist
+bigint
+percent
+formula
+website
+boolean
+double
+
+The supported operators are
+
+equals
+starts_with
+in
+not_equal
+greater_equal
+greater_than
+less_equal
+less_than
+between
+
+Refer to the following "Note" section to learn about the supported operator for each field type.
+
+Note
+
+The following section gives you the field types and the operators you can use in the criteria parameter
+
+Date, DateTime : equals, not_equal, greater_equal, greater_than, less_equal, less_than, between, in.
+Integer, Currency, Decimal : equals, not_equal, greater_equal, greater_than, less_equal, less_than, between, in.
+Boolean : equals, not_equal.
+textarea : equals, not_equal, starts_with.
+Lookup(user/owner) : equals, not_equal, in.
+Picklist, Autonumber : equals, not_equal, in.
+Text, Email, Phone, Website : equals, not_equal, starts_with, in.
+multiselectpicklist : equals, not_equal, in, starts_with.
+bigint: equals, not_equal, greater_than, greater_equal, less_than, less_equal, between, in.
+percent : equals, not_equal, greater_than, greater_equal, less_than, less_equal, between, in.
+formula: Operators depend on the formula's return type. Check the corresponding datatype's supported operators.
+Sample Request to Search with criteria
+curl "https://www.zohoapis.com/crm/v8/Leads/search?criteria=Created_Time%3Abetween%3A2024-02-01T18%3A52%3A56%2B00%3A00%2C2024-02-20T18%3A52%3A56%2B00%3A00"
+-X GET
+-H "Authorization: Zoho-oauthtoken 1000.8cb99dxxxxxxxxxxxxx9be93.9b8xxxxxxxxxxxxxxxf"
+
+In this example, the criteria for searching for the DateTime fields are in the ISO8601 format with the current user's time zone. The query is encoded.
+
+Sample Response
+{
+    "data": [
+        {
+            "Account": null,
+            "Company": "ABC",
+            "Owner": {
+                "name": "Patricia Boyle",
+                "id": "554023000000235011",
+                "email": "p.boyle@zylker.com"
+            },
+            "Email": null,
+            "$currency_symbol": "Rs.",
+            "$field_states": null,
+            "$sharing_permission": "full_access",
+            "Last_Activity_Time": null,
+            "Industry": null,
+            "Unsubscribed_Mode": null,
+            "$process_flow": true,
+            "Street": null,
+            "$locked_for_me": false,
+            "Zip_Code": null,
+            "id": "554023000003701012",
+            "$approval": {
+                "delegate": false,
+                "approve": false,
+                "reject": false,
+                "resubmit": false
+            },
+            "Created_Time": "2024-02-19T18:30:23-11:00",
+            "$wizard_connection_path": null,
+            "$editable": true,
+            "City": null,
+            "No_of_Employees": null,
+            "Longitude": null,
+            "Converted_Account": null,
+            "State": null,
+            "Country": null,
+            "Created_By": {
+                "name": "Patricia Boyle",
+                "id": "554023000000235011",
+                "email": "p.boyle@zylker.com"
+            },
+            "$zia_owner_assignment": "owner_recommendation_unavailable",
+            "Secondary_Email": null,
+            "Annual_Revenue": null,
+            "Currency_1": null,
+            "Description": null,
+            "Rating": null,
+            "$review_process": {
+                "approve": false,
+                "reject": false,
+                "resubmit": false
+            },
+            "Website": null,
+            "Twitter": null,
+            "File_Upload": null,
+            "Associated_Contacts": null,
+            "Salutation": null,
+            "Co_Owner": null,
+            "Full_Name": "John Smith",
+            "First_Name": "John",
+            "Lead_Status": null,
+            "Record_Image": null,
+            "Converted_Deal": null,
+            "Modified_By": {
+                "name": "Patricia Boyle",
+                "id": "554023000000235011",
+                "email": "p.boyle@zylker.com"
+            },
+            "$review": null,
+            "Lead_Conversion_Time": null,
+            "Skype_ID": null,
+            "Phone": null,
+            "Image_Upload_1": null,
+            "Email_Opt_Out": false,
+            "$zia_visions": null,
+            "Designation": null,
+            "Modified_Time": "2024-02-19T18:30:23-11:00",
+            "$converted_detail": {},
+            "Unsubscribed_Time": null,
+            "Converted_Contact": null,
+            "Mobile": null,
+            "Record_Status__s": "Available",
+            "$orchestration": false,
+            "Last_Name": "Smith",
+            "Layout": {
+                "name": "Standard",
+                "id": "554023000000095055"
+            },
+            "$in_merge": false,
+            "Locked__s": false,
+            "Lead_Source": null,
+            "Tag": [],
+            "Fax": null,
+            "$approval_state": "approved",
+            "$pathfinder": false
+        }
+    ],
+    "info": {
+        "per_page": 200,
+        "count": 1,
+        "sort_by": "id",
+        "page": 1,
+        "sort_order": "desc",
+        "more_records": false
+    }
+}
+Request Details: email
+Request URL:	https://www.zohoapis.com/crm/v8/{module_api_name}/search?email={email_here}
+Attributes
+emailstring
+
+Searches for records using an email address. The API searches across all email fields in the specified module and returns matching records.
+
+Sample Request to Search by email
+curl "https://www.zohoapis.com/crm/v8/Leads/search?email=newcrmapi@zoho.com"
+-X GET
+-H "Authorization: Zoho-oauthtoken 1000.8cb99dxxxxxxxxxxxxx9be93.9b8xxxxxxxxxxxxxxxf"
+Sample Response
+{
+    "data": [
+        {
+            "Account": null,
+            "Owner": {
+                "name": "Patricia Boyle",
+                "id": "3652397000000186017"
+            },
+            "Company": null,
+            "Email": "newcrmapi@zoho.com",
+            "$currency_symbol": "Rs.",
+            "Visitor_Score": null,
+            "Last_Activity_Time": "2019-03-22T11:10:55+05:30",
+            "Industry": "ASP",
+            "$converted": false,
+            "$process_flow": false,
+            "Street": "Street",
+            "Zip_Code": "Zip_Code",
+            "id": "3652397000000415002",
+            "$approved": true,
+            "$approval": {
+                "delegate": false,
+                "approve": false,
+                "reject": false,
+                "resubmit": false
+            },
+            "First_Visited_URL": null,
+            "Days_Visited": null,
+            "Created_Time": "2019-01-10T13:04:32+05:30",
+            "$editable": true,
+            "City": "City",
+            "No_of_Employees": 100,
+            "State": "State",
+            "Country": "Country",
+            "Last_Visited_Time": null,
+            "Created_By": {
+                "name": "Patricia Boyle",
+                "id": "3652397000000186017"
+            },
+            "Annual_Revenue": 100000,
+            "Secondary_Email": "newcrmapi@zoho.com",
+            "Description": "Design your own layouts that align your business processes precisely. Assign them to profiles appropriately.",
+            "Number_Of_Chats": null,
+            "Rating": "Acquired",
+            "Website": "crm.zoho.com",
+            "Twitter": "Twitter",
+            "Average_Time_Spent_Minutes": null,
+            "Associated_Contacts": null,
+            "Salutation": "Mr.",
+            "First_Name": "First_Name",
+            "Lead_Status": "Contacted",
+            "Full_Name": "Mr. First_Name Last_Name",
+            "Record_Image": null,
+            "Modified_By": {
+                "name": "Patricia Boyle",
+                "id": "3652397000000186017"
+            },
+            "Skype_ID": "Skype_ID",
+            "Phone": "98883434559",
+            "Email_Opt_Out": false,
+            "Designation": "Designation",
+            "Modified_Time": "2019-03-22T11:10:55+05:30",
+            "$converted_detail": {},
+            "Mobile": "98883434559",
+            "Prediction_Score": null,
+            "First_Visited_Time": null,
+            "Last_Name": "Last_Name",
+            "Referrer": null,
+            "Lead_Source": "Twitter",
+            "Tag": [],
+            "Fax": "Fax"
+        }
+    ],
+    "info": {
+        "per_page": 200,
+        "count": 1,
+        "page": 1,
+        "more_records": false
+    }
+}
+
+Show full
+
+Request Details: phone
+Request URL:	https://www.zohoapis.com/crm/v8/{module_api_name}/search?phone={phone_number_here}
+Attributes
+phonestring
+
+Searches for records using a phone number. The API searches across all phone fields in the specified module and returns matching records.
+
+Sample Request to Search by Phone
+curl "https://www.zohoapis.com/crm/v8/Leads/search?phone=98883434559
+-X GET
+-H "Authorization: Zoho-oauthtoken 1000.8cb99dxxxxxxxxxxxxx9be93.9b8xxxxxxxxxxxxxxxf"
+Sample Response
+{
+    "data": [
+        {
+            "Account": null,
+            "Owner": {
+                "name": "Patricia Boyle",
+                "id": "3652397000000186017"
+            },
+            "Company": null,
+            "Email": "newcrmapi@zoho.com",
+            "$currency_symbol": "Rs.",
+            "Visitor_Score": null,
+            "Last_Activity_Time": "2019-03-22T11:10:55+05:30",
+            "Industry": "ASP",
+            "$converted": false,
+            "$process_flow": false,
+            "Street": "Street",
+            "Zip_Code": "Zip_Code",
+            "id": "3652397000000415002",
+            "$approved": true,
+            "$approval": {
+                "delegate": false,
+                "approve": false,
+                "reject": false,
+                "resubmit": false
+            },
+            "First_Visited_URL": null,
+            "Days_Visited": null,
+            "Created_Time": "2019-01-10T13:04:32+05:30",
+            "$editable": true,
+            "City": "City",
+            "No_of_Employees": 100,
+            "State": "State",
+            "Country": "Country",
+            "Last_Visited_Time": null,
+            "Created_By": {
+                "name": "Patricia Boyle",
+                "id": "3652397000000186017"
+            },
+            "Annual_Revenue": 100000,
+            "Secondary_Email": "newcrmapi@zoho.com",
+            "Description": "Design your own layouts that align your business processes precisely. Assign them to profiles appropriately.",
+            "Number_Of_Chats": null,
+            "Rating": "Acquired",
+            "Website": "crm.zoho.com",
+            "Twitter": "Twitter",
+            "Average_Time_Spent_Minutes": null,
+            "Associated_Contacts": null,
+            "Salutation": "Mr.",
+            "First_Name": "First_Name",
+            "Lead_Status": "Contacted",
+            "Full_Name": "Mr. First_Name Last_Name",
+            "Record_Image": null,
+            "Modified_By": {
+                "name": "Patricia Boyle",
+                "id": "3652397000000186017"
+            },
+            "Skype_ID": "Skype_ID",
+            "Phone": "98883434559",
+            "Email_Opt_Out": false,
+            "Designation": "Designation",
+            "Modified_Time": "2019-03-22T11:10:55+05:30",
+            "$converted_detail": {},
+            "Mobile": "98883434559",
+            "Prediction_Score": null,
+            "First_Visited_Time": null,
+            "Last_Name": "Last_Name",
+            "Referrer": null,
+            "Lead_Source": "Twitter",
+            "Tag": [],
+            "Fax": "Fax"
+        }
+    ],
+    "info": {
+        "per_page": 200,
+        "count": 1,
+        "page": 1,
+        "more_records": false
+    }
+}
+
+Show full
+
+Request Details: word
+Request URL:	https://www.zohoapis.com/crm/v8/{module_api_name}/search?word={search_word_here}
+Attributes
+wordstring
+
+Performs a global search within the specified module using the given word. The matchable records across multiple fields based on the search term. 
+
+Sample Request to Search by word
+curl "https://www.zohoapis.com/crm/v8/Leads/search?word=abc"
+-X GET
+-H "Authorization: Zoho-oauthtoken 1000.8cb99dxxxxxxxxxxxxx9be93.9b8xxxxxxxxxxxxxxxf"
+Sample Response
+{
+    "data": [
+        {
+            "Owner": {
+                "name": "Patricia Boyle",
+                "id": "3652397000000186017"
+            },
+            "Company": "Company1",
+            "Email": null,
+            "$currency_symbol": "Rs.",
+            "Visitor_Score": null,
+            "Last_Activity_Time": null,
+            "Industry": null,
+            "$converted": false,
+            "$process_flow": false,
+            "Street": null,
+            "Zip_Code": null,
+            "id": "3652397000000562046",
+            "$approved": true,
+            "$approval": {
+                "delegate": false,
+                "approve": false,
+                "reject": false,
+                "resubmit": false
+            },
+            "First_Visited_URL": null,
+            "Days_Visited": null,
+            "Created_Time": "2019-02-19T12:57:55+05:30",
+            "$editable": true,
+            "City": null,
+            "No_of_Employees": null,
+            "Campaigns_Lookup": null,
+            "State": null,
+            "Country": null,
+            "Last_Visited_Time": null,
+            "Created_By": {
+                "name": "Patricia Boyle",
+                "id": "3652397000000186017"
+            },
+            "Annual_Revenue": null,
+            "Secondary_Email": null,
+            "Description": null,
+            "Number_Of_Chats": null,
+            "Rating": null,
+            "Website": null,
+            "Twitter": null,
+            "Average_Time_Spent_Minutes": null,
+            "Salutation": null,
+            "First_Name": null,
+            "Lead_Status": null,
+            "Full_Name": "abc",
+            "Record_Image": null,
+            "Modified_By": {
+                "name": "Patricia Boyle",
+                "id": "3652397000000186017"
+            },
+            "Skype_ID": null,
+            "Phone": null,
+            "Email_Opt_Out": false,
+            "Designation": null,
+            "Modified_Time": "2019-02-19T12:57:55+05:30",
+            "$converted_detail": {},
+            "Mobile": null,
+            "Prediction_Score": null,
+            "First_Visited_Time": null,
+            "Last_Name": "abc",
+            "Referrer": null,
+            "Lead_Source": null,
+            "Tag": [],
+            "Fax": null
+        },
+        {
+            "Owner": {
+                "name": "Patricia Boyle",
+                "id": "3652397000000186017"
+            },
+            "Company": "abc",
+            "Email": null,
+            "$currency_symbol": "Rs.",
+            "Visitor_Score": null,
+            "Last_Activity_Time": "2019-02-19T12:06:28+05:30",
+            "Industry": "ERP (Enterprise Resource Planning)",
+            "$converted": false,
+            "$process_flow": false,
+            "Street": null,
+            "Zip_Code": null,
+            "id": "3652397000000538029",
+            "$approved": true,
+            "$approval": {
+                "delegate": false,
+                "approve": false,
+                "reject": false,
+                "resubmit": false
+            },
+            "First_Visited_URL": null,
+            "Days_Visited": null,
+            "Created_Time": "2019-02-14T18:19:22+05:30",
+            "$editable": true,
+            "City": "Albany",
+            "No_of_Employees": null,
+            "Campaigns_Lookup": null,
+            "State": null,
+            "Country": null,
+            "Last_Visited_Time": null,
+            "Created_By": {
+                "name": "Patricia Boyle",
+                "id": "3652397000000186017"
+            },
+            "Annual_Revenue": null,
+            "Secondary_Email": null,
+            "Description": null,
+            "Number_Of_Chats": null,
+            "Rating": null,
+            "Website": null,
+            "Twitter": null,
+            "Average_Time_Spent_Minutes": null,
+            "Salutation": null,
+            "First_Name": "Test1",
+            "Lead_Status": "Contacted",
+            "Full_Name": "Test1 Lead1",
+            "Record_Image": null,
+            "Modified_By": {
+                "name": "Patricia Boyle",
+                "id": "3652397000000186017"
+            },
+            "Skype_ID": null,
+            "Phone": null,
+            "Email_Opt_Out": true,
+            "Designation": "Team Lead",
+            "Modified_Time": "2019-02-19T12:06:28+05:30",
+            "$converted_detail": {},
+            "Mobile": null,
+            "Prediction_Score": null,
+            "First_Visited_Time": null,
+            "Last_Name": "Lead1",
+            "Referrer": null,
+            "Lead_Source": "Advertisement",
+            "Tag": [],
+            "Fax": null
+        }
+    ],
+    "info": {
+        "per_page": 200,
+        "count": 2,
+        "page": 1,
+        "more_records": false
+    }
+}
+
+Show full
+
+Other optional parameters
+convertedstring
+
+To get the list of converted records. Default value is false.
+
+false - get only non-converted records
+true - get only converted records
+both - get all records
+approvedstring
+
+To get the list of approved records. Default value is true.
+
+true - get only approved records
+false - get only records which are not approved
+both - get all records
+pageinteger
+
+To get the list of records from the respective pages. The default value is 1.
+
+per_pageinteger
+
+Specify how many records to return per page. The default and the maximum possible value is 200.
+
+typestring
+
+To get a specific user type from the Users module. Please note that this parameter is supported only for Users module.
+
+The possible values are:
+
+AllUsers
+ActiveUsers
+DeactiveUsers
+ConfirmedUsers
+ConfirmedReportingUsers
+NotConfirmedUsers
+DeletedUsers
+ActiveConfirmedUsers
+AdminUsers
+ActiveConfirmedAdmins
+CurrentUser
+
+Note
+
+Only one of the mandatory parameters (criteria, email, phone, word) would work at one point of time.
+If multiple parameters are provided, the API will prioritize them in the following order:
+
+           i. criteria
+
+           ii. email
+
+           iii. phone
+
+           iv. word
+
+          Only the highest-priority parameter in the request will be processed.
+
+The page and per_page parameters help retrieve records based on their position in Zoho CRM.
+A single API call can fetch a maximum of 200 records.
+
+To retrieve more records, adjust the page and per_page values.
+
+Example: To fetch 400 records follow the below steps.
+
+First API call: page=1 & per_page=200 → Fetches records 1-200
+
+Second API call: page=2 & per_page=200 → Fetches records 201-400
+
+By making two API calls, all 400 records can be retrieved.
+
+The Search API allows you to search for and retrieve a maximum of 2,000 records. If the search exceeds 2,000 records, the API will return a "LIMIT_REACHED" error.
+The value of the fields with sensitive health data will be retrieved only when Restrict Data access through API option in the compliance settings is disabled. If the option is enabled, the value will be null. Refer to HIPAA compliance for more details.
+When you create or edit a record and search for it immediately, you may get a "204 NO CONTENT" error due to indexing delays. To fetch records without any delay, use the Query API.
+The "in" operator supports upto 100 values.
+The "full_name" field contains the concatenated values of the First Name and Last Name fields. 
+This is a read-only field available only in the Leads, Contacts, and Users modules.
+Sample Request: To Search with a Single Criterion
+curl "https://www.zohoapis.com/crm/v8/Campaigns/search?criteria=Campaign_Name:equals:CRM&fields=Campaign_Name,Type"
+-X GET
+-H "Authorization: Zoho-oauthtoken 1000.8cb99dxxxxxxxxxxxxx9be93.9b8xxxxxxxxxxxxxxxf"
+Sample response
+{
+    "data": [
+        {
+            "Type": "Trade Show",
+            "Campaign_Name": "CRM",
+            "id": "3652397000002247003"
+        }
+    ],
+    "info": {
+        "per_page": 200,
+        "count": 1,
+        "page": 1,
+        "more_records": false
+    }
+}
+Accessing Subform Data
+
+To retrieve subform records that match your search criteria, use the API name of the corresponding subform module. For more details on subforms, refer to Kaizen #124 - Manipulating Subform Using Zoho CRM APIs.
+
+Sample request
+curl "https://www.zohoapis.com/crm/v8/Project_Details/search?criteria=Expected_Budget:greater_equal:40000"
+-X GET
+-H "Authorization: Zoho-oauthtoken 1000.8cb99dxxxxxxxxxxxxx9be93.9b8xxxxxxxxxxxxxxxf"
+Sample response
+{
+    "data": [
+        {
+            "Status": "Negotiation in Process",
+            "$approval": {
+                "delegate": false,
+                "takeover": false,
+                "approve": false,
+                "reject": false,
+                "resubmit": false
+            },
+            "Modified_Time": "2025-02-16T09:35:17-08:00",
+            "$currency_symbol": "$",
+            "$field_states": null,
+            "Created_Time": "2025-02-16T09:35:17-08:00",
+            "Parent_Id": {
+                "name": "Alice Brown",
+                "id": "5725767000005442025"
+            },
+            "$review_process": null,
+            "$editable": true,
+            "$layout_id": {
+                "name": "Standard",
+                "id": "5725767000002102024"
+            },
+            "$sharing_permission": "full_access",
+            "Project_Name": "CAD",
+            "Expected_Budget": 70000,
+            "$orchestration": false,
+            "$review": null,
+            "$process_flow": false,
+            "Layout": {
+                "name": "Standard",
+                "id": "5725767000002102024"
+            },
+            "$in_merge": false,
+            "Budget": null,
+            "id": "5725767000005478001",
+            "$approval_state": "approved",
+            "$pathfinder": false,
+            "$zia_visions": null,
+            "Project_Type": "Civil"
+        },
+        {
+            "Status": "Negotiation in Process",
+            "$approval": {
+                "delegate": false,
+                "takeover": false,
+                "approve": false,
+                "reject": false,
+                "resubmit": false
+            },
+            "Modified_Time": "2024-06-05T04:28:30-07:00",
+            "$currency_symbol": "$",
+            "$field_states": null,
+            "Created_Time": "2024-06-05T04:28:30-07:00",
+            "Parent_Id": {
+                "name": "Patricia Patricia",
+                "id": "5725767000002954096"
+            },
+            "$review_process": null,
+            "$editable": true,
+            "$layout_id": {
+                "name": "Standard",
+                "id": "5725767000002102024"
+            },
+            "$sharing_permission": "full_access",
+            "Project_Name": "Mobile App Development for Productivity",
+            "Expected_Budget": 50000,
+            "$orchestration": false,
+            "$review": null,
+            "$process_flow": false,
+            "Layout": {
+                "name": "Standard",
+                "id": "5725767000002102024"
+            },
+            "$in_merge": false,
+            "Budget": null,
+            "id": "5725767000002954097",
+            "$approval_state": "approved",
+            "$pathfinder": false,
+            "$zia_visions": null,
+            "Project_Type": "Mobile App Development"
+        },
+        {
+            "Status": "Negotiation in Process",
+            "$approval": {
+                "delegate": false,
+                "takeover": false,
+                "approve": false,
+                "reject": false,
+                "resubmit": false
+            },
+            "Modified_Time": "2024-02-07T02:39:18-08:00",
+            "$currency_symbol": "$",
+            "$field_states": null,
+            "Created_Time": "2024-02-07T02:39:18-08:00",
+            "Parent_Id": {
+                "name": "Patricia",
+                "id": "5725767000002105005"
+            },
+            "$review_process": null,
+            "$editable": true,
+            "$layout_id": {
+                "name": "Standard",
+                "id": "5725767000002102024"
+            },
+            "$sharing_permission": "full_access",
+            "Project_Name": "Mobile App Development for Productivity",
+            "Expected_Budget": 50000,
+            "$orchestration": false,
+            "$review": null,
+            "$process_flow": false,
+            "Layout": {
+                "name": "Standard",
+                "id": "5725767000002102024"
+            },
+            "$in_merge": false,
+            "Budget": null,
+            "id": "5725767000002105006",
+            "$approval_state": "approved",
+            "$pathfinder": false,
+            "$zia_visions": null,
+            "Project_Type": "Mobile App Development"
+        },
+        {
+            "Status": "Negotiation in Process",
+            "$approval": {
+                "delegate": false,
+                "takeover": false,
+                "approve": false,
+                "reject": false,
+                "resubmit": false
+            },
+            "Modified_Time": "2024-02-06T23:05:20-08:00",
+            "$currency_symbol": "$",
+            "$field_states": null,
+            "Created_Time": "2024-02-06T22:52:18-08:00",
+            "Parent_Id": {
+                "name": "Patricia Boyle",
+                "id": "5725767000002085013"
+            },
+            "$review_process": null,
+            "$editable": true,
+            "$layout_id": {
+                "name": "Standard",
+                "id": "5725767000002102024"
+            },
+            "$sharing_permission": "full_access",
+            "Project_Name": "Social Media Integration Project",
+            "Expected_Budget": 40000,
+            "$orchestration": false,
+            "$review": null,
+            "$process_flow": false,
+            "Layout": {
+                "name": "Standard",
+                "id": "5725767000002102024"
+            },
+            "$in_merge": false,
+            "Budget": null,
+            "id": "5725767000002102887",
+            "$approval_state": "approved",
+            "$pathfinder": false,
+            "$zia_visions": null,
+            "Project_Type": "Marketing Automation"
+        },
+        {
+            "Status": "Proposal Submitted",
+            "$approval": {
+                "delegate": false,
+                "takeover": false,
+                "approve": false,
+                "reject": false,
+                "resubmit": false
+            },
+            "Modified_Time": "2024-02-06T23:05:20-08:00",
+            "$currency_symbol": "$",
+            "$field_states": null,
+            "Created_Time": "2024-02-06T22:52:18-08:00",
+            "Parent_Id": {
+                "name": "Patricia Boyle",
+                "id": "5725767000002085013"
+            },
+            "$review_process": null,
+            "$editable": true,
+            "$layout_id": {
+                "name": "Standard",
+                "id": "5725767000002102024"
+            },
+            "$sharing_permission": "full_access",
+            "Project_Name": "Big Data Infrastructure Implementation",
+            "Expected_Budget": 60000,
+            "$orchestration": false,
+            "$review": null,
+            "$process_flow": false,
+            "Layout": {
+                "name": "Standard",
+                "id": "5725767000002102024"
+            },
+            "$in_merge": false,
+            "Budget": null,
+            "id": "5725767000002102886",
+            "$approval_state": "approved",
+            "$pathfinder": false,
+            "$zia_visions": null,
+            "Project_Type": "Infrastructure Upgrade"
+        },
+        {
+            "Status": "Negotiation in Process",
+            "$approval": {
+                "delegate": false,
+                "takeover": false,
+                "approve": false,
+                "reject": false,
+                "resubmit": false
+            },
+            "Modified_Time": "2024-02-06T23:05:20-08:00",
+            "$currency_symbol": "$",
+            "$field_states": null,
+            "Created_Time": "2024-02-06T22:52:18-08:00",
+            "Parent_Id": {
+                "name": "Patricia Boyle",
+                "id": "5725767000002085013"
+            },
+            "$review_process": null,
+            "$editable": true,
+            "$layout_id": {
+                "name": "Standard",
+                "id": "5725767000002102024"
+            },
+            "$sharing_permission": "full_access",
+            "Project_Name": "Mobile App Development for Productivity",
+            "Expected_Budget": 50000,
+            "$orchestration": false,
+            "$review": null,
+            "$process_flow": false,
+            "Layout": {
+                "name": "Standard",
+                "id": "5725767000002102024"
+            },
+            "$in_merge": false,
+            "Budget": null,
+            "id": "5725767000002102885",
+            "$approval_state": "approved",
+            "$pathfinder": false,
+            "$zia_visions": null,
+            "Project_Type": "Mobile App Development"
+        },
+        {
+            "Status": "Negotiation in Process",
+            "$approval": {
+                "delegate": false,
+                "takeover": false,
+                "approve": false,
+                "reject": false,
+                "resubmit": false
+            },
+            "Modified_Time": "2024-02-06T23:04:32-08:00",
+            "$currency_symbol": "$",
+            "$field_states": null,
+            "Created_Time": "2024-02-06T22:48:23-08:00",
+            "Parent_Id": {
+                "name": "Subic",
+                "id": "5725767000002099046"
+            },
+            "$review_process": null,
+            "$editable": true,
+            "$layout_id": {
+                "name": "Standard",
+                "id": "5725767000002102024"
+            },
+            "$sharing_permission": "full_access",
+            "Project_Name": "Advanced Analytics Platform",
+            "Expected_Budget": 40000,
+            "$orchestration": false,
+            "$review": null,
+            "$process_flow": false,
+            "Layout": {
+                "name": "Standard",
+                "id": "5725767000002102024"
+            },
+            "$in_merge": false,
+            "Budget": null,
+            "id": "5725767000002102856",
+            "$approval_state": "approved",
+            "$pathfinder": false,
+            "$zia_visions": null,
+            "Project_Type": "Data Analytics"
+        },
+        {
+            "Status": "Proposal Submitted",
+            "$approval": {
+                "delegate": false,
+                "takeover": false,
+                "approve": false,
+                "reject": false,
+                "resubmit": false
+            },
+            "Modified_Time": "2024-02-06T23:03:37-08:00",
+            "$currency_symbol": "$",
+            "$field_states": null,
+            "Created_Time": "2024-02-06T22:53:58-08:00",
+            "Parent_Id": {
+                "name": "james",
+                "id": "5725767000002102893"
+            },
+            "$review_process": null,
+            "$editable": true,
+            "$layout_id": {
+                "name": "Standard",
+                "id": "5725767000002102024"
+            },
+            "$sharing_permission": "full_access",
+            "Project_Name": "Virtual Reality Training Program",
+            "Expected_Budget": 40000,
+            "$orchestration": false,
+            "$review": null,
+            "$process_flow": false,
+            "Layout": {
+                "name": "Standard",
+                "id": "5725767000002102024"
+            },
+            "$in_merge": false,
+            "Budget": null,
+            "id": "5725767000002102896",
+            "$approval_state": "approved",
+            "$pathfinder": false,
+            "$zia_visions": null,
+            "Project_Type": "Training and Development"
+        },
+        {
+            "Status": "Negotiation in Process",
+            "$approval": {
+                "delegate": false,
+                "takeover": false,
+                "approve": false,
+                "reject": false,
+                "resubmit": false
+            },
+            "Modified_Time": "2024-02-06T23:03:37-08:00",
+            "$currency_symbol": "$",
+            "$field_states": null,
+            "Created_Time": "2024-02-06T22:53:58-08:00",
+            "Parent_Id": {
+                "name": "james",
+                "id": "5725767000002102893"
+            },
+            "$review_process": null,
+            "$editable": true,
+            "$layout_id": {
+                "name": "Standard",
+                "id": "5725767000002102024"
+            },
+            "$sharing_permission": "full_access",
+            "Project_Name": "Internet of Things (IoT) Integration",
+            "Expected_Budget": 40000,
+            "$orchestration": false,
+            "$review": null,
+            "$process_flow": false,
+            "Layout": {
+                "name": "Standard",
+                "id": "5725767000002102024"
+            },
+            "$in_merge": false,
+            "Budget": null,
+            "id": "5725767000002102895",
+            "$approval_state": "approved",
+            "$pathfinder": false,
+            "$zia_visions": null,
+            "Project_Type": "IoT"
+        },
+        {
+            "Status": "Future Plan",
+            "$approval": {
+                "delegate": false,
+                "takeover": false,
+                "approve": false,
+                "reject": false,
+                "resubmit": false
+            },
+            "Modified_Time": "2024-02-06T23:03:37-08:00",
+            "$currency_symbol": "$",
+            "$field_states": null,
+            "Created_Time": "2024-02-06T22:53:58-08:00",
+            "Parent_Id": {
+                "name": "james",
+                "id": "5725767000002102893"
+            },
+            "$review_process": null,
+            "$editable": true,
+            "$layout_id": {
+                "name": "Standard",
+                "id": "5725767000002102024"
+            },
+            "$sharing_permission": "full_access",
+            "Project_Name": "Customer Relationship Management System",
+            "Expected_Budget": 50000,
+            "$orchestration": false,
+            "$review": null,
+            "$process_flow": false,
+            "Layout": {
+                "name": "Standard",
+                "id": "5725767000002102024"
+            },
+            "$in_merge": false,
+            "Budget": null,
+            "id": "5725767000002102894",
+            "$approval_state": "approved",
+            "$pathfinder": false,
+            "$zia_visions": null,
+            "Project_Type": "CRM Implementation"
+        }
+    ],
+    "info": {
+        "per_page": 200,
+        "count": 10,
+        "sort_by": "id",
+        "page": 1,
+        "sort_order": "desc",
+        "more_records": false
+    }
+}
+
+Show full
+
+sample request to retrieve subform records from a particular parent record
+curl "https://www.zohoapis.com/crm/v8/Project_Details/search?criteria=((Expected_Budget:greater_equal:40000)and(Parent_Id:equals:5725767000005442025))"
+-X GET
+-H "Authorization: Zoho-oauthtoken 1000.8cb99dxxxxxxxxxxxxx9be93.9b8xxxxxxxxxxxxxxxf"
+Sample response
+{
+    "data": [
+        {
+            "Status": "Negotiation in Process",
+            "$approval": {
+                "delegate": false,
+                "takeover": false,
+                "approve": false,
+                "reject": false,
+                "resubmit": false
+            },
+            "Modified_Time": "2025-02-16T09:35:17-08:00",
+            "$currency_symbol": "$",
+            "$field_states": null,
+            "Created_Time": "2025-02-16T09:35:17-08:00",
+            "Parent_Id": {
+                "name": "Alice Brown",
+                "id": "5725767000005442025"
+            },
+            "$review_process": null,
+            "$editable": true,
+            "$layout_id": {
+                "name": "Standard",
+                "id": "5725767000002102024"
+            },
+            "$sharing_permission": "full_access",
+            "Project_Name": "CAD",
+            "Expected_Budget": 70000,
+            "$orchestration": false,
+            "$review": null,
+            "$process_flow": false,
+            "Layout": {
+                "name": "Standard",
+                "id": "5725767000002102024"
+            },
+            "$in_merge": false,
+            "Budget": null,
+            "id": "5725767000005478001",
+            "$approval_state": "approved",
+            "$pathfinder": false,
+            "$zia_visions": null,
+            "Project_Type": "Civil"
+        }
+    ],
+    "info": {
+        "per_page": 200,
+        "count": 1,
+        "sort_by": "id",
+        "page": 1,
+        "sort_order": "desc",
+        "more_records": false
+    }
+}
+
+Show full
+
+Accessing Multi-Select Lookup (MxN) Data
+
+To retrieve multi-select lookup (MxN) records that match your search criteria, use the API name of the corresponding linking module. For more details on MxN, refer to Kaizen #125 Manipulating Multi-Select Lookup fields (MxN) using Zoho CRM APIs.
+
+Sample request
+curl "https://www.zohoapis.com/crm/v8/EmpXSkills/search?criteria=((Secondary_Email:equals:patricia@mail.com)and(Skills:equals:Content_Marketing))"
+-X GET
+-H "Authorization: Zoho-oauthtoken 1000.8cb99dxxxxxxxxxxxxx9be93.9b8xxxxxxxxxxxxxxxf"
+
+Possible Errors
+INVALID_DATAHTTP 400
+
+The search value contains special characters or does not contain at least two characters
+Resolution: Specify at least two characters in the search value and do not input special characters.
+
+INVALID_QUERYHTTP 400
+
+invalid query formed
+Resolution: The operators/field API names in your search query are invalid, the value passed does not match the expected data type of the search field, there is a special character in the search value, or the field specified is not available in the search module. Refer to the "details" JSON object in the response to know which value is incorrect.
+
+EXPECTED_PARAM_MISSINGHTTP 400
+
+mandatory param missing
+Resolution: Specify any of the mandatory parameters (criteria/email/phone/word) in your request to search based on criteria.
+
+LIMIT_REACHEDHTTP 400
+
+Maximum response iteration limit reached
+Resolution: The search records API returns only 2000 records in an API call.
+
+NOT_SUPPORTEDHTTP 400
+
+module not supported for search
+Resolution: The module you have specified is not supported for search operation. Refer to possible modules section above and specify a valid module API name.
+
+INVALID_REQUEST_METHODHTTP 400
+
+The http request method type is not a valid one
+Resolution: You have specified an invalid HTTP method to access the API URL. Specify a valid request method. Refer to endpoints section above.
+
+AUTHORIZATION_FAILEDHTTP 400
+
+User does not have sufficient privilege to read module details.
+Resolution: The user does not have the permission to retrieve module details. Contact your system administrator.
+
+OAUTH_SCOPE_MISMATCHHTTP 401
+
+Unauthorized
+Resolution: Client does not have ZohoSearch.securesearch.READ scope. Create a new client with valid scope. Refer to scope section above.
+
+NO_PERMISSIONHTTP 403
+
+Permission denied to read
+Resolution: The user does not have permission to read records. Contact your system administrator.
+
+INVALID_URL_PATTERNHTTP 404
+
+Please check if the URL trying to access is a correct one
+Resolution: The request URL specified is incorrect. Specify a valid request URL. Refer to request URL section above.
+
+INTERNAL_ERRORHTTP 500
+
+Internal Server Error
+Resolution: Unexpected and unhandled exception in the server. Contact support team.
+
+Sample response
+{
+    "data": [
+        {
+            "Owner": {
+                "name": "Patricia Boyle",
+                "id": "5725767000000411001",
+                "email": "patricia+us@zohotest.com"
+            },
+            "Email": null,
+            "$currency_symbol": "$",
+            "$field_states": null,
+            "$review_process": null,
+            "Employees": {
+                "name": "Patricia Boyle",
+                "id": "5725767000002601471"
+            },
+            "$sharing_permission": "full_access",
+            "Name": "10024",
+            "Last_Activity_Time": null,
+            "Modified_By": {
+                "name": "Patricia Boyle",
+                "id": "5725767000000411001",
+                "email": "patricia+us@zohotest.com"
+            },
+            "$review": null,
+            "Unsubscribed_Mode": null,
+            "$converted": false,
+            "$process_flow": false,
+            "Skills": {
+                "name": "Content Marketing",
+                "id": "5725767000002167151"
+            },
+            "id": "5725767000005478017",
+            "Email_Opt_Out": false,
+            "$zia_visions": null,
+            "$approval": {
+                "delegate": false,
+                "takeover": false,
+                "approve": false,
+                "reject": false,
+                "resubmit": false
+            },
+            "Modified_Time": "2025-02-16T10:01:13-08:00",
+            "Created_Time": "2025-02-16T10:01:13-08:00",
+            "$converted_detail": {},
+            "Unsubscribed_Time": null,
+            "$editable": true,
+            "Record_Status__s": "Available",
+            "$orchestration": false,
+            "$in_merge": false,
+            "Created_By": {
+                "name": "Patricia Boyle",
+                "id": "5725767000000411001",
+                "email": "patricia+us@zohotest.com"
+            },
+            "Secondary_Email": "patricia@mail.com",
+            "$approval_state": "approved",
+            "$pathfinder": false
+        }
+    ],
+    "info": {
+        "per_page": 200,
+        "count": 1,
+        "sort_by": "id",
+        "page": 1,
+        "sort_order": "desc",
+        "more_records": false
+    }
+}
+
+Show full
+
+© 2026, Zoho Corporation Pvt. Ltd. All Rights Reserved.
+
+ 
+API Directory
+Postman Collection
+Kaizen Series
+We're Online!
+
+How may I help you today?

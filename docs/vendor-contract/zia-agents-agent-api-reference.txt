@@ -1,0 +1,260 @@
+URL: https://www.zoho.com/agents/resources/help/developer-documentation/api-reference.html
+STATUS: 200
+
+Skip to product menu
+Zoho.com
+All Products
+Sign In
+Skip to main content
+Features
+Pricing
+Resources
+Explore Agents
+Products
+
+Watch a free webinar and build your first AI agent today.Register Now.
+
+Start Here
+
+Agent Fundamentals
+
+Platform Reference
+
+Build & Deploy
+
+Developer Documentation
+
+API Overview & Authentication
+
+API Reference
+
+Conceptual Articles
+
+Developer Documentation
+API Reference
+API Reference
+
+The Agent API lets you trigger a deployed agent programmatically. Instead of interacting with the agent through the Zia Agents UI, you send it a query via an HTTP request and receive the agent's response.
+
+This is useful when you want to integrate agent capabilities into custom functions (for example, a Deluge function in Zoho CRM), external applications, or automated workflows that need to call the agent as part of a larger process.
+
+Prerequisites
+
+Before calling the Agent API, make sure the following are in place:
+
+The agent is created and deployed.
+You have a valid access token. See API Overview & Authentication for the full setup.
+You have the agent's org ID, agent ID, and version ID (all available on the Integrate tab of the agent details page).
+Endpoint
+
+POST https://ziaagents.zoho.com/ziaagents/api/v1/agents/query
+
+Request headers
+Header	Description
+
+X-ZIAAGENTS-ORG
+	Your Zia Agents organization ID
+
+X-ZIAAGENTS-AGENT-ID
+	The agent's unique ID
+
+X-ZIAAGENTS-AGENT-VERSION-ID
+	The version ID of the agent (found under the Versions tab on the agent details page)
+
+Authorization
+	Zoho-oauthtoken {access_token}
+
+Content-Type
+	application/json
+Request body
+Parameter	Type	Description
+
+query
+	String	The message or prompt you're sending to the agent
+
+systemArgs
+	Object	Key-value pairs that map to the agent's tool parameters. The structure depends on the tools configured for the agent.
+
+reasoning
+	Boolean	Optional. Set to true if you want the agent to include its reasoning in the response.
+
+attachments
+	Array	Optional. An array of attachment IDs if the query involves uploaded files.
+Getting the systemArgs structure
+
+The systemArgs object varies based on the tools your agent uses. To get the correct structure:
+
+Go to the agent details page and click Test Agent. Configure your on-trigger parameters, then click Edit Parameters at the top right, followed by Copy Parameters. This copies the tool names, parameters, and expected values in the format the API expects.
+
+For example, an agent with a getRecordById tool would expect:
+
+
+{
+  "getRecordById": {
+    "module_api_name": "Deals",
+    "record_id": "4876271000000527001"
+  }
+}
+
+Sample request
+
+POST https://ziaagents.zoho.com/ziaagents/api/v1/agents/query
+
+Headers:
+  X-ZIAAGENTS-ORG: 892728477
+  X-ZIAAGENTS-AGENT-ID: 926000000380167
+  X-ZIAAGENTS-AGENT-VERSION-ID: 926000000380171
+  Authorization: Zoho-oauthtoken 1000.xxxxxxxxxxxx
+  Content-Type: application/json
+
+Body:
+{
+  "query": "Return the last name of this record",
+  "systemArgs": {
+    "getRecordById": {
+      "module_api_name": "Contacts",
+      "record_id": "4876271000000527001"
+    }
+  }
+}
+
+Response
+
+The response includes the agent's generated output within a data object:
+
+
+{
+  "data": {
+    "response": "The last name on this record is Anderson."
+  }
+}
+
+Using the Agent API in Zoho CRM (Deluge example)
+
+If you're calling the agent from a Zoho CRM custom function, here's a working Deluge example that handles the full flow from generating an access token to making the API call:
+
+
+// Generate access token
+refresh_token = "{your refresh token}";
+client_id = "{your client ID}";
+client_secret = "{your client secret}";
+
+params = Map();
+params.put("client_id", client_id);
+params.put("client_secret", client_secret);
+params.put("refresh_token", refresh_token);
+params.put("grant_type", "refresh_token");
+
+response = invokeurl
+[
+  url: "https://accounts.zoho.com/oauth/v2/token"
+  type: POST
+  parameters: params
+];
+
+access_token = response.get("access_token");
+
+// Build the request
+message = "Return the last name of this record";
+
+systemArgs = Map();
+getRecordMap = Map();
+getRecordMap.put("module_api_name", moduleName);
+getRecordMap.put("record_id", recordId);
+systemArgs.put("getRecordById", getRecordMap);
+
+query_url = "https://ziaagents.zoho.com/ziaagents/api/v1/agents/query";
+
+headersMap = Map();
+headersMap.put("X-ZIAAGENTS-ORG", "{your org ID}");
+headersMap.put("X-ZIAAGENTS-AGENT-ID", "{your agent ID}");
+headersMap.put("X-ZIAAGENTS-AGENT-VERSION-ID", "{your version ID}");
+headersMap.put("Authorization", "Zoho-oauthtoken " + access_token);
+headersMap.put("Content-Type", "application/json");
+
+bodyMap = Map();
+bodyMap.put("query", message);
+bodyMap.put("systemArgs", systemArgs);
+
+query_response = invokeurl
+[
+  url: query_url
+  type: POST
+  body: bodyMap.toString()
+  headers: headersMap
+];
+
+queryDat = query_response.get("data");
+return queryDat.get("response");
+
+
+Replace the placeholder values with your actual credentials and agent details. The systemArgs structure will differ based on the tools configured for your specific agent.
+
+Notes
+Access tokens expire after one hour. If you're running scheduled or recurring functions, make sure to generate a fresh token before each call.
+The OAuth scope for the Agent API is ZiaAgents.agents.TRIGGER. This is visible on the Integrate tab of the agent details page.
+The version ID changes each time you redeploy the agent. If your API calls start failing after a redeployment, check that the version ID in your headers is up to date.
+
+PREVIOUS
+
+UP NEXT
+
+API Overview & Authentication
+
+Conceptual Articles
+
+TABLE OF CONTENTS
+
+Prerequisites
+
+Endpoint
+
+Request headers
+
+Request body
+
+Getting the systemArgs structure
+
+Sample request
+
+Response
+
+Using the Agent API in Zoho CRM (Deluge example)
+
+Notes
+
+Features
+Agent Studio
+Agent Store
+Connect Agents
+Empower Agents
+Deploy Agents
+Multi Agents
+Observability
+Products
+Zoho CRM
+Zoho Desk
+Bigin by Zoho CRM
+Resources
+Documentation
+Webinars
+Articles
+What are AI Agents?
+AI Agents for Sales
+AI Agents for Customer Service
+Agentic AI Framework
+Agent Store
+How to Build AI Agents
+AI Agents Studio
+Multi-agent Architecture
+Explore Agents
+SDR Agent
+Support Specialist Agent
+Email Categorizer Agent
+Priority Message Tracker Agent
+Refund Tracker Agent
+support@ziaagents.com
+Choose Privacy. Choose Zoho.
+Contact UsSecurity ComplianceIPR ComplaintsAnti-spam PolicyTerms of ServicePrivacy PolicyRefund PolicyTrademark PolicyCookie PolicyGDPR ComplianceAbuse Policy
+
+© 2026, Zoho Corporation Pvt. Ltd. All Rights Reserved.

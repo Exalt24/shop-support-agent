@@ -1,0 +1,166 @@
+URL: https://www.zoho.com/agents/resources/help/developer-documentation/api-overview-and-authentication.html
+STATUS: 200
+
+Skip to product menu
+Zoho.com
+All Products
+Sign In
+Skip to main content
+Features
+Pricing
+Resources
+Explore Agents
+Products
+
+Watch a free webinar and build your first AI agent today.Register Now.
+
+Start Here
+
+Agent Fundamentals
+
+Platform Reference
+
+Build & Deploy
+
+Developer Documentation
+
+API Overview & Authentication
+
+API Reference
+
+Conceptual Articles
+
+Developer Documentation
+API Overview & Authentication
+API Overview & Authentication
+
+Zia Agents exposes APIs that let you trigger agents programmatically from external systems, custom functions, or your own applications. Before you can make any API call, you need to authenticate using Zoho's OAuth 2.0 flow.
+
+This article walks you through the authentication setup. Once that's in place, you can use the Agent API to interact with any deployed agent.
+
+What you'll need
+
+To authenticate and call the Agent API, you'll need the following credentials:
+
+Client ID and Client Secret from the Zoho API Console
+A Grant Token generated using your agent's OAuth scope
+A Refresh Token obtained by exchanging the grant token
+An Access Token generated from the refresh token (valid for one hour)
+
+The refresh token is permanent. Once you have it, you can generate new access tokens whenever you need them without repeating the full setup.
+
+Step 1: Find your agent's OAuth scope
+
+Go to your agent's details page and open the Integrate tab. You'll find the OAuth scope listed under Agent Info. Copy it. You'll need this in the next step.
+
+If you already have a refresh token, client ID, and client secret for this scope, you can skip ahead to generating an access token.
+
+Step 2: Get your client ID and client secret
+
+Head to api-console.zoho.com and create a Self Client if you don't already have one. Your Client ID and Client Secret are displayed here. These are permanent and won't change, so store them somewhere safe.
+
+Step 3: Generate a grant token
+
+In the API Console, go to the Generate Code tab and do the following:
+
+Paste the OAuth scope you copied in step 1. Set the duration to 10 minutes. Add a description for the scope and click Create.
+
+A grant token will be generated. This token is only valid for the duration you selected, so proceed to the next step before it expires.
+
+Step 4: Exchange the grant token for a refresh token
+
+Make a POST request to Zoho's OAuth endpoint with your credentials:
+
+
+POST https://accounts.zoho.com/oauth/v2/token
+
+Parameters:
+  code           = {your grant token}
+  client_id      = {your client ID}
+  client_secret  = {your client secret}
+ grant_type = authorization_code
+
+
+The response contains both a refresh token and an access token. The access token expires after one hour. The refresh token is permanent and can be used to generate new access tokens whenever needed.
+
+Store the refresh token securely.
+
+Step 5: Generate an access token
+
+Whenever you need a fresh access token, make a POST request using your refresh token:
+
+
+POST https://accounts.zoho.com/oauth/v2/token
+
+Parameters:
+  client_id      = {your client ID}
+  client_secret  = {your client secret}
+  refresh_token  = {your refresh token}
+ grant_type = refresh_token
+
+
+The response includes a new access token valid for one hour. Use this in the Authorization header of your API calls.
+
+What's next
+
+With authentication in place, you're ready to call the Agent API. See Agent API Reference for the full request format, headers, and parameters.
+
+PREVIOUS
+
+UP NEXT
+
+Developer Documentation
+
+API Reference
+
+TABLE OF CONTENTS
+
+What you'll need
+
+Step 1: Find your agent's OAuth scope
+
+Step 2: Get your client ID and client secret
+
+Step 3: Generate a grant token
+
+Step 4: Exchange the grant token for a refresh token
+
+Step 5: Generate an access token
+
+What's next
+
+Features
+Agent Studio
+Agent Store
+Connect Agents
+Empower Agents
+Deploy Agents
+Multi Agents
+Observability
+Products
+Zoho CRM
+Zoho Desk
+Bigin by Zoho CRM
+Resources
+Documentation
+Webinars
+Articles
+What are AI Agents?
+AI Agents for Sales
+AI Agents for Customer Service
+Agentic AI Framework
+Agent Store
+How to Build AI Agents
+AI Agents Studio
+Multi-agent Architecture
+Explore Agents
+SDR Agent
+Support Specialist Agent
+Email Categorizer Agent
+Priority Message Tracker Agent
+Refund Tracker Agent
+support@ziaagents.com
+Choose Privacy. Choose Zoho.
+Contact UsSecurity ComplianceIPR ComplaintsAnti-spam PolicyTerms of ServicePrivacy PolicyRefund PolicyTrademark PolicyCookie PolicyGDPR ComplianceAbuse Policy
+
+© 2026, Zoho Corporation Pvt. Ltd. All Rights Reserved.
