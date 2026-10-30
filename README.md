@@ -8,7 +8,7 @@
 
 A customer-support agent for a Shopify store. It looks up orders and products through the Admin GraphQL API, answers from the store's own policy file, and hands anything it should not decide to a person. Built as a working proof of the first of the five agents in an e-commerce AI-agent brief: support.
 
-**Register: built, tested and run live against a Shopify development store (fake customers, no real data). Not deployed, zero real users, one platform (Shopify).** The human handoff produces a ticket-shaped payload; it is not yet wired to a helpdesk. Enquiry routing and Zoho CRM lead capture are built and tested against fakes only and have never touched a live Zoho account (see their section).
+**Register: built, tested and run live against a Shopify development store (fake customers, no real data). Not deployed, zero real users, one platform (Shopify).** The human handoff produces a ticket-shaped payload; it is not yet wired to a helpdesk. Enquiry routing, the chat widget, the Zoho MCP server and the Zia client are built and tested against fakes only and have never touched a live Zoho or Zia account (see their sections).
 
 ## What it does
 
@@ -24,14 +24,15 @@ A customer-support agent for a Shopify store. It looks up orders and products th
 ## Proof
 
 ```
-./.venv/Scripts/python.exe -m pytest tests -q              # 313 tests, offline (scripted model, fake shop, fake Zoho)
-./.venv/Scripts/python.exe tests/mutation_check.py         # 65 mutants: each guard broken on purpose
+./.venv/Scripts/python.exe -m pytest tests -q              # 483 tests, offline (scripted model, fake shop, fake Zoho; the widget tests drive Chromium and skip without it)
+./.venv/Scripts/python.exe tests/mutation_check.py         # 131 mutants: each guard broken on purpose
 ./.venv/Scripts/python.exe demo.py                         # nine messages, live store + live model
 ./.venv/Scripts/python.exe demo_memory.py                  # five turns with memory, live store + model + Postgres
 ./.venv/Scripts/python.exe demo_enquiry.py                 # five enquiries, scripted model + fake Zoho (no live anything)
+./.venv/Scripts/python.exe demo_mcp.py                      # the MCP server over stdio against the fake Zoho
 ```
 
-- **Mutation harness:** each of 65 guards (the original 11, 14 for customer memory, 40 for enquiry routing, lead capture and the Zoho client) is deleted from the real source, the suite is run, and the file is restored byte-exact. All 65 mutants are caught. The identity check, the throttle-as-HTTP-200 handling, the legal-threat rule, the grounding guard, the number-word check and `status:active` product filtering each have a test that fails without them.
+- **Mutation harness:** each of 131 guards (the original 11, 14 for customer memory, 40 for enquiry routing, lead capture and the Zoho client, 27 for the chat server and widget, 39 for the MCP tools, the Zoho reads and the Zia client) is deleted from the real source, the suite is run, and the file is restored byte-exact. All 131 mutants are caught. The identity check, the throttle-as-HTTP-200 handling, the legal-threat rule, the grounding guard, the number-word check and `status:active` product filtering each have a test that fails without them.
 - **Live transcript:** `demo_transcript.md`. Nine messages including three hostile ones (a refund demand, a prompt injection asking for a 50% discount code, a legal threat). 7 answered, 2 escalated, and no promise, invented figure or foreign order detail reached a customer.
 - **Through n8n:** `n8n/workflow.json` (webhook, agent, "needs a person?" branch, handoff ticket, reply) was imported into a real n8n 2.41.6 server, published, and called over its webhook with an answered message, a wrong-email message and a legal threat. Regenerate it with `python n8n/build_workflow.py`.
 
@@ -56,6 +57,19 @@ For a sales site, not only a shop: the agent sorts each enquiry, routes it to an
 ```
 
 **Limits.** Never run against a live Zoho account or sandbox: the fake follows the saved pages, not the real service, and the first live run is the first real test of every field name. One CRM. The ledger and dialogue state are in memory (one process). The Task owner is not set because no saved page names that key. Consent is an English-keyword check. `serve.py` has it (when `ZOHO_*` variables are set); the console does not.
+
+## One chat widget for two websites, a Zoho MCP server and a Zia client (fakes only)
+
+- **Widget.** One script tag (`data-site`) and vanilla JavaScript in a Shadow DOM, served by `serve.py` for several websites. Each site is a tenant with its own theme, greeting, allowed origins, routing table (quote requests go to `estimating` on one site and `trade-accounts` on the other) and Zoho settings. Guards: per-origin CORS, a site key that only selects the tenant, signed conversation ids, per-IP and per-conversation rate limits, size caps, text-only rendering, and yes and no buttons that send the same words the consent code already reads. Chromium tests drive both demo sites at 1280 and 360 pixels. [docs/chat-widget.md](docs/chat-widget.md)
+- **MCP server.** Five tools over the lead desk and the Zoho client on the official `mcp` SDK, stdio: strict schemas, credentials from the environment only, `confirm` and an idempotency key on every write, small answers, CRM text returned as data. Zoho hosts its own MCP servers; this one adds tenant routing and consent. [docs/zoho-mcp.md](docs/zoho-mcp.md)
+- **Zia Agents client.** The Agent API is documented enough (endpoint, headers, body, answer, OAuth), so a small client with a fake is built from the saved pages. Nothing else is guessed: no retries, no error shapes.
+
+```
+./.venv/Scripts/python.exe -m pytest tests/test_widget_browser.py tests/test_mcp_stdio.py -q   # Chromium and a child process
+./.venv/Scripts/python.exe demo_widget.py                                                      # the two demo sites on :8101 and :8102
+```
+
+**Limits.** Fakes only: no live Zoho or Zia account, no real visitor. The widget is not hosted, has no analytics, and its limits and chats are in memory. The MCP consent flag is the caller's statement. Zia is tested but not wired into anything.
 
 ## What the live runs taught
 
