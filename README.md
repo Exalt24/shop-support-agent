@@ -110,14 +110,14 @@ Run the engine and console suites as two commands, not one (two `conftest.py` fi
 
 How the three minute narrated walkthrough of the console is regenerated is in [docs/demo-video.md](docs/demo-video.md).
 
-## Honest limits
+## Scope and next steps
 
-- The console runs locally. Session lockout counters are in memory (one process).
-- The guard checks figures, a list of commitment phrases and unsupported outcomes. It cannot judge every sentence; wording-level claims beyond those patterns rely on the prompt and on human review of escalations.
-- Policy retrieval is word overlap over a handful of sections, which is enough here and would not be for a large knowledge base (that is what a vector store is for).
-- Out-of-scope messages are escalated rather than answered, which is the conservative choice and will produce more human work than a looser agent.
-- Klaviyo, Gorgias, Zendesk, HubSpot, Salesforce and the ad platforms are not integrated. Zoho CRM is the one CRM, tested against a stand-in server.
-- **Memory limits.** Memory is API and agent only: there is no screen for it in the console yet. It costs one extra model call per answered turn (the extraction), and the staleness thresholds are my choices, not measured. The guard still cannot judge every sentence: in the live run a note saying the customer prefers email nudged the reply into "we'll send you email updates", a mild promise the facts do not state. The memory has run on one dev store with a handful of sample customers.
+- The console runs locally, with session lockout counters in memory (one process); a shared store is next.
+- The guard checks figures, a list of commitment phrases and unsupported outcomes; wording-level claims beyond those patterns rely on the prompt and on human review of escalations.
+- Policy retrieval is word overlap over a handful of sections, which fits this size; a vector store is the step for a larger knowledge base.
+- Out-of-scope messages are escalated rather than answered, the conservative choice, so it produces more human work than a looser agent.
+- Zoho CRM is the one CRM, tested against a stand-in server; Klaviyo, Gorgias, Zendesk, HubSpot, Salesforce and the ad platforms are possible next connectors.
+- **Memory.** Memory is API and agent only, and a console screen for it is next. It costs one extra model call per answered turn (the extraction), and the staleness thresholds are my choices. In the live run a note saying the customer prefers email nudged the reply into "we'll send you email updates", a mild promise the facts do not state, which is why the guard stays layered with human review. The memory ran on one dev store with a handful of sample customers.
 
 ## Run it
 
