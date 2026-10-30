@@ -40,7 +40,12 @@ export default function Shell({ store, stores, user, children }: Props) {
     return () => { alive = false; clearInterval(t); };
   }, [store.slug, pathname]);
 
-  useEffect(() => setDrawer(false), [pathname]);
+  // close the drawer when the route changes (state derived while rendering, not in an effect)
+  const [seenPath, setSeenPath] = useState(pathname);
+  if (seenPath !== pathname) {
+    setSeenPath(pathname);
+    setDrawer(false);
+  }
 
   const base = `/${store.slug}`;
   const items: { href: string; label: string; icon: typeof Inbox; admin?: boolean; badge?: number | null }[] = [

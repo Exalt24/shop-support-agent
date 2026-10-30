@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { Bot, CheckCircle2, Hand, Loader2, RotateCcw, Send, ShieldQuestion } from "lucide-react";
 import { api } from "@/lib/client";
-import { initials, nameFromEmail, reasonText } from "@/lib/format";
+import { initials, reasonText } from "@/lib/format";
 import type { ChatReply } from "@/lib/types";
 import { Avatar, Card, Chip } from "@/components/ui";
 import AgentTrace from "@/components/inbox/AgentTrace";

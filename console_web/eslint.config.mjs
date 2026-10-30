@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // a plain Node script that drives the built app with Playwright, not application code
+    "tests/e2e.js",
   ]),
 ]);
 

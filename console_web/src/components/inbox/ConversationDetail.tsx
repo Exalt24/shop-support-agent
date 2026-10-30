@@ -55,7 +55,7 @@ function Bubble({ m, customerName }: { m: Message; customerName: string }) {
 export default function ConversationDetail({ detail, store, meId, role, backHref, detailsHref }: { detail: Detail; store: string; meId: string; role: Role; backHref: string; detailsHref: string }) {
   const { conversation: c, messages, handoff } = detail;
   const name = nameFromEmail(c.customer_email);
-  let lastDay = "";
+  const days = messages.map((m) => dayLabel(m.created_at));
   return (
     <div className="flex flex-col min-h-0 h-full">
       <header className="flex items-center gap-3 px-4 sm:px-6 h-16 shrink-0 border-b border-line bg-surface">
@@ -78,10 +78,9 @@ export default function ConversationDetail({ detail, store, meId, role, backHref
       </header>
 
       <div className="flex-1 min-h-0 overflow-y-auto pane-scroll px-4 sm:px-6 py-5 space-y-4 bg-bg">
-        {messages.map((m) => {
-          const label = dayLabel(m.created_at);
-          const showDay = label !== lastDay;
-          lastDay = label;
+        {messages.map((m, i) => {
+          const label = days[i];
+          const showDay = i === 0 || label !== days[i - 1];
           const escalated = m.sender === "agent" && m.meta?.action === "escalated";
           return (
             <div key={m.id} className="space-y-3">
