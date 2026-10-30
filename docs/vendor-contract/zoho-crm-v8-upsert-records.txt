@@ -1,0 +1,407 @@
+RETRIEVED: 2026-10-30 with Operations/tools/webread/webread.cjs (real Chromium). Vendor page text, saved as data.
+URL: https://www.zoho.com/crm/developer/docs/api/v8/upsert-records.html
+STATUS: 200
+
+Skip to product menu
+Zoho.com
+BiginCRM PlusDeskCampaignsFSMZia AgentsAll Products
+Sign In
+Skip to main content
+Home
+Features
+Resources
+Release Notes
+Community
+Version 2
+Version 2.1
+Version 3
+Version 4
+Version 5
+Version 6
+Version 7
+Version 8
+Overview
+What's New in V8?
+Changelog
+Open API Specification 3.0.0 (OAS) 
+API Directory
+API Collection
+APIs and References 
+OAuth
+API Limits and Credits
+Compliance
+Zoho CRM SDKs
+Metadata APIs
+Core APIs
+Records
+GETRecords
+POSTRecords
+PUTRecords
+DELETERecords
+POSTUpsert Records
+GETSearch Records
+POSTRecord Clone
+GETRich Text Fields
+GETTimeline of a Record
+GETList of Deleted Records
+GETRecord Count in a Module
+Record Locking
+Contact Roles
+Attachments
+Photos
+Change Owner
+Convert Lead
+Convert Inventory Records
+Merge Records
+Share Records
+Mail Merge
+Services
+Appointments
+Appointments Rescheduled History
+Fields Attachments
+Meeting Cancel
+Notes
+Mass Actions
+Related Records
+External ID
+Emails
+Subforms
+Linking Modules
+Others
+Bulk APIs
+Composite API
+Query API
+Notification APIs
+Home
+Core APIs
+Records
+POSTUpsert Records
+Insert or Update Records (Upsert)
+Purpose
+
+The Upsert API allows you to insert a new record or update an existing one based on duplicate check field values.
+
+How it Works:
+
+The system checks for duplicate records using the values of the duplicate check fields.
+If a matching record exists, it gets updated.
+If no matching record is found, a new record is inserted.
+Endpoints
+POST /{module_api_name}/upsert
+
+{module_api_name} : API name of the module where you want to perform upsert operation.
+
+Request Details
+Request URL
+
+{api-domain}/crm/{version}/{module_api_name}/upsert
+
+Supported modules
+
+Leads, Accounts, Contacts, Deals, Campaigns, Cases, Solutions, Products, Vendors, Price Books, Quotes, Sales Orders, Purchase Orders, Invoices, Appointments, Appointments Rescheduled History, Services and Custom
+
+Header
+
+Authorization: Zoho-oauthtoken d92d4xxxxxxxxxxxxx15f52
+
+If-Unmodified-Since: 2024-01-15T15:26:49+05:30
+
+Scope
+
+scope=ZohoCRM.modules.ALL
+(or)
+scope=ZohoCRM.modules.{module_api_name}.{operation_type}
+
+Possible module names
+
+leads, accounts, contacts, deals, campaigns, cases, solutions, products, vendors, pricebooks, quotes, salesorders, purchaseorders, invoices, appointments, appointments_rescheduled_history, services and custom.
+
+Possible operation types
+
+ALL - Full access to the record
+WRITE - Edit records in the module
+CREATE - Create records in the module
+
+Sample Request
+Curl
+Deluge
+curl "https://www.zohoapis.com/crm/v8/Leads/upsert"
+-H "Authorization: Zoho-oauthtoken 1000.8cb99dxxxxxxxxxxxxx9be93.9b8xxxxxxxxxxxxxxxf"
+-d "@upsertlead.json"
+-X POST
+
+In the request, "@upsertlead.json" contains the sample input data.
+
+Input JSON 
+$skip_feature_executionJSON array, optional
+
+By default, if a Cadence is configured for a module, it will be executed automatically when you perform an upsert action (Insert or Update action) on a record via API. This key lets you skip the execution of the Cadences feature during record upsert. Specify "cadences" as the value for the "name" key to skip Cadences execution for the record. Ensure you include this key alongside the "data" key in your request.
+
+namestring, mandatory
+
+Represents the name of the feature. 
+
+Possible value: cadences
+
+actionstring, mandatory
+
+Indicates the action based on which the feature will be skipped. The system will skip the feature execution based on this action. Supported values: "insert" and "update". For example, if "action": "insert", the system will bypass the feature execution when the record is inserted via the upsert API.
+
+Note
+
+When using the Upsert API, the system verifies records for duplicates based on duplicate check fields. There are two types of duplicate check fields:
+System-Defined Duplicate Check Fields
+These are predefined unique fields in each module.
+The system automatically checks these fields to prevent duplicate entries.
+Refer to the System-Defined Duplicate Check Fields section for module-wise details.
+User-Defined Unique Fields
+These are fields where the option "Do not allow duplicate values" is enabled.
+Users can define custom unique fields to prevent duplicate data.
+Learn more about enabling Mark a Field as Unique.
+
+When a record is upserted, the system first checks for duplicates in these fields. If a matching record exists, it gets updated; otherwise, a new record is inserted.
+
+You can set the order in which the system verifies duplicate records using the duplicate_check_fields array in your API request.
+Allowed Fields:
+System-defined duplicate check fields. For example, Email for Leads.
+User-defined unique fields. For example, Phone and Fax.
+
+            Example: In the Leads module:
+
+            "duplicate_check_fields": 
+           [
+            "Email",
+            "Phone",
+             "Fax"
+           ]
+
+       If you do not specify duplicate_check_fields, the system follows this default order:
+
+          i. System-defined duplicate check fields
+          ii. User-defined unique fields
+
+The 'INVALID_DATA' error is thrown if the field value length is more than the maximum length defined for that field.
+If an API is used inside a Function and the field value length exceeds the limit, then that function receives an error response from the API. For ex: If the max length for a "Text field" is defined as 10, then value given for it in API cannot be "12345678901", since it has 11 characters.
+A maximum of 100 records can be inserted/updated per API call.
+Refer to our Kaizen post: Upsert Records API and Duplicate Check Preferences API vs. Upsert API, for more details with real-time use cases.
+You must use only Field API names in the input. You can obtain the field API names from
+Fields metadata API (the value for the key “api_name” for every field). (Or)
+Setup > Developer Hub > APIs and SDKs > API Names > {Module}. Choose “Fields” from the “Filter By” drop-down.
+The trigger input can be workflow, approval, or blueprint. If the trigger is not mentioned, the workflows, approvals and blueprints related to the API will get executed. Enter the trigger value as [] to not execute the workflows.
+Records with Subform details can also be inserted or updated to CRM using the Records API. Refer to Subforms API to learn more about adding subform information within a record. For detailed information on subforms, refer to our Kaizen post : Manipulating Subform using Zoho CRM APIs.
+The $append_values key represents whether you want to append the values of the multi-select picklist you specified in the input to the existing values. Specify the API names of the multi-select picklists and "true" or "false" as key-value pairs in this JSON object. The value "true" adds the values in the input to the multi-select picklist, while the value "false" replaces the existing values with the ones in the input.
+Use the apply_feature_execution array to trigger additional CRM checks during record creation or update.
+Supported values for the key name:
+layout_rules: Applies layout rules. Only the Set Mandatory Field action is supported via API.
+criteria_validation_rule: Applies module-level validation rules.
+Place the apply_feature_execution array parallel to the data array in the request body.
+Ensure the input contains all fields required by the layout rule criteria. Otherwise, the system throws an error, for example, MANDATORY_NOT_FOUND if a mandatory field from the layout rule is missing.
+When using criteria_validation_rule, the API evaluates all applicable validation rules and returns the corresponding validation error if any rule fails.
+When inserting/updating multiple records, the Response JSON array maintains the same order as the input records, allowing each response to be mapped to its respective input record.
+In case of partial success or failure, the API returns an HTTP status - 207 (Multi-Status), where individual record-level success or error details are provided within the response array in the same order.
+You must provide the layout ID field if you want to
+include the layout specific mandatory fields in the API-level mandatory check
+
+include only the fields that are defined in your layout for API- level processing and ignore the rest
+
+ 
+
+System-defined Duplicate Check Fields
+
+Following are the default duplicate check fields for different modules.
+
+Module	System-Defined Duplicate Check Field
+Leads	Email
+Accounts	Account_Name
+Contacts	Email
+Deals	Deal_Name
+Campaigns	Campaign_Name
+Cases	Subject
+Solutions	Solution_Title
+Products	Product_Name
+Vendors	Vendor_Name
+PriceBooks	Price_Book_Name
+Quotes	Subject
+SalesOrders	Subject
+PurchaseOrders	Subject
+Invoices	Subject
+Custom Modules	Name
+
+To know the specific details about each module in Zoho CRM and their limitations, refer to Sample Attributes section in Insert Records API.
+
+ 
+
+How does the duplicate check work?
+
+Consider a case where the user has configured two unique fields unique1 and unique2 for a module (user-defined unique fields), and Email is a system-defined unique field.
+The following table explains how the duplicate check happens for different user inputs to the duplicate_check_fields array.
+
+User Input to the "duplicate_check_fields" Array	Duplicate Check Pattern
+unique1	unique1, unique2
+unique2	unique2, unique1
+unique1, unique2	unique1, unique2
+Email	Email, unique1, unique2
+No input	System-defined duplicate check field for that module followed by unique fields. That is, Email, unique1, unique2
+
+If you do not specify system-defined duplicate check fields in the array, the system will ignore them and check only for user-defined unique fields.
+
+Sample Input
+{
+    "data": [
+        {
+            "Last_Name": "Lead_changed",
+            "Email": "newcrmapi@zoho.com",
+            "Company": "abc",
+            "Lead_Status": "Contacted",
+            "Foreign_Languages": [ //multi-select picklist
+                "Korean"
+            ],
+            "$append_values": {
+                "Foreign_Languages": false
+            }
+        },
+        {
+            "Last_Name": "New Lead",
+            "First_Name": "CRM Lead",
+            "Email": "newlead@zoho.com",
+            "Lead_Status": "Attempted to Contact",
+            "Mobile": "7685635434",
+            "Foreign_Languages": [ //multi-select picklist
+                "Korean",
+                "Spanish"
+            ],
+            "$append_values": {
+                "Foreign_Languages": true
+            }
+        }
+    ],
+    "skip_feature_execution": [
+        {
+            "name": "cadences",
+            "action": "insert"
+        }
+    ],
+    "duplicate_check_fields": [
+        "Email",
+        "Mobile"
+    ],
+    "trigger": [
+        "workflow"
+    ]
+}
+Possible Errors
+INVALID_MODULEHTTP 400
+
+The module name given seems to be invalid
+Resolution: You have specified an invalid module name or there is no tab permission, or the module could have been removed from the available modules. Specify a valid module API name.
+
+INVALID_MODULEHTTP 400
+
+The given module is not supported in API
+Resolution: The modules such as Documents and Projects are not supported in the current API. (This error will not be shown, once these modules are been supported). Specify a valid module API name.
+
+INVALID_DATAHTTP 400
+
+invalid data
+Resolution: The input specified is incorrect. Specify valid input.
+
+INVALID_URL_PATTERNHTTP 404
+
+Please check if the URL trying to access is a correct one
+Resolution: The request URL specified is incorrect. Specify a valid request URL. Refer to request URL section above.
+
+OAUTH_SCOPE_MISMATCHHTTP 401
+
+Unauthorized
+Resolution: Client does not have ZohoCRM.modules.{module_name}.WRITE/ZohoCRM.modules.{module_name}.CREATE scope. Create a new client with valid scope. Refer to scope section above.
+
+NO_PERMISSIONHTTP 403
+
+Permission denied to upsert
+Resolution: The user does not have permission to upsert records. Contact your system administrator.
+
+ALREADY_MODIFIEDHTTP 412
+
+Record updated time has already passed if-unmodified-since time 
+Resolution: The record has been updated after the specified If-Unmodified-Since timestamp. Try again with a more recent value for the If-Unmodified-Since header.
+
+DUPLICATE_DATAHTTP 400
+
+duplicate data
+Resolution: You have specified a duplicate value for one or more unique fields. The "details" key in the response gives the API name of the field that holds duplicate value in the input. Specify unique values to the unique fields.
+
+INTERNAL_ERRORHTTP 500
+
+Internal Server Error
+Resolution: Unexpected and unhandled exception in the server. Contact support team.
+
+INVALID_REQUEST_METHODHTTP 400
+
+The http request method type is not a valid one
+Resolution: You have specified an invalid HTTP method to access the API URL. Specify a valid request method. Refer to endpoints section above.
+
+AUTHORIZATION_FAILEDHTTP 400
+
+User does not have sufficient privilege to upsert records.
+Resolution: The user does not have the permission to upsert record details. Contact your system administrator.
+
+MANDATORY_NOT_FOUNDHTTP 400
+
+required field not found
+Resolution: You have not specified one or more mandatory fields in the input. Refer to Fields Metadata API to know the mandatory fields.
+
+Sample Response
+{
+    "data": [
+        {
+            "code": "SUCCESS",
+            "duplicate_field": "Email",
+            "action": "update",
+            "details": {
+                "Modified_Time": "2020-10-14T10:31:43+05:30",
+                "Modified_By": {
+                    "name": "Patricia Boyle",
+                    "id": "4150868000000225013"
+                },
+                "Created_Time": "2019-09-11T16:21:15+05:30",
+                "id": "4150868000000376008",
+                "Created_By": {
+                    "name": "Patricia Boyle",
+                    "id": "4150868000000225013"
+                }
+            },
+            "message": "record updated",
+            "status": "success"
+        },
+        {
+            "code": "SUCCESS",
+            "duplicate_field": null,
+            "action": "insert",
+            "details": {
+                "Modified_Time": "2020-10-14T10:31:43+05:30",
+                "Modified_By": {
+                    "name": "Patricia Boyle",
+                    "id": "4150868000000225013"
+                },
+                "Created_Time": "2020-10-14T10:31:43+05:30",
+                "id": "4150868000003194003",
+                "Created_By": {
+                    "name": "Patricia Boyle",
+                    "id": "4150868000000225013"
+                }
+            },
+            "message": "record added",
+            "status": "success"
+        }
+    ]
+}
+
+© 2026, Zoho Corporation Pvt. Ltd. All Rights Reserved.
+
+ 
+API Directory
+Postman Collection
+Kaizen Series
+We're Online!
+
+How may I help you today?

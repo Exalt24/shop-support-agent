@@ -1,0 +1,121 @@
+RETRIEVED: 2026-10-30 with Operations/tools/webread/webread.cjs (real Chromium). Vendor page text, saved as data.
+URL: https://www.zoho.com/crm/developer/docs/api/v8/status-codes.html
+STATUS: 200
+
+Zoho.com
+BiginCRM PlusDeskCampaignsFSMZia AgentsAll Products
+Sign In
+Home
+Features
+Resources
+Release Notes
+Community
+Version 2
+Version 2.1
+Version 3
+Version 4
+Version 5
+Version 6
+Version 7
+Version 8
+Overview
+What's New in V8?
+Changelog
+Open API Specification 3.0.0 (OAS) 
+API Directory
+API Collection
+APIs and References 
+OAuth
+OAuth Scopes 
+Authentication
+HTTP Request Methods
+Status Codes
+Multi DC Support
+API Limits and Credits
+Compliance
+Zoho CRM SDKs
+Metadata APIs
+Core APIs
+Bulk APIs
+Composite API
+Query API
+Notification APIs
+Home
+OAuth
+Status Codes
+Common Errors
+The 200 series
+OKHTTP 200
+
+The API request is successful.
+
+CreatedHTTP 201
+
+Message: record added.
+Request fulfilled for record insertion.
+
+AcceptedHTTP 202
+
+The request has been accepted. Generally, the server takes time to complete the process.
+
+No ContentHTTP 204
+
+There is no content available for the request.
+
+Multi-StatusHTTP 207
+
+The API is partially successful. It shows the record added (for successful insertions) and the error message for unsuccessful insertions.
+Request fulfilled for multiple records insertion.
+
+The 300 series
+Not ModifiedHTTP 304
+
+The requested resource has not been modified after the time mentioned in the "If-Modified-Since" header in a GET API.
+
+The 400 series
+BAD REQUESTHTTP 400
+
+The request or the authentication considered is invalid.
+
+INVALID_DATAHTTP 400
+
+The ID given is invalid.
+
+AUTHORIZATION ERRORHTTP 401
+
+Invalid API key provided.
+
+FORBIDDENHTTP 403
+
+No permission to do the operation.
+
+NOT FOUNDHTTP 404
+
+Invalid request.
+
+METHOD NOT ALLOWEDHTTP 405
+
+The specified method is not allowed.
+
+REQUEST ENTITY TOO LARGEHTTP 413
+
+The server did not accept the request while uploading a file, since the limited file size has exceeded.
+
+UNSUPPORTED MEDIA TYPEHTTP 415
+
+The server did not accept the request while uploading a file, since the media/ file type is not supported.
+
+TOO MANY REQUESTSHTTP 429
+
+Number of API requests for the 24 hour period is exceeded or the concurrency limit of the user for the app is exceeded.
+
+INTERNAL SERVER ERRORHTTP 500
+
+Generic error that is encountered due to an unexpected server error.
+
+© 2026, Zoho Corporation Pvt. Ltd. All Rights Reserved.
+
+ 
+API Directory
+Postman Collection
+Kaizen Series

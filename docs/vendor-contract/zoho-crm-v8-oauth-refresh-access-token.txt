@@ -1,0 +1,97 @@
+RETRIEVED: 2026-10-30 with Operations/tools/webread/webread.cjs (real Chromium). Vendor page text, saved as data.
+URL: https://www.zoho.com/crm/developer/docs/api/v8/refresh.html
+STATUS: 200
+
+Zoho.com
+BiginCRM PlusDeskCampaignsFSMZia AgentsAll Products
+Sign In
+Home
+Features
+Resources
+Release Notes
+Community
+Version 2
+Version 2.1
+Version 3
+Version 4
+Version 5
+Version 6
+Version 7
+Version 8
+Overview
+What's New in V8?
+Changelog
+Open API Specification 3.0.0 (OAS) 
+API Directory
+API Collection
+APIs and References 
+OAuth
+OAuth Scopes 
+Authentication
+Overview
+Scopes
+Step1: Registering a Client
+Step2: Making the Authorization Request
+Step3: Generating Tokens
+Step 4: Refreshing your Access Tokens
+Step 5: Revoking Tokens
+Client Credentials
+Incremental Authorization
+Token Validity
+HTTP Request Methods
+Status Codes
+Multi DC Support
+API Limits and Credits
+Compliance
+Zoho CRM SDKs
+Metadata APIs
+Core APIs
+Bulk APIs
+Composite API
+Query API
+Notification APIs
+Home
+OAuth
+Authentication
+Step 4: Refreshing your Access Tokens
+Refresh Access Token
+
+Access tokens expire after an hour of generation. To generate a new access token, use the refresh token you generated earlier.
+
+Make a POST request with the following URL:
+
+{Accounts_URL}/oauth/v2/token?refresh_token={refresh_token}&client_id={client_id}&client_secret={client_secret}&grant_type=refresh_token
+
+Note
+
+You must use your domain-specific Zoho Accounts URL to refresh your access token.
+
+For US: https://accounts.zoho.com
+For AU: https://accounts.zoho.com.au
+For EU: https://accounts.zoho.eu
+For IN: https://accounts.zoho.in
+For CN: https://accounts.zoho.com.cn
+For JP: https://accounts.zoho.jp
+For CA(Canada): https://accounts.zohocloud.ca
+
+If the request is successful, you will receive the following output:
+
+{
+    "access_token": "{new_access_token}",
+    "expires_in": 3600,
+    "api_domain": "https://www.zohoapis.com",
+    "token_type": "Bearer"
+}
+
+Note
+
+We have provided with a sample test OAuth in all the examples, so that you can test any example on your own. You can replace the sample OAuth Token with your actual token to test requests from your CRM account.
+For applications with multiple organizations, the refresh tokens generated for one organization in an environment cannot be used for another organization. For instance, you cannot use the refresh token generated for an organization in the Production environment to generate access tokens for the organizations in the sandbox or developer accounts.
+For information about the validity of the tokens, refer to the Token Validity page.
+
+© 2026, Zoho Corporation Pvt. Ltd. All Rights Reserved.
+
+ 
+API Directory
+Postman Collection
+Kaizen Series

@@ -13,6 +13,7 @@ import re
 from dataclasses import dataclass, field
 
 from .audit import AuditLog, mask_email
+from .enquiry import EnquiryDesk, EnquiryInfo
 from .escalation import HOLDING_REPLY, decide
 from .guard import figures, verify_grounded
 from .llm import LLM, LLMError, parse_json
@@ -24,8 +25,12 @@ TRIAGE_SYSTEM = """You triage customer messages for an online store. Reply with 
 {"intent": "order_status" | "return_request" | "policy_question" | "product_question" | "other",
  "order_number": "<digits only, or null>",
  "product_query": "<short product search text, or null>",
+ "enquiry_intent": "order_support" | "product_question" | "sales_enquiry" | "quote_request" | "service_request" | "general" | "human_needed",
+ "lead": {"name": "<the customer's name as they wrote it, or null>", "email": "<as written, or null>", "phone": "<as written, or null>",
+          "company": "<only if they named it, or null>"},
  "angry": true|false, "legal_threat": true|false, "chargeback": true|false, "wants_human": true|false}
-Use null when a value is not in the message. Do not answer the customer."""
+Use null when a value is not in the message. Copy lead values exactly as the customer wrote them and never make one up.
+Do not answer the customer."""
 
 ANSWER_SYSTEM = """You are a friendly, concise customer support agent for an online store.
 Answer ONLY from the FACTS below. Rules:
@@ -58,12 +63,14 @@ class Result:
     escalation_reason: str | None = None
     guard_violations: tuple[str, ...] = ()
     steps: list[str] = field(default_factory=list)
+    enquiry: EnquiryInfo | None = None  # set only when an EnquiryDesk is attached
 
 
 class SupportAgent:
     def __init__(self, llm: LLM, shop: Shop, policy: list[PolicySection], audit: AuditLog | None = None,
-                 memory: MemoryStore | None = None):
+                 memory: MemoryStore | None = None, enquiry: EnquiryDesk | None = None):
         self._llm, self._shop, self._policy, self._audit, self._memory = llm, shop, policy, audit, memory
+        self._enquiry = enquiry  # None: the agent behaves exactly as it did before enquiry routing existed
 
     def attach_memory(self, memory: MemoryStore | None) -> None:
         """Memory is per request (it carries the tenant and the staff member), so the console attaches it per turn."""
@@ -71,13 +78,19 @@ class SupportAgent:
 
     # -- public -----------------------------------------------------------------------------
 
-    def handle(self, message: str, email: str) -> Result:
-        res = self._run(message, email)
+    def handle(self, message: str, email: str, conversation_id: str | None = None) -> Result:
+        res = self._run(message, email, conversation_id)
+        self._capture_lead(res, email, conversation_id)
         if self._audit:
-            self._audit.write({
+            record = {
                 "customer": mask_email(email), "message_chars": len(message), "intent": res.intent,
                 "order": res.order_name, "action": res.action, "escalation_reason": res.escalation_reason,
-                "guard_violations": list(res.guard_violations), "steps": res.steps})
+                "guard_violations": list(res.guard_violations), "steps": res.steps}
+            if res.enquiry:  # counts and kinds only: no name, no email, no phone and none of the visitor's words
+                e = res.enquiry
+                record["enquiry"] = {"intent": e.intent, "queue": e.queue, "consent": e.consent, "captured": e.captured,
+                                     "lead": e.lead_status, "vendor": e.vendor_code, "fields_sent": e.fields_sent}
+            self._audit.write(record)
         return res
 
     # -- internals --------------------------------------------------------------------------
@@ -122,12 +135,32 @@ class SupportAgent:
         except Exception as e:
             res.steps.append("memory not saved: %s" % type(e).__name__)
 
+    def _capture_lead(self, res: Result, email: str, conversation_id: str | None) -> None:
+        """After the reply is decided. A lead is captured only on a turn that was answered (never an escalated one), and a
+        failure is recorded on the Result and nowhere else: the visitor's reply is already final."""
+        if not self._enquiry or res.action != "replied":
+            return
+        state = self._enquiry.ready(self._enquiry.key(conversation_id, email))
+        if not state:
+            return
+        state.attempts += 1
+        outcome = self._enquiry.capture.capture(dict(state.fields), state.intent, state.summary)
+        state.captured = outcome.status != "failed"
+        info = res.enquiry
+        if info:
+            info.lead_status, info.vendor_code, info.fields_sent = outcome.status, outcome.vendor_code, outcome.fields_sent
+            info.captured = state.captured
+        if outcome.status == "failed":
+            res.steps.append("lead capture failed: %s %s (the reply is unchanged)" % (outcome.vendor_code, outcome.detail))
+        else:
+            res.steps.append("lead capture: %s" % outcome.status)
+
     def _escalate(self, res: Result, reason: str) -> Result:
         res.action, res.reply, res.escalation_reason = "escalated", HOLDING_REPLY, reason
         res.steps.append("escalated: " + reason)
         return res
 
-    def _run(self, message: str, email: str) -> Result:
+    def _run(self, message: str, email: str, conversation_id: str | None = None) -> Result:
         res = Result(action="replied", reply="")
 
         # 1. escalation floor, before anything else touches the message
@@ -147,6 +180,21 @@ class SupportAgent:
         reason = decide(message, triage)
         if reason:
             return self._escalate(res, reason)
+
+        # 2a. enquiry routing, when a desk is attached. The model proposed an intent; code checked it against the list, and the
+        # owner queue and the follow-up come from the table in code. This can add an escalation (human_needed), never remove one.
+        if self._enquiry:
+            routing = self._enquiry.route(triage, res.intent)
+            res.enquiry = EnquiryInfo(routing.intent, routing.route.queue, routing.follow_up)
+            res.steps.append(routing.step)
+            if routing.intent == "human_needed":
+                return self._escalate(res, "enquiry routed to a person")
+            key = self._enquiry.key(conversation_id, email)
+            turn = self._enquiry.converse(key, message, email, triage, routing, res.steps)
+            if turn:  # a lead dialogue: the reply is written in code, so it needs no facts and no guard
+                res.reply = turn.reply
+                res.enquiry.consent, res.enquiry.consent_asked = turn.consent, turn.consent_asked
+                return res
 
         # 2b. what we remember about this customer: hints and one pointer, never facts
         memories = self._recall(email, res)

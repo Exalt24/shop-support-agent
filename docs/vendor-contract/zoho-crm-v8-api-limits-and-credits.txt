@@ -1,0 +1,218 @@
+RETRIEVED: 2026-10-30 with Operations/tools/webread/webread.cjs (real Chromium). Vendor page text, saved as data.
+URL: https://www.zoho.com/crm/developer/docs/api/v8/api-limits.html
+STATUS: 200
+
+Zoho.com
+BiginCRM PlusDeskCampaignsFSMZia AgentsAll Products
+Sign In
+Home
+Features
+Resources
+Release Notes
+Community
+Version 2
+Version 2.1
+Version 3
+Version 4
+Version 5
+Version 6
+Version 7
+Version 8
+Overview
+What's New in V8?
+Changelog
+Open API Specification 3.0.0 (OAS) 
+API Directory
+API Collection
+APIs and References 
+OAuth
+API Limits and Credits
+API Dashboard
+API Limits
+Increase API Credits
+Customize API Usage Notification
+Compliance
+Zoho CRM SDKs
+Metadata APIs
+Core APIs
+Bulk APIs
+Composite API
+Query API
+Notification APIs
+Home
+API Limits and Credits
+API Limits
+API Limits
+Table of Contents
+Credit System
+How Integration Tasks Consume API Credits
+Increase API Credits
+Concurrency Limit
+Sub-concurrency Limit
+Concurrency in Integration Tasks
+Credit System
+
+API Usage in Zoho CRM is calculated based on credits .The credits are deducted from your credit count, based on the type of the API call that you make. Credit deduction is based upon the intensiveness of the performance, and the memory usage of the operations involved in the API calls.
+
+Each API call made will result in a reduction of 1 credit. However, for some APIs, credit reduction would be different. For example, for a "Convert Lead API", 5 credits will be reduced for a single API call. Refer to the table below for more details.
+
+Maximum credit limit in a 24-hour window for various editions of Zoho CRM
+Edition	Allowed Credits	Maximum Credits
+Free Edition	5000 credits	5000 credits
+Standard/Starter Edition	50,000 credits + (Number of User licenses x 250) + Add-on credits	100,000 credits
+Professional	50,000 credits + (Number of User licenses x 500) + Add-on credits	3,000,000 credits
+Enterprise/Zoho One	50,000 credits + (Number of User licenses x 1000) + Add-on credits	5,000,000 credits
+Ultimate/CRM Plus	50,000 credits + (Number of User licenses x 2000) + Add-on credits	Unlimited
+
+Here is a calculator to know the available credit limits based on your edition and the number of users.
+
+Edition:
+
+Free
+Standard/Starter
+Professional
+Enterprise/ZohoOne
+Ultimate/CRM Plus
+Purchased Users Count:
+
+With the purchase of 100 users for Enterprise/ZohoOne edition, the available API Credits are 150,000
+
+ 
+
+ 
+
+Note:
+
+For example, in the Standard edition, if there are 10 user licenses in an organization, the available credits will be 52,500 (i.e, 50,000 + (10 x 250)). However, the maximum limit for this edition will still be 100,000 credits irrespective of the number of user licenses.
+For all editions, factors such as concurrency and sub-concurrency are placed to protect the service from overload. This will impact the total number of API calls we process in the 24-hour rolling window.
+Once your API credit usage consumes 50% or above of the daily available credit limit(credits excluding additional paid credits), the remaining credits (including add-on credits) will be present in the header X-API-CREDITS-REMAINING in the API response.
+The API credit limits for trial editions are the same as those of their corresponding paid editions. For example, the Enterprise trial edition follows the same API limits as the Enterprise paid edition. For more information, refer to the feature-wise allowed limits of Zoho CRM editions.
+
+The credit deduction for some of the API operations are listed below.
+
+API Call	Number of Credits Deducted
+Get Users/Roles/Profiles	1
+Get list of Modules	1
+Get Field Meta Data	1
+Get Module Meta Data	1
+Composite request	1
+Get Records through a COQL query	
+LIMIT between 1-200 - 1 API credit
+LIMIT between 201-1000 - 2 API credits
+LIMIT between 1001-2000 - 3 API credits
+
+Get IDs of deleted records	2
+Get Related Records Count of a Record	2 for fetching the record count of one related list
+Get records with cvid parameter	3
+Convert Lead	5
+Download Mail Merge	5
+Add/Remove Tags to Multiple records	1 credit for every 50 records
+Insert/Update/Upsert	1 credit for every 10 records
+Send Mail	20
+Merge Records	50
+Mass Change Owner	50
+Update/Delete/Replace Global Picklist	50
+Bulk Read Initialize	50
+Record Count in a Module	50
+Mass Delete using CVID	50
+Associate Users with Territory	50
+Disassociate Users from Territory	50
+Mass Delete using "ids"	1 credit for every 100 records
+Mass Convert Leads	200
+Bulk Write Initialize	500
+Add Territories	50 credits per territory(max 500 credits, 10 territories per API call)
+Update Territories	50 credits per territory(max 500 credits, 10 territories per API call)
+Delete Territories	50 credits per territory(max 500 credits, 10 territories per API call)
+Transfer and Delete Territories	50 credits per territory(max 500 credits, 10 territories per API call)
+Create Custom Field	10 credits per field creation (In Bulk APIs, the credit cost equals the number of fields created multiplied by 10)
+Update Custom Field	10 credits per field update (In Bulk APIs, the credit cost equals the number of fields updated multiplied by 10)
+Delete Custom Field	10 credits per field deletion (In Bulk APIs, the credit cost equals the number of fields deleted multiplied by 10)
+Transfer Records and Delete User	500
+Create Custom Module	500
+Update Custom Module	5
+Get Calls Preference	1
+Update Calls Preference	1
+Get Rich Text Field 	1
+Create Data Sharing Rule	250
+Update Data Sharing Rule	250
+Update Data Sharing Rule per ID	250
+Delete Data Sharing Rule	250
+Get Data Sharing Rules 	10
+Get Data Sharing Rule per ID	1
+Get Data Sharing Settings	10
+Update Default Organization Permissions 	1
+All other APIs	1
+
+Note
+
+You can Insert/Update/Upsert a maximum of 100 records per API call, and Add/Remove Tags from a maximum of 500 records per API call. Therefore, the maximum number of credits that the system deducts for these API calls is 10.
+The API call limit has a rolling 24-hour window, from the start of the call.
+How Integration Tasks Consume API Credits?
+
+The integration tasks used in our Deluge functions are a set of wrappers for each service's API to execute certain actions provisioned in the Deluge editor. You can call an integration task of a service by calling its name.
+Example:
+zoho.crm.createRecord(“Leads”, <Map>); invokes the Zoho CRM's Create Records API in the background.
+However, there was no way of identifying such API calls made to CRM through these integration tasks from Deluge functions written across Zoho Apps. A provision to identify the origin of these calls can help restrict the unwanted API calls.
+To address these aspects and to keep our API servers checked against such hidden consumption, we have decided to include the integration tasks made through Deluge functions as part of the API credit consumption. For example, if you use the zoho.crm.searchRecords() integration task, it will consume the same number of credits as that of the Search Records API.
+The Credits by Application/Functions section on the API Dashboard will give you the details of the number of credits the integration tasks, functions, and applications have consumed in a certain period.
+
+Increase API Credits
+
+If your organization requires more API credits than the allowed limit for your edition, the super-admin of your org can increase the credit limit from the API Dashboard. The extra credits will be billed monthly as a pay-as-you-go model, where you will only pay for the credits you have consumed in that billing period. Refer to the Increase API Credits page for more details.
+
+Concurrency limits for various editions of Zoho CRM
+
+In addition to the above credit system, Zoho CRM also uses a Concurrency system, to calculate API Limits based on the number of concurrent calls made per org per app in Zoho CRM. These concurrency limits specify the maximum number of API calls that can be simultaneously active at a given point of time per org per app.
+
+Since the API limits are based on the number of simultaneous active calls, there are no time-based API call restrictions in Zoho CRM. You can make any number of API calls in a minute, provided the number of concurrent calls are within the specified limits.
+
+Edition	Concurrency Limits for an Org/App
+Free	5
+Standard/Starter	10
+Professional	15
+Enterprise/Zoho One	20
+Ultimate/CRM Plus	25
+Sub-concurrency limits for various editions
+
+Besides concurrency limits, Zoho CRM also applies sub-concurrency to limit the number of concurrent calls for a few APIs that take much more computing resources than other APIs. The APIs that falls under the sub-concurrency limit are:
+
+Get Records with cvid or sort_by parameters
+Convert Lead
+Insert, Update, or Upsert records (when the record count is greater than 10)
+Send Mail
+Search records API invoked from a function
+Query API
+Composite API
+The sub-concurrency limit for the above APIs is 10 for all the CRM editions. For example, you can either make ten concurrent Convert Lead API calls or a combination of 10 concurrent requests of any of the above APIs.
+
+Therefore, when an API request is sent from an org, two concurrency limits are applied—Concurrency (edition-based) and Sub-concurrency (request-based).
+
+For example, consider that a Convert Lead API call is sent from an org in the Professional edition. The concurrency limit the org is left with is 14 (out of 15), and the sub-concurrency limit for the Convert Lead request is 9 (out of 10). These limits are further calculated based on the type of subsequent requests.
+
+Let's say the the Get Module Meta Data API request is sent from the org. Now, the concurrency limit becomes 13 (out of the remaining 14), and the sub-concurrency limit stays the same (9).
+Now, in the same org, 15 records are updated through the Update records API. The concurrency limit, now, is 12 (out of the remaining 13), and the sub-concurrency limit for the same is 8 (out of the remaining 9).
+After this, only 7 concurrent calls can be made from the org—Convert lead, insert/update (more than 10 records), search records from a function, or query API.
+
+When the sub-concurrency limit for any of the two requests is reached, the system throws the TOO_MANY_REQUESTS error.
+
+You can continue to make other requests from the org as they still fall under the primary concurrency limit.
+
+Concurrency in Integration Tasks
+
+Concurrency limits are also applicable to integration tasks at the organization level. This means the maximum number of integration task calls that can be executed simultaneously per org depends on your edition. The limits are as follows:
+
+Edition	Concurrency Limits in Integration Tasks for an Org
+Free	5
+Standard/Starter	10
+Professional	15
+Enterprise/Zoho One	20
+Ultimate/CRM Plus	25
+
+Note: Sub-concurrency limits do not apply to integration tasks.
+
+© 2026, Zoho Corporation Pvt. Ltd. All Rights Reserved.
+
+ 
+API Directory
+Postman Collection
+Kaizen Series

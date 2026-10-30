@@ -1,0 +1,545 @@
+RETRIEVED: 2026-10-30 with Operations/tools/webread/webread.cjs (real Chromium). Vendor page text, saved as data.
+URL: https://help.zoho.com/portal/en/community/topic/kaizen-36-tasks-api
+STATUS: 200
+
+Welcome to Portal
+Skip to Content
+Skip to Menu
+Skip to Footer
+Home
+Knowledge Base
+Community
+ZUGs
+Sign In
+English
+Add Request
+Add Topic
+Community
+Zoho CRM
+Zoho CRM Developer
+Kaizen #36 - Tasks #API
+SS
+ Shylaja S
+Discussion
+6 years ago
+
+Hello everyone! 
+
+Welcome back to another post in the Kaizen series!
+
+This week, we will discuss adding, updating, and deleting Tasks.
+
+
+
+A task is a specific piece of work that is usually time-bound. In Zoho CRM, tasks are listed in the record's Home page, Activities' home page, and in other related records.
+
+Let us now see how to work with Tasks using APIs.
+
+
+
+1. Creating a Task
+
+Use the Insert Records API to create a task.
+
+
+
+Request URL: {{api-domain}}/crm/v2/Tasks
+
+Request method: POST
+
+Sample Input (se_module Leads)
+
+
+
+{
+  "data": [
+    {
+      "Subject": "Team_Meeting",
+      "What_Id": {
+        "name": "Christopher Maclead",
+        "id": "3660682000000516249"
+      },
+      "Status": "In Progress",
+      "Due_Date": "2020-05-30",
+      "Priority": "High",
+      "$se_module": "Leads"
+    }
+  ]
+}
+
+
+Sample Input (se_module Contacts)
+
+{
+  "data": [
+    {
+      "Subject": "Team_Meeting"1,
+      "Who_Id": {
+        "name": "Kris Marrier ,
+        "id": "3660682000000516033"
+      },
+      "Status": "In Progress",
+      "Due_Date": "2020-05-30",
+      "Priority": "High",
+      "$se_module": "Contacts"
+    }
+  ]
+}
+
+
+
+Sample Input (se_module Accounts)
+
+
+
+{
+  "data": [
+    {
+      "Subject": "Meeting1",
+      "Who_Id": {
+        "name": "Kris Marrier",
+        "id": "3660682000000516033"
+      },
+      "What_Id": {
+        "name": "Zylker",
+        "id": "3652397000000624046"
+      },
+      "Status": "In Progress",
+      "Due_Date": "2020-05-02",
+      "Priority": "High",
+      "$se_module": "Accounts",
+      "Remind_At": {
+        "ALARM": "FREQ=WEEKLY;UNTIL=2020-05-21T11:00:00+05:30ACTION=POPUP;TRIGGER=DATE-TIME:2020-05-01T11:00:00+05:30"
+      },
+      "Recurring_Activity": {
+        "RRULE": "FREQ=WEEKLY;INTERVAL=1;UNTIL=2020-05-16;BYDAY=SA;DTSTART=2020-05-02"
+      }
+    }
+  ]
+}
+
+
+
+
+
+
+Input JSON
+
+
+
+Key
+
+	
+Data Type
+
+	
+Description
+
+
+
+Subject
+
+	
+String
+
+	
+Subject of the task. This key is mandatory.
+
+
+
+Who_Id
+
+	
+JSON Object
+
+	
+ID of the contact the task is related to.
+Applicable when module is contacts.
+
+
+
+
+What_Id
+
+	
+JSON Object
+
+	
+ID of the record for modules other than contacts.
+For Accounts module, this is the ID of the module the contact is associated with the contact whose ID is given in the Who_Id key.
+ 
+
+
+
+Status
+
+	
+String
+
+	
+The status of the task. The possible values are "Not Started", "Deferred", "In Progress", "Completed", and "Waiting on someone else".
+
+
+
+Due_Date
+
+	
+Date in yyyy-mm-dd format
+
+	
+The date on which the task is due.
+
+
+
+Priority
+
+	
+String
+
+	
+The priority of the task. The possible values are "High", "Highest", "Low", "Lowest", and "Normal".
+
+
+
+$se_module
+
+	
+String
+
+	
+The API name of the parent module that the contact is associated with. This key is mandatory when you include Who_id and What_Id.
+
+Remind_At
+
+
+
+Key
+
+	
+Data Type
+
+	
+Description
+
+
+
+FREQ
+
+	String
+	
+Defines the frequency of the reminder. The possible values are DAILY, WEEKLY, MONTHLY, YEARLY, NONE. If you specify, NONE, the system sets a one-time reminder and TRIGGER becomes mandatory. 
+
+
+
+Action
+
+	
+String
+
+	
+Represents how you want to remind the task owner about the task. The possible values are EMAIL, POPUP, EMAILANDPOPUP.
+
+
+
+TRIGGER=DATE-TIME
+
+	
+DateTime (ISO8601)
+
+	
+Defines when you want to trigger the reminder. This key is mandatory. Example: 2020-05-01T12:28:00+05:30.
+
+
+
+TRIGGER=TIME
+
+	
+hh:mm
+
+	
+24-hour time format at which the system must trigger the reminder. Example: 23:45
+
+Note
+
+Triggers can be given based on due date. For instance, if you want the reminder to be triggered one day before the due date:TRIGGER = -P1D.
+
+Similarly, if you want the reminder to be triggered two weeks before the due date:TRIGGER= -P2W. This applies only to recurring tasks, and the trigger time is mandatory.
+
+
+
+Recurring_Activity
+
+We have discussed this key in detail in Kaizen#8 - Handling Recurrence and Participants in the Events module via API.
+
+
+
+Here is the response.
+
+Since we have created a recurring task that recurs thrice, the system creates three individual tasks.
+
+
+
+
+
+
+
+2. Updating a Task
+
+Use the Update Specific Record API or Update Records API to update the task(s).
+
+The input keys are similar to the ones mentioned in the Insert a Task section.
+
+In this example, we are updating the reminder (the "remind_at" key) of one of the recurring tasks. 
+
+
+
+Request URL: {{api-domain}}/crm/v2/Tasks/3652397000002133013
+
+Request method: PUT
+
+
+
+Sample Input
+
+
+
+{
+
+    "data": [
+
+        {
+
+            "Subject": "Meeting1",
+
+            "Remind_At": {
+
+                "ALARM": "FREQ=NONE;ACTION=POPUP;TRIGGER=-P1D;TRIGGER_TIME=11:00"
+
+            }
+
+        }
+
+    ]
+
+}
+
+
+
+Sample response
+
+
+
+
+
+
+
+Errors common to inserting and updating a task
+
+
+
+
+
+Error code
+
+	
+Reason
+
+	
+Handling
+
+
+
+INVALID_DATA
+
+	
+The ID you specified in what_id or who_id is invalid.
+
+	
+Specify the correct ID.
+
+
+
+MANDATORY_NOT_FOUND
+
+	
+You have not specified TRIGGER in "Remind_At" or  UNTIL and DTSTART in RRULE keys.
+
+	
+Specify the mandatory keys.
+
+
+
+INVALID_RRULE
+
+	
+You have specified an incorrect value for FREQ, INTERVAL, or BYMONTHDAY, BYDAY, BYMONTH, BYSETPOS.
+
+	
+Specify the correct value for RRULE.
+
+
+
+3. Deleting a Task
+
+Use the Delete Specific Record API or Delete Records API to delete the task(s).
+
+
+
+Request URL: {{api-domain}}/crm/v2/Tasks/3652397000002133013 or
+                        {{api-domain}}/crm/v2/Tasks?ids=3652397000002133013,3652397000002133010
+Request method: DELETE
+
+
+
+Sample response
+
+
+
+
+
+We hope you found this post useful. 
+
+Write to us at support@zohocrm.com if you have any questions, or let us know in the comment section.
+
+
+
+Cheers!
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Share :
+1 Reply
+Reply
+LE
+Lee
+5 years ago
+
+Thanks Shylaja - exactly what I was searching for.
+The 'Sample Input' are key, as the documentation lacks details of FREQ / TRIGGER parameters.
+
+Reply to Shylaja S
+A
+12
+Insert
+Attach a file
+(Up to 20 MB )
+ADD COMMENT
+
+
+Stats
+3 followers
+1 reply
+4684 views
+Follow
+
+Subscribe to receive notifications from this topic.
+
+Tags
+apitasksrecurring taskskaizen
+Participants
+LE
+Lee
+SS
+Shylaja S
+Sticky Posts
+Kaizen #261 : Using Zoho CRM Skill to generate complex COQL queries
+Announcing the new SKILL.md for Zoho CRM and the updated OAS repository!
+Kaizen #256 - Build an Arrival Readiness Web Tab in Zoho CRM
+Kaizen #226: Using ZRC in Client Script
+Kaizen #222 - Client Script Support for Notes Related List
+Show More
+Zoho CRM Resources
+
+CRM Community Learning Series
+
+Kaizen
+
+Functions
+
+Meetups
+
+Kbase
+
+Resources
+
+Digest
+
+CRM Marketplace
+
+MVP Corner
+
+Recent Topics
+Feature Request: Post-commit Subform Row Event (onRowSave / afterRowCommit) in Client Scripts
+Kaizen #265 - Working with Zoho CRM using Zoho MCP - Part I
+Function failure APIs report "no failures" (204 / empty 200) while the Failures view lists real failures
+Zoho CRM Fields
+Kaizen #264 - Using zoho-crm Skill to Write Functions
+Show More
+Related Articles
+Kaizen posts 2025: API series
+Kaizen posts 2020: API series
+Kaizen posts 2023: Functions series
+Kaizen posts 2024: API series
+Kaizen posts 2022: API series
+Follow us on:
+Apps
+Mobile Apps
+G Suite Integration
+Microsoft Office 365 Integration
+Apps for Apple Watch
+	
+Partners
+Hosting Providers
+Partners
+Consulting Partners
+Platform Partners
+Technology Partners
+	
+Resources
+Zia
+Support
+Community
+Forums
+Blogs
+Academy
+	
+About
+About Zoho
+Perspectives
+Events
+Press
+Zoho in the News
+Zoho Opinions
+Contact Us
+Zoho Schools
+	
+Contact - India
+GST Helpline
+1800 123 7711
+gstindia@zohofinance.com
+Sales
+1800 103 1123
++91 (44) 69656060
+sales@zohocorp.com
+Zoho Home Contact Security IPR Complaints Anti-spam Policy Terms of Service Privacy Policy Cookie Policy GDPR Compliance Abuse Policy Community Guidelines
+
+© 2026, Zoho Corporation Pvt. Ltd. All Rights Reserved.

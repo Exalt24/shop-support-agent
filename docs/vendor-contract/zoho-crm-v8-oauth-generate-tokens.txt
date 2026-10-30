@@ -1,0 +1,173 @@
+RETRIEVED: 2026-10-30 with Operations/tools/webread/webread.cjs (real Chromium). Vendor page text, saved as data.
+URL: https://www.zoho.com/crm/developer/docs/api/v8/access-refresh.html
+STATUS: 200
+
+Skip to product menu
+Zoho.com
+BiginCRM PlusDeskCampaignsFSMZia AgentsAll Products
+Sign In
+Skip to main content
+Home
+Features
+Resources
+Release Notes
+Community
+Version 2
+Version 2.1
+Version 3
+Version 4
+Version 5
+Version 6
+Version 7
+Version 8
+Overview
+What's New in V8?
+Changelog
+Open API Specification 3.0.0 (OAS) 
+API Directory
+API Collection
+APIs and References 
+OAuth
+OAuth Scopes 
+Authentication
+Overview
+Scopes
+Step1: Registering a Client
+Step2: Making the Authorization Request
+Step3: Generating Tokens
+Step 4: Refreshing your Access Tokens
+Step 5: Revoking Tokens
+Client Credentials
+Incremental Authorization
+Token Validity
+HTTP Request Methods
+Status Codes
+Multi DC Support
+API Limits and Credits
+Compliance
+Zoho CRM SDKs
+Metadata APIs
+Core APIs
+Bulk APIs
+Composite API
+Query API
+Notification APIs
+Home
+OAuth
+Authentication
+Step3: Generating Tokens
+Generate Access Token and Refresh Token
+
+OAuth2.0 requests are usually authenticated with an access token, which is passed as bearer token. To use this access token, you need to construct a normal HTTP request and include it in an Authorization header along with the value of Bearer.
+
+Note
+
+You must use your domain-specific Zoho accounts URL to generate access and refresh tokens. The following are the various domains and their corresponding accounts URLs.
+For US: https://accounts.zoho.com
+For AU: https://accounts.zoho.com.au
+For EU: https://accounts.zoho.eu
+For IN: https://accounts.zoho.in
+For CN: https://accounts.zoho.com.cn
+For JP: https://accounts.zoho.jp
+For SA(Saudi Arabia): https://accounts.zoho.sa
+For CA(Canada): https://accounts.zohocloud.ca
+If you have more than one organization, then the grant token generated will be specific to a particular organization, and the same applies to the access and refresh tokens generated using the grant token.
+To generate access and refresh token:
+
+Make a POST request with the following URL. Replace {accounts_URL} with your domain-specific Zoho accounts URL when you make the request.
+
+{accounts_URL}/oauth/v2/token
+
+Note: For security reasons, pass the below parameters in the body of your request as form-data.
+
+Request Parameters
+grant_type
+
+Enter the value as "authorization_code".
+
+client_id
+
+Specify client-id obtained from the connected app.
+
+client_secret
+
+Specify client-secret obtained from the connected app.
+
+redirect_uri
+
+Specify the Callback URL that you registered during the app registration.
+
+code
+
+Enter the grant token you received after you made the authorization code request.
+
+If the request is successful, you would receive the following:
+
+{
+                                        "access_token": "{access_token}",
+                                        "refresh_token": "{refresh_token}",
+                                        "api_domain": "https://www.zohoapis.com",
+                                        "token_type": "Bearer",
+                                        "expires_in": 3600
+                                    }
+Response Parameters
+access_token
+
+Access token to access ZohoCRM APIs.
+
+refresh_token
+
+Refresh token to obtain new access tokens.
+
+expires_in
+
+Time in seconds after which the access token expires.
+
+api_domain
+
+Domain name of the API. Use this domain in your requests to make API calls to Zoho CRM.
+
+token_type
+
+Type of token obtained. "Bearer" indicates this is an access token.
+
+This completes the authentication. Once your app receives the access token, send the token in your HTTP authorization header to Zoho CRM API with the value "Zoho-oauthtoken {access_token}" for each endpoint (for each request).
+
+Note
+
+Each access token is valid for only an hour and can be used only for the operations defined in the scope.
+A refresh token does not expire. Use it to refresh access tokens when they expire. For more details on the validity of the tokens, refer to Token Validity page.
+Use the value in the "api_domain" key to make API calls to Zoho CRM. The URL varies based on the environment:
+For sandbox, the domain would be sandbox.zohoapis.{domain}. Example: https://sandbox.zohoapis.eu
+For developer, the domain would be developer.zohoapis.{domain}. Example: https://developer.zohoapis.au
+If your application has more than one environment, the access and refresh token generated for a user becomes organization-specific in an environment. Thus, you cannot use tokens generated for an organization in one environment to make API calls to the organization in another environment. For instance, you cannot use tokens generated for an organization in the Production environment to make API calls to the organizations in the sandbox or developer accounts.
+Possible Errors
+invalid_client
+
+Resolution: You have passed an invalid Client ID or secret. Specify the correct client ID and secret.
+(or)
+There is a domain mismatch. You have registered the client and generated the grant token in a certain domain (US), but generating the tokens from a different domain (EU). Ensure that you generate the grant, access, and refresh tokens from the same domain using the same domain URL or Enable Multi-DC for your client to generate tokens from any domain.
+(or)
+You have passed the wrong client secret when multi-DC is enabled. Each DC holds a unique client secret. Ensure to pass the right client secret for that DC.
+
+invalid_code
+
+Resolution: The grant token has expired. The grant token is valid only for one minute in the redirection-based flow. Generate the access and refresh tokens before the grant token expires.
+(or)
+You have already used the grant token. You can use the grant token only once.
+(or)
+The refresh token to generate a new access token is wrong or revoked. Specify the correct refresh token value while refreshing an access token.
+
+invalid_redirect_uri
+
+Resolution: The redirect URI in the request mismatches the one registered in the developer console. Specify the correct redirect URI in the request.
+
+© 2026, Zoho Corporation Pvt. Ltd. All Rights Reserved.
+
+ 
+API Directory
+Postman Collection
+Kaizen Series
+We're Online!
+
+How may I help you today?

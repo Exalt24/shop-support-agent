@@ -1,0 +1,1269 @@
+RETRIEVED: 2026-10-30 with Operations/tools/webread/webread.cjs (real Chromium). Vendor page text, saved as data.
+URL: https://www.zoho.com/crm/developer/docs/api/v8/insert-records.html
+STATUS: 200
+
+Skip to product menu
+Zoho.com
+BiginCRM PlusDeskCampaignsFSMZia AgentsAll Products
+Sign In
+Skip to main content
+Home
+Features
+Resources
+Release Notes
+Community
+Version 2
+Version 2.1
+Version 3
+Version 4
+Version 5
+Version 6
+Version 7
+Version 8
+Overview
+What's New in V8?
+Changelog
+Open API Specification 3.0.0 (OAS) 
+API Directory
+API Collection
+APIs and References 
+OAuth
+API Limits and Credits
+Compliance
+Zoho CRM SDKs
+Metadata APIs
+Core APIs
+Records
+GETRecords
+POSTRecords
+PUTRecords
+DELETERecords
+POSTUpsert Records
+GETSearch Records
+POSTRecord Clone
+GETRich Text Fields
+GETTimeline of a Record
+GETList of Deleted Records
+GETRecord Count in a Module
+Record Locking
+Contact Roles
+Attachments
+Photos
+Change Owner
+Convert Lead
+Convert Inventory Records
+Merge Records
+Share Records
+Mail Merge
+Services
+Appointments
+Appointments Rescheduled History
+Fields Attachments
+Meeting Cancel
+Notes
+Mass Actions
+Related Records
+External ID
+Emails
+Subforms
+Linking Modules
+Others
+Bulk APIs
+Composite API
+Query API
+Notification APIs
+Home
+Core APIs
+Records
+POSTRecords
+Insert Records
+Purpose
+
+To add new entities or records in a module. You can insert up to 100 records in a single API call.
+
+Endpoints
+POST /{module_api_name}
+
+{module_api_name} : API name of the module where you want to add records.
+
+Request Details
+Request URL
+
+{api-domain}/crm/{version}/{module_api_name}
+
+Supported modules
+
+Leads, Accounts, Contacts, Deals, Campaigns, Tasks, Cases, Meetings, Calls, Solutions, Products, Vendors, Price Books, Quotes, Sales Orders, Purchase Orders, Invoices, Appointments, Appointments Rescheduled History, Services and Custom
+
+Header
+
+Authorization: Zoho-oauthtoken d92d4xxxxxxxxxxxxx15f52
+
+Scope
+
+scope=ZohoCRM.modules.ALL
+(or)
+scope=ZohoCRM.modules.{module_name}.{operation_type}
+
+Possible module names
+
+leads, accounts, contacts, deals, campaigns, tasks, cases, events, calls, solutions, products, vendors, pricebooks, quotes, salesorders, purchaseorders, invoices, custom, appointments, appointments_rescheduled_history, services and notes
+
+Possible operation types
+
+ALL - Full access to the record
+WRITE - Edit records in the module
+CREATE - Create records in the module
+
+Note
+
+To insert a single record, send only one JSON object in the input with the necessary keys and values.
+The 'INVALID_DATA' error is thrown if the field value length is more than the maximum length defined for that field.
+If an API is used inside a Function and the field value exceeds the allowed length, the function will receive an error response from the API.
+For example, if a Text field has a maximum length of 10, the API cannot accept a value like "12345678901", since it exceeds the limit with 11 characters.
+Duplicates are checked for every insert record API call based on unique fields.
+A maximum of 100 records can be inserted per API call.
+You must use only Field API names in the input. You can obtain the field API names from:
+Fields metadata API (the value for the key “api_name” for every field). (Or)
+Setup > Developer Hub > APIs and SDKs > API Names > {{Module}}. Choose “Fields” from the “Filter By” drop-down.
+The trigger input can be workflow, approval, blueprint, pathfinder, or orchestration(for the Journey Builder feature). If trigger is not mentioned, the automation actions related to the API will get executed. Enter the trigger value as [] to not execute the workflows.
+Records with Subform details can also be inserted to CRM using the Records API. Refer to Subforms API to learn more about adding subform information within a record. For detailed information on subforms, refer to our Kaizen post : Manipulating Subform using Zoho CRM APIs.
+The $approved key is used to create records in the approval mode. It is mostly used for leads and contacts procured from web forms. Specify the value as false to create the record in approval mode.
+Multiselect Lookup association is restricted if the dependent record is locked, and the system will throw a RECORD_LOCKED error.
+In Calls module, the call duration for an Inbound or Outbound call cannot be zero.
+For any module, specify all the mandatory fields while creating a record. Refer to the Mandatory fields section to know about system-defined mandatory fields for different modules.
+When inserting multiple records, the Response JSON array maintains the same order as the input records, allowing each response to be mapped to its respective input record.
+In case of partial success or failure, the API returns an HTTP status - 207 (Multi-Status), where individual record-level success or error details are provided within the response array in the same order.
+Sample Request
+curl "https://www.zohoapis.com/crm/v8/Leads"
+-H "Authorization: Zoho-oauthtoken 1000.8cb99dxxxxxxxxxxxxx9be93.9b8xxxxxxxxxxxxxxxf"
+-d "@newlead.json"
+-X POST
+System-defined mandatory fields for each module
+
+While inserting records there are a few system-defined mandatory fields that you need to mention. To successfully insert records in Zoho CRM, make sure you enter user-defined mandatory fields too.
+
+Leads
+
+"Last_Name" - Single Line
+
+Contacts
+
+"Last_Name" - Single Line
+
+Accounts
+
+"Account_Name" - Single Line
+
+Deals
+
+"Deal_Name"- Single Line
+"Stage" - Picklist
+"Pipeline" - Single Line (mandatory when pipeline is enabled)
+
+Tasks
+
+"Subject" - Multi Line
+
+Calls
+
+"Subject" - Multi Line
+"Call_Type" - Picklist
+"Call_Start_Time" - Date/Time
+"Call_Duration" - Single Line
+
+Events
+
+"Event_Title"- Single Line
+"Start_DateTime" - Date/Time
+"Remind_At" - Single Line "End_DateTime" - Date/Time
+
+Products
+
+"Product_Name" - Single Line
+
+Quotes
+
+"Subject"- Single Line
+"Quoted_Items" - Line item subform
+
+Invoices
+
+"Subject"- Single Line
+"Invoiced_Items" - Line item subform
+
+Campaigns
+
+"Campaign_Name" - Single Line
+
+Vendors
+
+"Vendor_Name"- Single Line
+
+Price Books
+
+"Price_Book_Name"- Single Line
+"Pricing_Details"- JSON Array with "from_range", "to_range", "discount"
+
+Cases
+
+"Case_Origin" - Picklist
+"Status"- Picklist
+"Subject" - Single Line
+
+Solutions
+
+"Solution_Title"- Single Line
+
+Purchase Orders
+
+"Subject"- Single Line
+"Vendor_Name"- Lookup
+"Purchased_Items" - Line item subform
+
+Sales Orders
+
+"Subject"- Single Line
+"Ordered_Items" - Line item subform
+
+Sample Attributes
+
+The following table gives you specific details about each field type in Zoho CRM and their limitations. The JSON type and the data type of the field-types are extracted from fields metadata API.
+
+Single Linestring
+
+Accepts up to 255 characters, and alphanumeric and special characters.
+Example:"Last_Name": "Mike O'Leary"
+
+Multi Linestring
+
+Small - accepts up to 2000 characters.
+Large - accepts up to 32000 characters.
+You will not be able to use this field to create custom views, reports or other filters. Accepts alphanumeric and special characters.
+Example:"Multi_Line_1": "This is the first line \n Now for the second Line"
+
+Emailstring
+
+Accepts valid email IDs.
+Example:"Email_1": "p.boyle@zylker.com"
+
+. The regex in Zoho CRM to validate the email fields is:
+"^[\\+\\-\\p{L}\\p{M}\\p{N}_]([\\p{L}\\p{M}\\p{N}!#$%&'*+\\-\\/=?^_`{|}~.]*)@(?=.{4,256}$)(([\\p{L}\\p{N}\\p{M}]+)(([\\-_]*[\\p{L}\\p{M}\\p{N}])*)[.])+[\\p{L}\\p{M}]{2,22}$”
+
+Phonestring
+
+Accepts up to 30 characters. This limit may vary based on the value configured in 'Number of characters allowed' in the properties pop-up of the field, in UI.
+The regex pattern in Zoho CRM to validate this field's value is ^([\+]?)(?![\.-])(?>(?>[\.-]?[ ]?[\da-zA-Z]+)+|([ ]?\((?![\.-])(?>[ \.-]?[\da-zA-Z]+)+\)(?![\.])([ -]?[\da-zA-Z]+)?)+)+(?>(?>([,]+)?[;]?[\da-zA-Z]+)+(([#][\da-zA-Z]+)+)?)?[#;]?$
+Example:"Phone_1": "9900000000"
+"Phone_1":"91(987)654321"
+
+Pickliststring
+
+You can either pass an existing pick list value or add a new one. The pick list value accepts all alphanumeric and special characters.
+Example:"Industry": "automobile"
+
+Multi-select picklistJSON array
+
+You can either pass existing pick list values or add a new one. The pick list value accepts all alphanumeric and special characters..
+Example:"Courses_Opted": [
+"Analytics",
+"Big data"
+]
+
+Datestring
+
+Accepts date in yyyy-MM-dd format.
+Example: "Date_1": "2017-08-16"
+
+Date/Timestring
+
+Accepts date and time in yyyy-MM-ddTHH:mm:ss±HH:mm format.
+Example: "Date_Time": "2017-08-16T14:32:23+05:30".
+Date_Time is in the ISO8601 format and the time zone is the current user's time zone.
+
+Numberinteger
+
+Accepts numbers up to 9 digits. This limit may vary based on the value configured in 'Maximum digits allowed' in the properties pop-up of the field, in UI. Accepts only numeric values.
+
+Currencydouble
+
+Before decimal point - accepts numbers up to 16 digits. This limit may vary based on the value configured in 'Maximum digits allowed' in the properties pop-up of the field, in UI.
+After decimal point - accepts precision up to 9 digits. This limit may vary based on the value configured in 'Number of decimal paces' in the properties pop-up of the field, in UI. Accepts only numeric values.
+Example:"Annual_Revenue": 250000.90
+
+Decimaldouble
+
+Before decimal point - accepts numbers up to 16 digits. This limit may vary based on the value configured in 'Maximum digits allowed' in the properties pop-up of the field, in UI.
+After decimal point - accepts precision up to 9 digits. This limit may vary based on the value configured in 'Number of decimal places' in the properties pop-up of the field, in UI.
+Accepts only numeric values..
+Example:"Decimal_1": 250000.50
+
+Percentdouble
+
+Accepts numbers up to 5 digits and only numeric values.
+Example:"Percentage": 25
+
+Long Integerstring
+
+Accepts numbers up to 18 digits. This limit may vary based on the value configured in 'Maximum digits allowed' in the properties pop-up of the field, in UI. Accepts only numeric values.
+Example:"EAN_Code":"0012345600012"
+
+Checkboxboolean
+
+Accepts only Boolean values (true,false)
+Example:"Email_Opt_Out": true
+
+URLstring
+
+Accepts valid URLs. The regex pattern in Zoho CRM to validate this field's value is ^(http:\\/\\/www.|https:\\/\\/www.|ftp:\\/\\/www.|www.|http:\\/\\/|https:\\/\\/|ftp:\\/\\/|){1}[^\\x00-\\x19\\x22-\\x27\\x2A-\\x2C\\x2E-\\x2F\\x3A-\\x3F\\x5B-\\x5E\\x60\\x7B\\x7D-\\x7F]+(\\.[^\\x00-\\x19\\x22\\x24-\\x2C\\x2E-\\x2F\\x3C\\x3E\\x40\\x5B-\\x5E\\x60\\x7B\\x7D-\\x7F]+)+([\\/\\?].*)*$
+Example:"URL": "https://www.zylker.com"
+
+LookupJSON object
+
+Accepts unique ID of the record, which you can get through Get Records API.
+Example:"Lookup" : {
+"id" : "425248000000104001"
+}
+
+UserJSON object
+
+This is a default look-up field to users in Zoho CRM.
+Example:"User":
+{
+"name":"Patricia Boyle",
+"id":"4150868000000623001"
+}
+
+lar_idstring
+
+The unique ID of the assignment rule you want to trigger while inserting a record. Use the Get Assignment Rules API to get the lar_id. This key must be provided parallel to the key data. 
+Note: The lar_id key is supported for all modules where assignment rules are applicable, such as Leads, Contacts, Deals, Accounts, Tasks, Cases, and Custom.
+
+LayoutJSON Object
+
+The ID represents the unique ID of the layout. You can get your layout IDs from the Metadata Layouts API.
+
+Note
+
+You must provide the layout ID field if you want to
+include the layout specific mandatory fields in the API-level mandatory check
+include only the fields that are defined in your layout for API- level processing and ignore the rest
+$wizard_connection_pathJSON array
+
+The IDs of the connections in a wizard that indicates the screen traversal when the record is created. Use the IDs in the "connections" key in the "containers" array of the Get Wizards response.
+
+Wizardstring
+
+The ID of the wizard in which you want to create the record. Use the Get Wizards API to fetch the ID of the wizard.
+
+apply_feature_executionJSON array
+
+Use the apply_feature_execution array to trigger certain CRM features while creating or updating a record through the API.
+
+This array supports the following values for the key name:
+
+layout_rules: To apply layout rules.
+criteria_validation_rule: To apply validation rules.
+
+layout_rules string:
+
+Use this array to apply an existing layout rule when you create a record. Layout rules allow you to show a section, certain fields, set mandatory fields, or show a subform. However, you can only trigger the "Set Mandatory Field" option through the API.
+Specify the value layout_rules for the key name to apply a layout rule to the record. Note that you must give this key parallel to "data".
+Ensure that the input body includes all the keys required to satisfy the criteria in the layout rule. The system throws an error, otherwise. For example, if the layout rule triggers when the Lead_Source is Employee Referral, and you have mandated the Company field, then the system throws the MANDATORY_NOT_FOUND error if you fail to give the Company key in the input. Refer to the sample input section.
+
+criteria_validation_rule string:
+
+To trigger Validation Rules during record creation or update via the API, include the apply_feature_execution array in your request body.
+
+"apply_feature_execution": [
+   {
+       "name": "criteria_validation_rule"
+   }
+]
+
+When you use the apply_feature_execution array with criteria_validation_rule, the system evaluates all applicable rules. If multiple rules fail at the same time, the API returns the MULTIPLE_OR_MULTI_ERRORS response.
+
+skip_feature_executionJSON array
+
+By default, if a Cadence is configured for a module, it will be executed automatically when you create a record via API. This key lets you skip the execution of the Cadences feature during record creation. 
+Specify "cadences" as the value for the "name" key to skip Cadences execution for the record. Ensure you include this key alongside the "data" key in your request. The supported value for the "name" key is "cadences".
+
+Sample Input
+{
+    "data": [
+        {
+            "Layout": {
+                "id": "554023000002734009"
+            },
+            "Lead_Source": "Employee Referral",
+            "Company": "ABC",
+            "Last_Name": "Daly",
+            "First_Name": "Paul",
+            "Email": "p.daly@zylker.com",
+            "State": "Texas"
+        },
+        {
+            "Layout": {
+                "id": "554023000002734009"
+            },
+            "Lead_Source": "Employee Referral",
+            "Company": "ABC",
+            "Last_Name": "Dolan",
+            "First_Name": "Brian",
+            "Email": "brian@villa.com",
+            "State": "Texas"
+        }
+    ],
+    "apply_feature_execution": [
+        {
+            "name": "layout_rules"
+        }
+    ],
+    "skip_feature_execution": [
+        {
+            "name": "cadences"
+        }
+    ],
+    "trigger": [
+        "approval",
+        "workflow",
+        "blueprint",
+        "pathfinder",
+        "orchestration"
+    ]
+}
+Sample Response
+{
+    "data": [
+         {
+            "code": "SUCCESS",
+            "details": {
+                "Modified_Time": "2023-05-10T01:10:47-07:00",
+                "Modified_By": {
+                    "name": "Patricia Boyle",
+                    "id": "5725767000000411001"
+                },
+                "Created_Time": "2023-05-10T01:10:47-07:00",
+                "id": "5725767000000524157",
+                "Created_By": {
+                    "name": "Patricia Boyle",
+                    "id": "5725767000000411001"
+                },
+                "$approval_state": "approved"
+            },
+            "message": "record added",
+            "status": "success"
+        }
+        {
+            "code": "SUCCESS",
+            "details": {
+                "Modified_Time": "2023-05-10T01:10:47-07:00",
+                "Modified_By": {
+                    "name": "Patricia Boyle",
+                    "id": "5725767000000411001"
+                },
+                "Created_Time": "2023-05-10T01:10:47-07:00",
+                "id": "5725767000000524157",
+                "Created_By": {
+                    "name": "Patricia Boyle",
+                    "id": "5725767000000424162"
+                },
+                "$approval_state": "approved"
+            },
+            "message": "record added",
+            "status": "success"
+        }
+    ]
+}
+
+This section explains the input JSON for pipeline, image upload, file upload, multi-select lookup, and multi-user lookup fields in the Deals module.
+
+Pipelinestring
+
+The name of the Pipeline you want the record to be assigned to. Note that this key is mandatory when a pipeline is enabled for the Deals module. Also, it is mandatory to input the Stage for the deal record. Use the Get Pipelines API to get the name of the pipeline.
+
+In Layouts metadata API, the pick_list_values inside the maps key represent the stages that are available in the pipeline. You can only add a stage that is available in this list to a deal for that pipeline. The system throws an error otherwise.
+
+Image_UploadJSON Array
+
+The API name of the image upload field in a module.
+
+File_Id__sstring, mandatory
+
+The File_Id you received in the response when you added the image through the Files API.
+You can add multiple images to the image upload field while inserting a record. Refer to the example on the right pane for the JSON structure.
+
+File_UploadJSON Array
+
+The API name of the file upload field in a module.
+
+File_Id__sstring, mandatory
+
+The file ID you received in the response when you added the file through the Files API.
+You can add multiple files to the file upload field while inserting a record. Refer to the example on the right pane for the JSON structure.
+
+Multi-select lookup
+
+When you create a multi-select lookup field in a parent module to associate multiple records from a child module, a linking module gets created between the parent and the child. In the linking module, this data is arranged as two different lookup fields, one each for the parent and the child. To add values to the multi-select lookup field in the parent module, you must include the child module's lookup field's API name and specify the ID of the record in the child module that you want to associate with the parent. 
+
+For detailed information on Multi-Select Lookup fields (MxN), refer to our Kaizen post : Manipulating Multi-Select Lookup fields (MxN) using Zoho CRM APIs.
+
+In this example, Listings is a multi-select lookup field in the Deals module (parent module) that associates the records in the Listings module (child module). Interested_Listings is the lookup field in the linking module. Refer to the example in the right pane for the JSON structure.
+
+ListingsJSON Array
+Interested_ListingsJSON Object
+
+The API name of the lookup field in the linking module.
+
+idString
+
+The unique ID of the record in the child module that you want to associate with the parent module.
+
+Multi-user lookup
+
+The API name of the multi-user lookup field. Accepts the IDs of the users as individual JSON objects. Refer to the example for the JSON structure.
+
+Multi-userJSON Array
+Multi-userJSON Object
+
+The API name of the multi-user lookup field.
+
+idString
+
+The unique ID of the user you want to associate with the multi-user lookup field.
+
+Sample Request
+curl "https://www.zohoapis.com/crm/v8/Deals"
+-H "Authorization: Zoho-oauthtoken 1000.8cb99dxxxxxxxxxxxxx9be93.9b8xxxxxxxxxxxxxxxf"
+-d "@newquote.json"
+-X POST
+Sample Input
+{
+    "data": [
+        {
+            "Deal_Name": "Insert",
+            "Stage": "Qualification",
+            "Pipeline": "Standard (Standard)",
+            "Image_Upload": [
+                {
+                    "File_Id__s": "2cxxxxxxxxxxxx2fa"
+                },
+               {
+                    "File_Id__s": "2cxxxxxxxxxxxx4fa"
+                }
+            ],
+           "File_Upload": [
+                {
+                    "File_Id__s": "2cxxxxxxxxxxxx4fc"
+                },
+               {
+                    "File_Id__s": "2cxxxxxxxxxxxx8gs"
+                }
+            ]
+            "Listings": [
+                {
+                    "Interested_Listings": {
+                        "id": "3652397000001978005"
+                    }
+                },
+                {
+                    "Interested_Listings": {
+                        "id": "3652397000001978016"
+                    }
+                }
+            ],
+            "Multi_user": [
+                {
+                    "Multi_user": {
+                        "name": "Patricia Boyle",
+                        "id": "3652397000000186017"
+                    }
+                },
+                {
+                    "Multi_user": {
+                        "name": "J Smith",
+                        "id": "3652397000000281001"
+                    }
+                }
+            ]
+        }
+    ]
+}
+
+Show full
+
+Sample Response
+{
+    "data": [
+        {
+            "code": "SUCCESS",
+            "details": {
+                "Modified_Time": "2021-10-10T10:30:15+05:30",
+                "Modified_By": {
+                    "name": "Patricia Boyle",
+                    "id": "3652397000000186017"
+                },
+                "Created_Time": "2021-10-10T10:30:15+05:30",
+                "id": "3652397000006064046",
+                "Created_By": {
+                    "name": "Patricia Boyle",
+                    "id": "3652397000000186017"
+                },
+                "$approval_state": "approved"
+            },
+            "message": "record added",
+            "status": "success"
+        },
+        {
+            "code": "SUCCESS",
+            "details": {
+                "Modified_Time": "2021-10-10T10:30:15+05:30",
+                "Modified_By": {
+                    "name": "Patricia Boyle",
+                    "id": "3652397000000186017"
+                },
+                "Created_Time": "2021-10-10T10:30:15+05:30",
+                "id": "3652397000006064047",
+                "Created_By": {
+                    "name": "Patricia Boyle",
+                    "id": "3652397000000186017"
+                },
+                "$approval_state": "approved"
+            },
+            "message": "record added",
+            "status": "success"
+        }
+    ]
+}
+
+Show full
+
+Sample Input for the Inventory Modules
+
+This section explains the various keys in the input body while inserting a record in any of the inventory modules (Quotes, Sales Orders, Purchase Orders, Invoices).
+The line item details are given in the form of a subform. The parent key of this subform for Quotes, Sales Orders, Purchase Orders, and Invoices will be Quoted_Items, Ordered_Items, Purchased_Items, and Invoiced_Items, respectively. All the other keys of this subform are common to all the inventory modules.
+
+This subform is mandatory while inserting a record in any of these inventory modules.
+
+In addition to this subform, you must provide the other mandatory keys in that module in the input body.
+
+We have given a sample for inserting a quote.
+
+Subjectstring, mandatory
+
+Accepts up to 255 characters, and alphanumeric and special characters.
+
+Quoted_ItemsJSON array, mandatory
+
+The details of the quote such as the product's name, price book's name, various taxes, discount, quantity etc,.
+Use the Fields Metadata API for the API name and data type of each of these keys.
+
+Sample Request
+curl "https://www.zohoapis.com/crm/v8/Quotes"
+-H "Authorization: Zoho-oauthtoken 1000.8cb99dxxxxxxxxxxxxx9be93.9b8xxxxxxxxxxxxxxxf"
+-d "@newquote.json"
+-X POST
+Sample Input
+{
+    "data": [
+        {
+            "Subject": "quote v6",
+            "$line_tax": [
+                {
+                    "percentage": 1.5,
+                    "name": "Common Tax"
+                }
+            ],
+            "Quoted_Items": [
+                {
+                    "Product_Name": {
+                        "name": "ZCRM_Product",
+                        "id": "3652397000000416001"
+                    },
+                    "Quantity": 100,
+                    "Discount": 0,
+                    "Price_Book_Name": {
+                        "id": "3652397000000491235",
+                        "name": "Price Book 1"
+                    },
+                    "Description": "description",
+                    "Line_Tax": [
+                        {
+                            "percentage": 10,
+                            "name": "Sales Tax"
+                        },
+                        {
+                            "percentage": 1,
+                            "name": "Vat"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
+
+Show full
+
+Sample Input to Insert a Call
+
+You can insert a record for a scheduled, completed, and missed call.
+
+Subjectstring, mandatory
+
+Accepts up to 255 characters, and alphanumeric and special characters.
+
+Call_Typestring, mandatory
+
+The type of call. The possible values are Inbound, Outbound, or Missed.
+
+Who_IdJSON object, mandatory for scheduled calls
+
+The name and ID of the contact you want to associate the call to.
+
+What_IdJSON object, mandatory for scheduled calls
+
+The name and ID of the record(other than a Contact) you want to associate the call to.
+
+$se_modulestring, mandatory when you give What_Id
+
+The API name of the module of the record specified in What_Id.
+
+Call_Start_TimeDateTime in ISO8601 format, mandatory for scheduled and completed calls
+
+The date and time at which the call started. For a scheduled call, this time must be greater than the current time.
+
+Call_Durationstring, mandatory for completed calls
+
+The time duration in HH:mm format that the call lasted for.
+
+Call_Purposestring, optional
+
+The purpose of the call. Use the Fields Metadata API for the possible values of this field.
+
+Outbound_Call_Statusstring, optional
+
+The status of the outbound call. The possible values are Scheduled or Completed.
+
+Sample Input to Insert a Call
+{
+    "data": [
+        {
+            "Who_Id": {
+                "name": "Patricia Boyle",
+                "id": "3652397000000649013"
+            },
+            "Description": "Discussion ZCRM",
+            "Call_Start_Time": "2021-02-23T13:30:00+05:30",
+            "Subject": "Discussion",
+            "Call_Type": "Outbound",
+            "Outbound_Call_Status": "Completed",
+            "Call_Duration": "10:00",
+            "Call_Purpose": "Administrative"
+        }
+    ]
+}
+Sample Input to Insert a Recurring Event
+Event_Titlestring, mandatory
+
+Represents the name of the event and it accepts alphanumeric and special characters.
+
+All_dayBoolean, optional
+
+Represents whether the event happens for an entire day.
+Possible Values:
+True: The event occurs either for a whole day or more than a day.
+False: The event occurs for less than a day.
+
+Start_DateTimeDateTime, mandatory
+
+Indicates the commencement date and time of the event. The value should be given in the ISO8601 format.
+
+End_DateTimeDateTime, mandatory
+
+Provides the concluding date and time of the event. The value should be given in the ISO8601 format.
+
+ParticipantsJSON object, optional
+
+Contains the name, participant and type of the attendees of the event.
+type: It denotes the module of the participant record in your CRM. You can also specify email in this key to use the participant's email ID and add them to the event. Possible Values: lead, contact, user and email.
+participant: This key holds the record ID of the participant.
+Email: When "type":"email", use this key to specify the email ID of the participant.
+
+What_IdJSON object, optional
+
+Contains the name and ID of the record to which the event is related.
+
+$se_modulestring, mandatory for What_ID
+
+Denotes the module API name of the record specified in What_ID.
+Possible values: Accounts, Deals, Products, Quotes, Sales_Orders, Purchase_Orders, Invoices, Campaigns, Vendors, and Cases.
+
+Who_IdJSON object, optional
+
+contains the name and ID of the participant related to the What_ID, who is also associated with the event.
+
+Remind_AtJSON array, mandatory for recurring meetings
+
+Indicates the time at which you want to set reminder for the event. The reminder should be given in this format with in string "Unit Period". For example, 15 mins and 2 hrs.
+Possible Values:
+Unit: numbers between 0 to 60
+Period: mins, hrs, days, weeks.
+
+Recurring_ActivityJSON object, optional
+
+Contains the RRULE to create recurring meetings. You can set the frequency, interval, and until which date and time the meeting should recur in the FREQ, INTERVAL, and UNTIL keys, respectively.
+
+Sample Input
+{
+    "data": [
+        {
+            "Event_Title": "New Meeting",
+            "All_day": false,
+            "Start_DateTime": "2023-05-20T09:00:00+05:30",
+            "End_DateTime": "2023-05-20T10:00:00+05:30",
+            "Participants": [
+                {
+                    "name": "John",
+                    "type": "contact",
+                    "participant": "5545974000002858122"
+                },
+                {
+                    "type": "email",
+                    "Email": "patricia.boyle@zylker.com"
+                }
+            ],
+            "Who_Id": {
+                "name": "Christopher",
+                "id": "5545974000002755004"
+            },
+            "What_Id": {
+                "name": "Mega Deal",
+                "id": "5545974000002755007"
+            },
+            "$se_module": "Deals",
+            "Remind_At": [
+                {
+                    "unit": 15,
+                    "period": "minutes"
+                },
+                {
+                    "unit": 5,
+                    "period": "minutes"
+                },
+                {
+                    "unit": 1,
+                    "period": "days",
+                    "time": "10.30"
+                }
+            ],
+            "Recurring_Activity": {
+                "RRULE": "FREQ=DAILY;INTERVAL=1;DTSTART=2023-05-20;UNTIL=2023-05-28"
+            }
+        }
+    ]
+}
+
+Show full
+
+Sample Response
+{
+    "data": [
+        {
+            "code": "SUCCESS",
+            "details": {
+                "Modified_Time": "2022-11-02T18:57:39+05:30",
+                "Modified_By": {
+                    "name": "Patricia Boyle",
+                    "id": "3652397000000186017"
+                },
+                "Created_Time": "2022-11-02T18:57:39+05:30",
+                "id": "3652397000010183179",
+                "Created_By": {
+                    "name": "Patricia Boyle",
+                    "id": "3652397000000186017"
+                },
+                "$approval_state": "approved"
+            },
+            "message": "record added",
+            "status": "success"
+        },
+        {
+            "code": "SUCCESS",
+            "details": {
+                "Modified_Time": "2022-11-02T18:57:39+05:30",
+                "Modified_By": {
+                    "name": "Patricia Boyle",
+                    "id": "3652397000000186017"
+                },
+                "Created_Time": "2022-11-02T18:57:39+05:30",
+                "id": "3652397000010183181",
+                "Created_By": {
+                    "name": "Patricia Boyle",
+                    "id": "3652397000000186017"
+                },
+                "$approval_state": "approved"
+            },
+            "message": "record added",
+            "status": "success"
+        },
+        {
+            "code": "SUCCESS",
+            "details": {
+                "Modified_Time": "2022-11-02T18:57:39+05:30",
+                "Modified_By": {
+                    "name": "Patricia Boyle",
+                    "id": "3652397000000186017"
+                },
+                "Created_Time": "2022-11-02T18:57:39+05:30",
+                "id": "3652397000010183183",
+                "Created_By": {
+                    "name": "Patricia Boyle",
+                    "id": "3652397000000186017"
+                },
+                "$approval_state": "approved"
+            },
+            "message": "record added",
+            "status": "success"
+        }
+    ]
+}
+
+Show full
+
+Sample Input to Insert a Recurring Task
+Subjectstring, mandatory
+
+Accepts up to 255 characters and alphanumeric and special characters.
+
+Recurring ActivityJSON object, mandatory for a recurring task
+
+The RRULE that defines the frequency, interval, start date and end date of the task.
+
+Remind_AtJSON object, mandatory for reminder
+
+The details of the reminder you want to set up for the task.
+Each JSON object in this array contains the following keys:
+ACTION - mandatory. Represents whether you want the reminder in an email or as a pop up. The values are EMAIL and POPUP.
+TRIGGER - mandatory. The date and time in ISO8601 format at which the reminder must be triggered. You can also specify -P1D, -P2D, -P3D, -P4D, -P5D, -P6D, -P1W, -P2W -P3W to trigger the reminder before "n" days or "m" weeks. -PnD and -PmW can be used only for recurring tasks. For non-recurring tasks, specify DATE-TIME only.
+TRIGGER_TIME - mandatory when you use -PnD and -PmW. The time in the 24 hour format at which you want the reminder.
+
+Possible Errors
+INVALID_MODULEHTTP 400
+
+The module name given seems to be invalid
+Resolution: You have specified an invalid module name or there is no tab permission, or the module could have been removed from the available modules. Specify a valid module API name.
+
+INVALID_MODULEHTTP 400
+
+The given module is not supported in API
+Resolution: The modules such as Documents and Projects are not supported in the current API. (This error will not be shown, once these modules are been supported). Specify a valid module API name.
+
+INVALID_DATAHTTP 400
+
+Given Probability is not valid
+Resolution: The probability of winning a deal cannot be less than 0% or greater than 100%. Specify a valid probability.
+
+MULTIPLE_OR_MULTI_ERRORSHTTP 400
+
+Duplicate data in multiple fields
+Resolution: You have enabled duplicate check for multiple fields and all or some of the fields contain duplicate data in the input. The "errors" array gives you the details of the module and the API name of the fields that contain duplicate data. Specify unique values to these fields.
+
+INVALID_DATAHTTP 400
+
+Wizard connections supplied do not form a valid path
+Resolution: You must specify the IDs of the connections in the right sequence. For example, to create a record in the wizard's screens 1 and 2, you must specify the connection IDs of screen1 followed by screen2.
+
+INVALID_DATAHTTP 400
+
+Wizard connection id is invalid
+Resolution: Specify the right connection ID. Use the IDs in the "connections" key in the "containers" array of the Get Wizards response.
+
+INVALID_DATAHTTP 400
+
+Wizard connections supplied do not form a valid path
+Resolution: You must specify the IDs of the connections in the right sequence. For example, to create a record in the wizard's screens 1 and 2, you must specify the connection IDs of screen1 followed by screen2.
+
+DEPENDENT_FIELD_MISSINGHTTP 400
+
+Required field not found
+
+You have not specified $wizard_connection_path in the input while creating a record in a wizard. Include the key "$wizard_connection_path" in the input.
+For the Appointments module, you have given the value as "yes" for the Job_Sheet_Required key, but the input does not have the job sheet section.
+DEPENDENT_SERVICE_ERRORHTTP 400
+
+Error
+Resolution: When you insert a record in the Campaigns module, and there is an error in the dependent service you have integrated with CRM.
+"NO_PERMISSION" indicates you do not have permission to create records in the dependent service's module. Contact your administrator.
+"LIMIT_EXCEEDED" indicates that you tried to add more than the allowed limit of 100 records per API call.
+"PROCESSING_ERROR" indicates there was an error while processing your request. Contact your administrator.
+
+INVALID_DATAHTTP 400
+
+Invalid Data
+Resolution: There is a data type mismatch in one of the input keys is specified. Refer to Sample Attributes section above and specify valid input.
+
+INVALID_DATAHTTP 400
+
+Invalid data has been provided for the "name" key in the "skip_feature_execution" property 
+Resolution: Specify the supported value for the "name" key. The supported value is "cadences".
+
+MANDATORY_NOT_FOUNDHTTP 400
+
+The required key is missing in the "skip_feature_execution" property 
+Resolution: Specify the "name" key with the valid value "cadences".
+
+MANDATORY_NOT_FOUNDHTTP 400
+
+Required field not found
+Resolution: One of the input keys has the invalid data type. Refer to Sample Attributes section above and specify valid input.
+
+INVALID_DATAHTTP 400
+
+Invalid Data
+Resolution: You have not specified one or more mandatory fields. Refer to System-defined mandatory fields for each module section above.
+
+DEPENDENT_MISMATCHHTTP 400
+
+In the Appointments module,
+
+You are trying to update one or more fields of a job sheet that is not associated to that appointment.
+Resolution: Update the fields that are related to the right job sheet and the appointment.
+You are trying to create a job sheet for an appointment that is not competed.
+Resolution: Create job sheets only for completed appointments.
+INVALID_URL_PATTERNHTTP 404
+
+Please check if the URL trying to access is a correct one
+Resolution: The request URL specified is incorrect. Specify a valid request URL. Refer to the request URL section above.
+
+OAUTH_SCOPE_MISMATCHHTTP 401
+
+Unauthorized
+Resolution: Client does not have ZohoCRM.modules.{module_name}.CREATE scope. Create a new client with valid scope. Refer to scope section above.
+
+NO_PERMISSIONHTTP 403
+
+Permission denied to add records
+Resolution: The user does not have permission to add records. Contact your system administrator.
+
+INTERNAL_ERRORHTTP 500
+
+Internal Server Error
+Resolution: Unexpected and unhandled exception in Server. Contact support team.
+
+INVALID_REQUEST_METHODHTTP 400
+
+The http request method type is not a valid one
+Resolution: You have specified an invalid HTTP method to access the API URL. Specify a valid request method. Refer to endpoints section above.
+
+AUTHORIZATION_FAILEDHTTP 400
+
+User does not have sufficient privilege to add records
+Resolution: The user does not have the permission to add records. Contact your system administrator.
+
+DUPLICATE_DATAHTTP 400
+
+duplicate data
+Resolution: You have specified a duplicate value for one or more unique fields. The "details" key in the response gives the API name of the field that holds duplicate value in the input and the "module" JSON object gives the API name and ID of the existing record with the same value. Refer to Fields Metadata API to know the unique fields.
+
+LIMIT_EXCEEDEDHTTP 400
+
+Only 50 participants can be added to an event.
+Resolution: You can add only a maximum of 50 participants to an event. Ensure that the number of participants you add does not exceed 50.
+
+RECORD_LOCKEDHTTP 400
+
+Sorry, you cannot perform this operation as the record is locked.
+Resolution: Multiselect Lookup association is restricted if the dependent record is in locked state. Make sure the dependent record is not in locked state and try again.
+
+DEPENDENT_MISMATCHHTTP 400
+
+Call Duration can not be zero.
+Resolution: The duration of an inbound or outbound call cannot be zero. Try again with a non-zero value for Call_Duration.
+
+Sample Input
+{
+	"data": [
+		{
+			
+			"What_Id": {
+				"id": "3652397000006067001"
+			},
+			"$se_module": "Leads",
+			"Status": "In Progress",
+			"Send_Notification_Email": true,
+			"Description": "Design your own layouts that align your business processes precisely. Assign them to profiles appropriately.",
+			
+			
+			"send_notification": true,
+			"Subject": "Subject",
+			"Recurring_Activity":{   
+                "RRULE":"FREQ=DAILY;INTERVAL=1;DTSTART=2022-04-06;UNTIL=2022-04-12"
+                },
+            "Remind_At":{
+             "ALARM":"ACTION=EMAIL;TRIGGER=-P1D;TRIGGER_TIME=22:52"
+            }
+		}
+	]
+}
+
+Show full
+
+Sample Response
+{
+    "data": [
+        {
+            "code": "SUCCESS",
+            "details": {
+                "Modified_Time": "2022-03-13T01:47:05+05:30",
+                "Modified_By": {
+                    "name": "Patricia Boyle",
+                    "id": "3652397000000186017"
+                },
+                "Created_Time": "2022-03-13T01:47:05+05:30",
+                "id": "3652397000007549434",
+                "Created_By": {
+                    "name": "Patricia Boyle",
+                    "id": "3652397000000186017"
+                },
+                "$approval_state": "approved"
+            },
+            "message": "record added",
+            "status": "success"
+        },
+        {
+            "code": "SUCCESS",
+            "details": {
+                "Modified_Time": "2022-03-13T01:47:05+05:30",
+                "Modified_By": {
+                    "name": "Patricia Boyle",
+                    "id": "3652397000000186017"
+                },
+                "Created_Time": "2022-03-13T01:47:05+05:30",
+                "id": "3652397000007549435",
+                "Created_By": {
+                    "name": "Patricia Boyle",
+                    "id": "3652397000000186017"
+                },
+                "$approval_state": "approved"
+            },
+            "message": "record added",
+            "status": "success"
+        },
+        {
+            "code": "SUCCESS",
+            "details": {
+                "Modified_Time": "2022-03-13T01:47:05+05:30",
+                "Modified_By": {
+                    "name": "Patricia Boyle",
+                    "id": "3652397000000186017"
+                },
+                "Created_Time": "2022-03-13T01:47:05+05:30",
+                "id": "3652397000007549436",
+                "Created_By": {
+                    "name": "Patricia Boyle",
+                    "id": "3652397000000186017"
+                },
+                "$approval_state": "approved"
+            },
+            "message": "record added",
+            "status": "success"
+        },
+        {
+            "code": "SUCCESS",
+            "details": {
+                "Modified_Time": "2022-03-13T01:47:05+05:30",
+                "Modified_By": {
+                    "name": "Patricia Boyle",
+                    "id": "3652397000000186017"
+                },
+                "Created_Time": "2022-03-13T01:47:05+05:30",
+                "id": "3652397000007549437",
+                "Created_By": {
+                    "name": "Patricia Boyle",
+                    "id": "3652397000000186017"
+                },
+                "$approval_state": "approved"
+            },
+            "message": "record added",
+            "status": "success"
+        },
+        {
+            "code": "SUCCESS",
+            "details": {
+                "Modified_Time": "2022-03-13T01:47:05+05:30",
+                "Modified_By": {
+                    "name": "Patricia Boyle",
+                    "id": "3652397000000186017"
+                },
+                "Created_Time": "2022-03-13T01:47:05+05:30",
+                "id": "3652397000007549438",
+                "Created_By": {
+                    "name": "Patricia Boyle",
+                    "id": "3652397000000186017"
+                },
+                "$approval_state": "approved"
+            },
+            "message": "record added",
+            "status": "success"
+        },
+        {
+            "code": "SUCCESS",
+            "details": {
+                "Modified_Time": "2022-03-13T01:47:05+05:30",
+                "Modified_By": {
+                    "name": "Patricia Boyle",
+                    "id": "3652397000000186017"
+                },
+                "Created_Time": "2022-03-13T01:47:05+05:30",
+                "id": "3652397000007549439",
+                "Created_By": {
+                    "name": "Patricia Boyle",
+                    "id": "3652397000000186017"
+                },
+                "$approval_state": "approved"
+            },
+            "message": "record added",
+            "status": "success"
+        },
+        {
+            "code": "SUCCESS",
+            "details": {
+                "Modified_Time": "2022-03-13T01:47:05+05:30",
+                "Modified_By": {
+                    "name": "Patricia Boyle",
+                    "id": "3652397000000186017"
+                },
+                "Created_Time": "2022-03-13T01:47:05+05:30",
+                "id": "3652397000007549440",
+                "Created_By": {
+                    "name": "Patricia Boyle",
+                    "id": "3652397000000186017"
+                },
+                "$approval_state": "approved"
+            },
+            "message": "record added",
+            "status": "success"
+        }
+    ]
+}
+
+
+Show full
+
+Further Reading
+Kaizen #8 - Handling Recurrence and Participants in the Events Module via API
+Kaizen #9 - Handling Product Line Items in the Inventory Modules #API
+Kaizen #27 - Layouts in Zoho CRM
+Kaizen #63 - Layout Rules in Zoho CRM
+Kaizen #64 - External Fields and Records APIs
+
+© 2026, Zoho Corporation Pvt. Ltd. All Rights Reserved.
+
+ 
+API Directory
+Postman Collection
+Kaizen Series
+We're Online!
+
+How may I help you today?

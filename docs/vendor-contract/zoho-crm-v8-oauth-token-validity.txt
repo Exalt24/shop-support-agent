@@ -1,0 +1,88 @@
+RETRIEVED: 2026-10-30 with Operations/tools/webread/webread.cjs (real Chromium). Vendor page text, saved as data.
+URL: https://www.zoho.com/crm/developer/docs/api/v8/token-validity.html
+STATUS: 200
+
+Skip to product menu
+Zoho.com
+BiginCRM PlusDeskCampaignsFSMZia AgentsAll Products
+Sign In
+Skip to main content
+Home
+Features
+Resources
+Release Notes
+Community
+Version 2
+Version 2.1
+Version 3
+Version 4
+Version 5
+Version 6
+Version 7
+Version 8
+Overview
+What's New in V8?
+Changelog
+Open API Specification 3.0.0 (OAS) 
+API Directory
+API Collection
+APIs and References 
+OAuth
+OAuth Scopes 
+Authentication
+Overview
+Scopes
+Step1: Registering a Client
+Step2: Making the Authorization Request
+Step3: Generating Tokens
+Step 4: Refreshing your Access Tokens
+Step 5: Revoking Tokens
+Client Credentials
+Incremental Authorization
+Token Validity
+HTTP Request Methods
+Status Codes
+Multi DC Support
+API Limits and Credits
+Compliance
+Zoho CRM SDKs
+Metadata APIs
+Core APIs
+Bulk APIs
+Composite API
+Query API
+Notification APIs
+Home
+OAuth
+Authentication
+Token Validity
+Token Validity
+Grant Token (Authorization code)
+Grant token is a one-time use token and valid for three minutes, by default. If you want to extend the expiry time, choose the required time from the drop-down while generating the token from the API console (applicable only to self-clients).
+You can generate a maximum of 10 grant tokens in a span of 10 minutes per client ID. If the limit is reached, "access_denied" exception will be thrown for the remaining time.
+Access Token
+Each access token is valid for one hour.
+A maximum of 15 active access tokens can be stored per refresh token. When the 16th token is requested, the oldest token is invalidated. When an invalid access token is used, "INVALID_OAUTHTOKEN" exception will be thrown.
+You can generate a maximum of 10 access tokens from a refresh token in a span of 10 minutes.
+
+If the 10-minute throttle limit is reached, "Access Denied" error will be thrown. Reuse valid tokens to avoid this exception.
+
+{
+   "error_description":"You have made too many requests continuously. Please try again after some time.",
+   "error":"Access Denied", 
+   "status":"failure"
+}
+Refresh Token
+Refresh tokens do not expire until a user revokes them.
+A maximum of 20 refresh tokens can be stored per user.
+When you generate the 21st refresh token, the first created refresh token gets invalidated.
+
+© 2026, Zoho Corporation Pvt. Ltd. All Rights Reserved.
+
+ 
+API Directory
+Postman Collection
+Kaizen Series
+We're Online!
+
+How may I help you today?

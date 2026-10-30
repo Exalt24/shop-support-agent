@@ -1,0 +1,93 @@
+RETRIEVED: 2026-10-30 with Operations/tools/webread/webread.cjs (real Chromium). Vendor page text, saved as data.
+URL: https://www.zoho.com/crm/developer/docs/api/v8/multi-dc.html
+STATUS: 200
+
+Zoho.com
+BiginCRM PlusDeskCampaignsFSMZia AgentsAll Products
+Sign In
+Home
+Features
+Resources
+Release Notes
+Community
+Version 2
+Version 2.1
+Version 3
+Version 4
+Version 5
+Version 6
+Version 7
+Version 8
+Overview
+What's New in V8?
+Changelog
+Open API Specification 3.0.0 (OAS) 
+API Directory
+API Collection
+APIs and References 
+OAuth
+OAuth Scopes 
+Authentication
+HTTP Request Methods
+Status Codes
+Multi DC Support
+API Limits and Credits
+Compliance
+Zoho CRM SDKs
+Metadata APIs
+Core APIs
+Bulk APIs
+Composite API
+Query API
+Notification APIs
+Home
+OAuth
+Multi DC Support
+Multi DC Support
+
+Data protection and privacy laws in multiple countries mandate that user data be stored in data centers located on that country's territory. For this reason, Zoho CRM is hosted at multiple data centers (DC). When a client have user audience across multiple DC and need to reach all its users, it needs to enable Multi DC support at Zoho API console to access Zoho's global user base. Each DC exclusively holds the data of users who have registered at that domain. Therefore, the API domain URL varies for each data center.
+
+The various domains and their respective API domain URLs are:
+
+US: https://accounts.zoho.com
+AU: https://accounts.zoho.com.au
+EU: https://accounts.zoho.eu
+IN: https://accounts.zoho.in
+CN: https://accounts.zoho.com.cn
+JP: https://accounts.zoho.jp
+CA(Canada): https://accounts.zohocloud.ca
+
+When you made an Authorization Request using the below authorization URL,
+
+https://accounts.zoho.com/oauth/v2/auth?&scope=ZohoCRM.users.ALL&client_id={client_id}&response_type=code&access_type={offline_or_online}&redirect_uri={redirect_uri}
+
+the response to the request was:
+
+{redirect_uri}?code={grant_token}&location=us&accounts-server=https://accounts.zoho.com
+
+The "location=us" parameter contains the domain of your account. Use this domain in all API endpoints.
+
+Therefore, the domain-specific URL to fetch all CRM Leads is
+
+EU domain: "https://www.zohoapis.eu/crm/v7/Leads"
+CN domain: "https://www.zohoapis.com.cn/crm/v7/Leads"
+
+Note
+
+You must make the authorization request from https://accounts.zoho.com for the EU, AU, and IN domains. After the request is successful, the system automatically redirects you to your domain.
+For the CN domain, make the authorization request from https://accounts.zoho.com.cn.
+
+Enabling Multi DC for a web-based client
+
+After registering your client, you can enable Multi DC in the SETTINGS tab.
+
+With this option, you can decide users from which domain can access the web application.
+
+You can see in the above screenshot that users from Europe, Australia, and India can access the web-based client. The client ID remains the same, and the client secret differs from one DC to another. You can also choose to have the same client secret across multiple domains based on your business needs.
+
+© 2026, Zoho Corporation Pvt. Ltd. All Rights Reserved.
+
+ 
+API Directory
+Postman Collection
+Kaizen Series
