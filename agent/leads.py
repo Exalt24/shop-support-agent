@@ -23,16 +23,16 @@ from dataclasses import dataclass, field
 from datetime import date
 from typing import Callable
 
-from .enquiry import ROUTES, add_business_days, split_name
-from .zoho_crm import CrmClient, ZohoError, scrub
+from .enquiry import ROUTES, EnquiryDesk, add_business_days, split_name
+from .zoho_crm import CrmClient, ZohoCrmClient, ZohoError, ZohoSettings, scrub
 
 
 def idempotency_key(tenant: str, contact: str, day: date) -> str:
     return hashlib.sha256(("%s|%s|%s" % (tenant, contact.strip().lower(), day.isoformat())).encode()).hexdigest()[:32]
 
 
-def _note_key(summary: str) -> str:
-    return hashlib.sha256(summary.encode()).hexdigest()[:12]
+def _note_key(intent: str, summary: str) -> str:
+    return hashlib.sha256(("%s|%s" % (intent, summary)).encode()).hexdigest()[:12]
 
 
 @dataclass
@@ -90,7 +90,7 @@ class LeadCapture:
             day = self._today()
             key = idempotency_key(self._tenant, fields.get("email") or fields.get("phone") or "", day)
             entry = self._ledger.open(key, day)
-            note_key = _note_key(summary)
+            note_key = _note_key(intent, summary)
             did = {"upsert": False, "task": False, "note": False}
             sent = len(record)
             try:
@@ -123,3 +123,21 @@ class LeadCapture:
             else:
                 status = "duplicate"
             return LeadOutcome(status, "SUCCESS", sent if did["upsert"] else 0)
+
+
+def desk_from_env(env: dict[str, str] | None = None, transport=None) -> EnquiryDesk | None:
+    """The desk for serve.py: None unless ZOHO_CLIENT_ID, ZOHO_CLIENT_SECRET and ZOHO_REFRESH_TOKEN are all set, so a deployment
+    with no CRM behaves exactly as before. Also read: ZOHO_REGION (us, au, eu, in, jp, ca, cn), SUPPORT_TENANT, and
+    ZOHO_ASSIGNMENT_RULES as `sales=<lar_id>,service=<lar_id>` (an optional Zoho assignment rule per queue)."""
+    import os
+    env = os.environ if env is None else env
+    if not all(env.get(n) for n in ("ZOHO_CLIENT_ID", "ZOHO_CLIENT_SECRET", "ZOHO_REFRESH_TOKEN")):
+        return None
+    rules = {}
+    for pair in (env.get("ZOHO_ASSIGNMENT_RULES") or "").split(","):
+        queue, _, rule = pair.partition("=")
+        if queue.strip() in {r.queue for r in ROUTES.values()} and rule.strip():
+            rules[queue.strip()] = rule.strip()
+    tenant = env.get("SUPPORT_TENANT") or "default"
+    crm = ZohoCrmClient(ZohoSettings.from_env(env), transport)
+    return EnquiryDesk(LeadCapture(crm, tenant=tenant, assignment_rules=rules), tenant=tenant)

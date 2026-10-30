@@ -80,7 +80,10 @@ class SupportAgent:
 
     def handle(self, message: str, email: str, conversation_id: str | None = None) -> Result:
         res = self._run(message, email, conversation_id)
-        self._capture_lead(res, email, conversation_id)
+        try:
+            self._capture_lead(res, email, conversation_id)
+        except Exception as e:  # the lead is a convenience for the team: whatever goes wrong, the reply is already final
+            res.steps.append("lead capture error: %s (the reply is unchanged)" % type(e).__name__)
         if self._audit:
             record = {
                 "customer": mask_email(email), "message_chars": len(message), "intent": res.intent,
@@ -193,7 +196,8 @@ class SupportAgent:
             turn = self._enquiry.converse(key, message, email, triage, routing, res.steps)
             if turn:  # a lead dialogue: the reply is written in code, so it needs no facts and no guard
                 res.reply = turn.reply
-                res.enquiry.consent, res.enquiry.consent_asked = turn.consent, turn.consent_asked
+                lead = self._enquiry.route({"enquiry_intent": turn.intent}, res.intent)  # the conversation's intent, not this message's
+                res.enquiry = EnquiryInfo(lead.intent, lead.route.queue, lead.follow_up, turn.consent, turn.consent_asked)
                 return res
 
         # 2b. what we remember about this customer: hints and one pointer, never facts

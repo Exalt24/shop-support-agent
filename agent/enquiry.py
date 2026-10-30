@@ -114,10 +114,6 @@ NOT_NAMES = frozenset({"yes", "no", "hi", "hello", "hey", "sir", "madam", "ok", 
 MIN_PHONE_DIGITS, MAX_PHONE_DIGITS = 9, 12  # 13 digits and up is a possible card number (memory.CARD_RE), so it is refused
 
 
-def strip_cards(text: str) -> str:
-    return CARD_RE.sub(" ", text)
-
-
 def valid_email(value: str) -> bool:
     return bool(EMAIL_OK.match(value)) and len(value) <= 254 and ".." not in value
 
@@ -168,11 +164,11 @@ def read_fields(lead: object, message: str, session_email: str) -> tuple[dict[st
     (the one the chat was opened with) counts as given. Returns the values that passed and short notes (no values) on what
     was refused."""
     proposal = lead if isinstance(lead, dict) else {}
-    said = strip_cards(message)
+    said = message
     out: dict[str, str] = {}
     notes: list[str] = []
     if CARD_RE.search(message):
-        notes.append("a card-like number in the message was removed before anything was read from it")
+        notes.append("a card-like number in the message was ignored: never read as a phone number, never copied anywhere")
 
     emails = {e.lower(): e for e in EMAIL_IN_TEXT.findall(said) if valid_email(e)}
     if session_email and valid_email(session_email.strip()):
@@ -250,6 +246,7 @@ class EnquiryState:
     summary: str = ""
     consent_asked: bool = False
     consent: bool | None = None
+    session_email_read: bool = False  # the chat's own email is a candidate once; a conflict seen then is not undone by a later turn
     confirmed: bool = False
     captured: bool = False
     attempts: int = 0
@@ -297,6 +294,7 @@ class EnquiryInfo:
 @dataclass(frozen=True)
 class Turn:
     reply: str
+    intent: str  # the lead intent the conversation is about, which may differ from this one message's ("yes" is "general")
     consent: bool
     consent_asked: bool
 
@@ -367,7 +365,8 @@ class EnquiryDesk:
             state.intent = routing.intent
         elif not (state.intent in LEAD_INTENTS and routing.intent == "general"):
             return None  # an order or product question mid-conversation is answered normally; the lead state waits
-        team = TEAM_WORD[ROUTES[state.intent].queue]
+        intent = state.intent
+        team = TEAM_WORD[ROUTES[intent].queue]
 
         # consent counts only if the question was asked in an EARLIER turn; a yes volunteered before it is not an answer to it
         asked_before = state.consent_asked
@@ -376,7 +375,8 @@ class EnquiryDesk:
                 state.consent = True
             elif is_explicit_no(message):
                 state.consent = False
-        found, notes = read_fields(triage.get("lead"), message, email)
+        found, notes = read_fields(triage.get("lead"), message, "" if state.session_email_read else email)
+        state.session_email_read = True
         steps.extend("lead: " + n for n in notes)
         state.fields.update(found)
 
@@ -396,7 +396,7 @@ class EnquiryDesk:
             reply = unclear(team)
         steps.append("lead: %s, consent %s" % ("details complete" if complete else "details missing",
                                                {True: "given", False: "refused", None: "not given"}[state.consent]))
-        return Turn(reply, consent=state.consent is True, consent_asked=state.consent_asked)
+        return Turn(reply, intent, consent=state.consent is True, consent_asked=state.consent_asked)
 
     def ready(self, key: str) -> EnquiryState | None:
         """The state if a lead may be captured now: a lead intent, a name and a contact, an explicit yes, not captured yet."""
