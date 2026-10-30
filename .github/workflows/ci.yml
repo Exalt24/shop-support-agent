@@ -37,9 +37,17 @@ jobs:
           cache: pip
       - name: Install
         run: pip install -r requirements.txt
+      # Chromium for the chat widget tests (tests/test_widget_browser.py). Without it those tests skip on a laptop.
+      - name: Install Chromium
+        run: python -m playwright install --with-deps chromium
       # The engine and the console suites run as two commands: their two conftest.py files collide in one run.
       - name: Engine tests (scripted model, fake shop, fake Zoho)
         run: python -m pytest tests -q
+      # The widget tests again, named, with SHOP_SUPPORT_REQUIRE_BROWSER set so a missing Chromium FAILS here instead of skipping.
+      - name: Chat widget on two demo sites (real Chromium, real server, fake Zoho)
+        env:
+          SHOP_SUPPORT_REQUIRE_BROWSER: "1"
+        run: python -m pytest tests/test_widget_browser.py -q -rs
       - name: Console schema, roles and forced row level security
         run: python -m console_api.migrate --reset
       - name: Console tests (isolation, roles, login, memory)

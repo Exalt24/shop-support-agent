@@ -1,0 +1,24 @@
+{
+  "tenants": [
+    {
+      "id": "harbour-heating",
+      "site_key": "pk_harbour_demo_01",
+      "theme": {"name": "Harbour Heating", "initials": "HH", "primary": "#0b5d7a", "on_primary": "#ffffff"},
+      "greeting": "Hi, I'm the Harbour Heating assistant. Ask about a boiler service, a repair or a quote.",
+      "allowed_origins": ["http://127.0.0.1:8101"],
+      "routing": {"sales_enquiry": "sales", "quote_request": "estimating", "service_request": "dispatch"},
+      "assignment_rules": {"estimating": "LAR-HARBOUR-ESTIMATING", "dispatch": "LAR-HARBOUR-DISPATCH"},
+      "zoho": "harbour"
+    },
+    {
+      "id": "loomhouse-homewares",
+      "site_key": "pk_loomhouse_demo_02",
+      "theme": {"name": "Loomhouse Homewares", "initials": "LH", "primary": "#8a2c4a", "on_primary": "#ffffff"},
+      "greeting": "Welcome to Loomhouse. Ask about bulk orders, trade pricing or a delivery problem.",
+      "allowed_origins": ["http://127.0.0.1:8102"],
+      "routing": {"sales_enquiry": "web-sales", "quote_request": "trade-accounts", "service_request": "customer-care"},
+      "assignment_rules": {"trade-accounts": "LAR-LOOMHOUSE-TRADE"},
+      "zoho": "loomhouse"
+    }
+  ]
+}

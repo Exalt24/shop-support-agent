@@ -7,6 +7,7 @@ different failure mode from red.
 """
 from __future__ import annotations
 
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -152,16 +153,89 @@ MUTANTS = [
      "a vendor message that echoes an email goes into the audit in clear"),
     ("agent/zoho_crm.py", "    \"au\": (\"https://accounts.zoho.com.au\", \"https://www.zohoapis.com.au\"),", "    \"au\": (\"https://accounts.zoho.com\", \"https://www.zohoapis.com\"),",
      "an Australian account is sent to the US data centre"),
+    # ---- the chat widget server: origins, tenants, signed ids, limits, size caps, text only ------------------------------
+    ("agent/chat_api.py", "            if not self.registry.origin_known(origin):\n                return self._answer(403, {\"error\": \"origin_not_allowed\"})\n            ok, retry = self.ip_limit.hit(",
+     "            if False:\n                return self._answer(403, {\"error\": \"origin_not_allowed\"})\n            ok, retry = self.ip_limit.hit(",
+     "a page on any website can post to the chat (the origin check on the message route removed)"),
+    ("agent/chat_api.py", "            if origin not in tenant.allowed_origins:\n                return self._answer(403, {\"error\": \"origin_not_allowed\"}, origin)\n            if req.conversation_id is None:",
+     "            if False:\n                return self._answer(403, {\"error\": \"origin_not_allowed\"}, origin)\n            if req.conversation_id is None:",
+     "site A's page can talk to site B's chat by quoting B's public key"),
+    ("agent/chat_api.py", "            if origin not in tenant.allowed_origins:\n                return self._answer(403, {\"error\": \"origin_not_allowed\"}, origin)\n            return self._answer(200, tenant.public(), origin)",
+     "            if False:\n                return self._answer(403, {\"error\": \"origin_not_allowed\"}, origin)\n            return self._answer(200, tenant.public(), origin)",
+     "site A's page can read site B's theme and greeting by quoting B's public key"),
+    ("agent/chat_api.py", "            tenant = self.registry.by_site_key(req.site)", "            tenant = self.registry.tenants[0]",
+     "every visitor lands on the first tenant whatever site key the page sent"),
+    ("agent/chat_api.py", "            conversation = self.signer.verify(token, tenant.id)", "            conversation = token",
+     "a visitor can attach to another conversation by sending any id"),
+    ("agent/chat_guard.py", "        if not hmac.compare_digest(sig.encode(\"utf-8\"), self._sign(\".\".join(parts[:3])).encode(\"utf-8\")):", "        if False:",
+     "a conversation id the visitor made up or edited is accepted (signature unchecked)"),
+    ("agent/chat_guard.py", "        if tenant != tenant_id or not issued.isdigit()", "        if not issued.isdigit()",
+     "an id issued for one site is accepted on another"),
+    ("agent/chat_guard.py", "or self._now() - int(issued) > self._max_age:", "or False:",
+     "a conversation id never expires"),
+    ("agent/chat_guard.py", "        if len(q) >= self.limit:", "        if False:",
+     "a visitor can send messages without limit"),
+    ("agent/chat_api.py", "            ok, retry = self.ip_limit.hit(\"ip:\" + self._ip(request))", "            ok, retry = True, 0",
+     "one address can flood the chat endpoint (per-IP limit removed)"),
+    ("agent/chat_api.py", "            ok, retry = self.conversation_limit.hit(\"%s:%s\" % (tenant.id, conversation))", "            ok, retry = True, 0",
+     "one conversation can flood the model (per-conversation limit removed)"),
+    ("agent/chat_guard.py", "    if trust_proxy and forwarded_for:", "    if forwarded_for:",
+     "a visitor dodges the per-IP limit by sending a forged X-Forwarded-For"),
+    ("agent/chat_guard.py", "        last = forwarded_for.split(\",\")[-1].strip()", "        last = forwarded_for.split(\",\")[0].strip()",
+     "behind a proxy the visitor's own forged entry is taken instead of the one the proxy wrote"),
+    ("agent/chat_guard.py", "        if len(out) > limit:", "        if False:",
+     "a chunked body of any size is read into memory"),
+    ("agent/chat_api.py", "            if declared and declared.isdigit() and int(declared) > MAX_BODY_BYTES:", "            if False:",
+     "a body that declares itself huge is read before it is refused"),
+    ("agent/chat_api.py", "MAX_MESSAGE_CHARS = 1000", "MAX_MESSAGE_CHARS = 10 ** 7",
+     "a message of any length reaches the model"),
+    ("agent/chat_api.py", "    model_config = ConfigDict(extra=\"forbid\")", "    model_config = ConfigDict(extra=\"ignore\")",
+     "a request with fields the API does not have is accepted"),
+    ("agent/chat_guard.py", "    return _CONTROL.sub(\"\", str(value))[:limit]", "    return str(value)[:limit]",
+     "control characters in a reply reach the visitor's screen"),
+    ("agent/chat_guard.py", "    return _CONTROL.sub(\"\", str(value))[:limit]", "    return _CONTROL.sub(\"\", str(value))",
+     "a reply of any length reaches the visitor's screen"),
+    ("agent/chat_api.py", "headers.update({\"Access-Control-Allow-Origin\": origin, \"Vary\": \"Origin\"})", "headers.update({\"Access-Control-Allow-Origin\": \"*\", \"Vary\": \"Origin\"})",
+     "any website can read the chat's answers (CORS opened to every origin)"),
+    ("agent/chat_api.py", "            awaiting = bool(result.enquiry and result.enquiry.awaiting_consent)", "            awaiting = False",
+     "the yes and no buttons never appear, so the consent question has no button answer"),
+    ("agent/leads.py", "        route = self._routes[intent]", "        route = ROUTES[intent]",
+     "a lead for site B lands in the default owner queue instead of site B's own"),
+    ("agent/enquiry.py", "        team = team_word(self.routes[intent].queue)", "        team = team_word(ROUTES[intent].queue)",
+     "the visitor of site B is told the default team will call, not site B's"),
+    ("agent/tenants.py", "    return Tenant(tid, key, _text(theme, \"name\", 2, 40, where), initials, theme[\"primary\"], theme[\"on_primary\"],", "    return Tenant(tid, key, _text(theme, \"name\", 2, 40, where), initials, \"#000000\", theme[\"on_primary\"],",
+     "a tenant's own colour is ignored"),
+    ("agent/tenants.py", "        n = normalise_origin(o)\n        if not n:", "        n = str(o).strip().lower()\n        if not n:",
+     "a wildcard or a path is accepted as an allowed origin"),
+    ("widget/widget.js", "      m.appendChild(document.createTextNode(String(text))); // text node: markup in a message is shown, never run",
+     "      m.insertAdjacentHTML(\"beforeend\", String(text)); // BROKEN ON PURPOSE",
+     "markup in a reply or in the visitor's own words runs inside the page"),
+    ("widget/widget.js", "yes.addEventListener(\"click\", function () { submit(YES_TEXT, false, true); });",
+     "yes.addEventListener(\"click\", function () { submit(NO_TEXT, false, true); });",
+     "the yes button sends a no"),
 ]
 
 
-def run_suite() -> tuple[str, str]:
+# The two slow files (a real Chromium, a real child process over stdio) run only for a mutant the fast tests did not catch.
+SLOW = ["tests/test_widget_browser.py"]
+
+
+def run_pytest(args: list[str], retries: int = 2) -> tuple[str, str]:
     try:
-        p = subprocess.run([sys.executable, "-m", "pytest", "tests", "-q", "-x", "-p", "no:cacheprovider"],
-                           cwd=ROOT, capture_output=True, text=True, timeout=180)
+        p = subprocess.run([sys.executable, "-m", "pytest", *args, "-q", "-x", "-rf", "-p", "no:cacheprovider"],
+                           cwd=ROOT, capture_output=True, text=True, encoding="utf-8", timeout=180)
     except subprocess.TimeoutExpired:
         return "hang", ""
+    if p.returncode != 0 and "WinError 10055" in p.stdout and retries:
+        return run_pytest(args, retries - 1)  # Windows ran out of socket buffers (many test runs in a row): not the mutant's doing, so not a catch
     return ("green" if p.returncode == 0 else "red"), p.stdout[-600:]
+
+
+def run_suite() -> tuple[str, str]:
+    outcome, out = run_pytest(["tests", *["--ignore=" + f for f in SLOW]])
+    if outcome != "green":
+        return outcome, out
+    return run_pytest(SLOW)
 
 
 def main() -> int:
@@ -169,8 +243,12 @@ def main() -> int:
     if baseline != "green":
         print("BASELINE IS NOT GREEN, mutation results would mean nothing\n" + out)
         return 2
-    survivors = []
+    survivors, ran = [], 0
+    only = sys.argv[1] if len(sys.argv) > 1 else ""  # an optional filter: only mutants whose file or consequence contains this text
     for rel, old, new, consequence in MUTANTS:
+        if only and only not in rel and only not in consequence:
+            continue
+        ran += 1
         path = ROOT / rel
         original = path.read_bytes()
         text = original.decode("utf-8")
@@ -179,20 +257,22 @@ def main() -> int:
             return 2
         try:
             path.write_bytes(text.replace(old, new).encode("utf-8"))
-            outcome, _ = run_suite()
+            outcome, tail = run_suite()
         finally:
             path.write_bytes(original)
         if path.read_bytes() != original:
             print("FAIL  %s was not restored byte-exact" % rel)
             return 2
         caught = outcome in ("red", "hang")
-        print("%-6s %-22s %s" % ("caught" if caught else "ALIVE", rel, consequence) + ("  [suite hung]" if outcome == "hang" else ""))
+        failed = re.search(r"^FAILED (\S+)", tail, re.M)  # which test caught it, so a catch by something unrelated is visible
+        print("%-6s %-22s %s" % ("caught" if caught else "ALIVE", rel, consequence) + ("  [suite hung]" if outcome == "hang" else "")
+              + ("  <- " + failed.group(1).split("::")[-1][:60] if caught and failed else ""))
         if not caught:
             survivors.append(rel + ": " + consequence)
     if survivors:
         print("\n%d mutant(s) survived: a guard with no test behind it." % len(survivors))
         return 1
-    print("\nAll %d mutants caught, every file restored byte-exact." % len(MUTANTS))
+    print("\nAll %d mutants caught, every file restored byte-exact." % ran)
     return 0
 
 

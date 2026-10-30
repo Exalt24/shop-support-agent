@@ -197,7 +197,8 @@ class SupportAgent:
             if turn:  # a lead dialogue: the reply is written in code, so it needs no facts and no guard
                 res.reply = turn.reply
                 lead = self._enquiry.route({"enquiry_intent": turn.intent}, res.intent)  # the conversation's intent, not this message's
-                res.enquiry = EnquiryInfo(lead.intent, lead.route.queue, lead.follow_up, turn.consent, turn.consent_asked)
+                res.enquiry = EnquiryInfo(lead.intent, lead.route.queue, lead.follow_up, turn.consent, turn.consent_asked,
+                                        turn.awaiting_consent)
                 return res
 
         # 2b. what we remember about this customer: hints and one pointer, never facts

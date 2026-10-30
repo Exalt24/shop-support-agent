@@ -17,7 +17,7 @@ import hashlib
 import re
 import threading
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date, timedelta
 
 from .memory import CARD_RE, SECRET_RE
@@ -51,6 +51,20 @@ assert set(ROUTES) == set(INTENTS)
 TEAM_WORD = {"sales": "sales", "service": "service", "support": "support"}
 
 
+def team_word(queue: str) -> str:
+    """How the visitor hears a queue name: the three default queues by their word, a tenant's own queue by its name."""
+    return TEAM_WORD.get(queue) or queue.replace("-", " ")
+
+
+def routes_with_queues(queues: dict[str, str]) -> dict[str, Route]:
+    """A tenant's routing table: the default routes with the owner queue of some intents replaced. Only the queue changes. The
+    follow-up subject, due days and priority stay the ones above, and an intent that is not listed keeps its default queue."""
+    unknown = set(queues) - set(ROUTES)
+    if unknown:
+        raise ValueError("not an intent: " + ", ".join(sorted(unknown)))
+    return {i: (replace(r, queue=queues[i]) if i in queues else r) for i, r in ROUTES.items()}
+
+
 @dataclass(frozen=True)
 class Routing:
     intent: str
@@ -65,7 +79,7 @@ class Routing:
         return "%s task due in %d business day%s" % (r.queue, r.due_days, "" if r.due_days == 1 else "s")
 
 
-def route_enquiry(triage: dict, legacy_intent: str) -> Routing:
+def route_enquiry(triage: dict, legacy_intent: str, routes: dict[str, Route] = ROUTES) -> Routing:
     """Validate the model's proposal against INTENTS. No proposal: fall back to the old triage intent. A proposal that is
     not on the list: human_needed, because a value nobody planned for is not something to route on a guess."""
     proposed = triage.get("enquiry_intent")
@@ -75,7 +89,7 @@ def route_enquiry(triage: dict, legacy_intent: str) -> Routing:
         intent, step = proposed.strip().lower(), "routing: model proposed a listed intent"
     else:
         intent, step = "human_needed", "routing: the model proposed a value that is not on the list, treated as human_needed"
-    return Routing(intent, ROUTES[intent], step + ", queue=%s" % ROUTES[intent].queue)
+    return Routing(intent, routes[intent], step + ", queue=%s" % routes[intent].queue)
 
 
 def add_business_days(start: date, days: int) -> date:
@@ -285,6 +299,7 @@ class EnquiryInfo:
     follow_up: str
     consent: bool = False
     consent_asked: bool = False
+    awaiting_consent: bool = False  # the question is out and not answered yet: a chat widget shows its yes and no buttons
     captured: bool = False
     lead_status: str = "none"
     vendor_code: str | None = None
@@ -297,6 +312,7 @@ class Turn:
     intent: str  # the lead intent the conversation is about, which may differ from this one message's ("yes" is "general")
     consent: bool
     consent_asked: bool
+    awaiting_consent: bool = False
 
 
 # -- the words said to the visitor ---------------------------------------------------------------------------------------------
@@ -342,15 +358,17 @@ class EnquiryDesk:
     """The conversation side of an enquiry: classification lives in route_enquiry, this holds the lead dialogue. The capture
     itself (agent/leads.py) is a separate object so it can be tested, and fail, on its own."""
 
-    def __init__(self, capture, *, tenant: str = "default", tracker: EnquiryTracker | None = None):
+    def __init__(self, capture, *, tenant: str = "default", tracker: EnquiryTracker | None = None,
+                 routes: dict[str, Route] | None = None):
         self.capture, self.tenant, self.tracker = capture, tenant, tracker or EnquiryTracker()
+        self.routes = routes or ROUTES  # a tenant can send the same intent to its own owner queue
         self.max_attempts = 3
 
     def key(self, conversation_id: str | None, email: str) -> str:
         return conversation_key(self.tenant, conversation_id, email)
 
     def route(self, triage: dict, legacy_intent: str) -> Routing:
-        return route_enquiry(triage, legacy_intent)
+        return route_enquiry(triage, legacy_intent, self.routes)
 
     def converse(self, key: str, message: str, email: str, triage: dict, routing: Routing, steps: list[str]) -> Turn | None:
         """The reply for a lead turn, or None when this turn is not part of a lead conversation (the normal flow answers)."""
@@ -366,7 +384,7 @@ class EnquiryDesk:
         elif not (state.intent in LEAD_INTENTS and routing.intent == "general"):
             return None  # an order or product question mid-conversation is answered normally; the lead state waits
         intent = state.intent
-        team = TEAM_WORD[ROUTES[intent].queue]
+        team = team_word(self.routes[intent].queue)
 
         # consent counts only if the question was asked in an EARLIER turn; a yes volunteered before it is not an answer to it
         asked_before = state.consent_asked
@@ -396,7 +414,8 @@ class EnquiryDesk:
             reply = unclear(team)
         steps.append("lead: %s, consent %s" % ("details complete" if complete else "details missing",
                                                {True: "given", False: "refused", None: "not given"}[state.consent]))
-        return Turn(reply, intent, consent=state.consent is True, consent_asked=state.consent_asked)
+        return Turn(reply, intent, consent=state.consent is True, consent_asked=state.consent_asked,
+                    awaiting_consent=state.consent_asked and state.consent is None)
 
     def ready(self, key: str) -> EnquiryState | None:
         """The state if a lead may be captured now: a lead intent, a name and a contact, an explicit yes, not captured yet."""

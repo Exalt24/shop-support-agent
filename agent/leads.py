@@ -23,7 +23,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from typing import Callable
 
-from .enquiry import ROUTES, EnquiryDesk, add_business_days, split_name
+from .enquiry import ROUTES, EnquiryDesk, Route, add_business_days, split_name
 from .zoho_crm import CrmClient, ZohoCrmClient, ZohoError, ZohoSettings, scrub
 
 
@@ -67,8 +67,10 @@ class LeadOutcome:
 
 class LeadCapture:
     def __init__(self, crm: CrmClient, ledger: LeadLedger | None = None, *, tenant: str = "default",
-                 assignment_rules: dict[str, str] | None = None, today: Callable[[], date] = date.today):
+                 assignment_rules: dict[str, str] | None = None, today: Callable[[], date] = date.today,
+                 routes: dict[str, Route] | None = None):
         self._crm, self._ledger, self._tenant = crm, ledger or LeadLedger(), tenant
+        self._routes = routes or ROUTES  # the tenant's own owner queues; the default table when none are given
         self._rules, self._today = assignment_rules or {}, today
         self._lock = threading.Lock()
 
@@ -85,7 +87,7 @@ class LeadCapture:
 
     def capture(self, fields: dict[str, str], intent: str, summary: str) -> LeadOutcome:
         record = self.lead_record(fields)
-        route = ROUTES[intent]
+        route = self._routes[intent]
         with self._lock:  # one capture at a time: two identical requests cannot both pass the ledger check
             day = self._today()
             key = idempotency_key(self._tenant, fields.get("email") or fields.get("phone") or "", day)
