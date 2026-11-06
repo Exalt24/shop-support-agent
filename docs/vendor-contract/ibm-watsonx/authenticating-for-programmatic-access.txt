@@ -1,0 +1,167 @@
+URL: https://dataplatform.cloud.ibm.com/docs/content/analyze-data/ml-authentication.html
+STATUS: 200
+
+IBM Cloud Pak for Data
+Log In
+Sign Up
+Docs
+/
+Find information
+Documentation home
+Overview of IBM Cloud Pak for Data as a Service
+Services
+Getting started and tutorials
+Projects
+Deployment spaces
+Preparing data
+Data science solutions
+Deploying AI
+Data governance
+AI governance
+Troubleshooting
+Administration
+Glossary
+Authenticating for programmatic access
+Last updated: Jul 05, 2025
+
+To use Watson Machine Learning with the Python client library or the REST API, you must authenticate to secure your work. Learn about the different ways to authenticate and how to apply them to the service of your choosing.
+
+You use IBM Cloud® Identity and Access Management (IAM) to make authenticated requests to public IBM Watson™ services. With IAM access policies, you can assign access to more than one resource from a single key. In addition, a user, service ID, and service instance can hold multiple API keys.
+
+Security overview
+
+Refer to the section that describes your security needs.
+
+Authentication credentials
+Python client
+Rest API
+Authentication credentials
+
+These terms relate to the security requirements described in this topic.
+
+API keys allow you to easily authenticate when you are using the Python client or APIs and can be used across multiple services. API Keys are considered confidential because they are used to grant access. Treat all API keys as you would a password because anyone with your API key can access your service.
+An IAM token is an authentication token that is required to access IBM Cloud services. You can generate a token by using your API key in the token request. For details on using IAM tokens, refer to Authenticating to Watson Machine Learning API.
+
+To authenticate to a service through its API, pass your credentials to the API. You can pass either a bearer token in an authorization header or an API key.
+
+Generating an API key
+
+To generate an API key from your IBM Cloud user account, go to Manage access and users - API Keys and create or select an API key for your user account.
+
+You can also generate and rotate API keys from Profile and settings > User API key. For more information, see Managing the user API key.
+
+Authenticate with an IAM token
+
+IAM tokens are temporary security credentials that are valid for 60 minutes. When a token expires, you generate a new one. Tokens can be useful for temporary access to resources. For more information, see Generating an IBM Cloud IAM token by using an API key.
+
+Getting a service-level token
+
+You can also authenticate with a service-level token. To generate a service-level token:
+
+Refer to the IBM Cloud instructions for creating a Service ID.
+Generate an API key for that Service ID.
+Open the space where you plan to keep your deployable assets.
+On the Access control tab, add the Service ID and assign an access role of Admin or Editor.
+
+You can use the service-level token with your API scoring requests.
+
+Interfaces
+Python client
+REST API
+
+ 
+
+Python client
+
+Refer to: watsonx.ai Python client 
+
+To create an instance of the watsonx.ai Python client object, you need to pass your credentials to Watson Machine Learning API client.
+
+wml_credentials = {
+                  "apikey":"example-key-value",
+                  "url": " https://HIJKL"
+}
+from ibm_watson_machine_learning import APIClient
+wml_client = APIClient(wml_credentials)
+
+Note:
+
+Even though you do not explicitly provide an instance_id, it will be picked up from the associated space or project for billing purposes. For details on plans and billing for Watson Machine Learning services, refer to Watson Machine Learning plans and runtime usage.
+
+Refer to sample notebooks for examples of how to authenticate and then score a model by using the Python client.
+
+REST API
+
+Refer to: Watson Machine Learning REST API 
+
+To use the Watson Machine Learning REST API, you must obtain an IBM Cloud Identity and Access Management (IAM) token. In this example, you would supply your API key in place of the example key.
+
+cURL example
+curl -k -X POST \
+--header "Content-Type: application/x-www-form-urlencoded" \
+--header "Accept: application/json" \
+--data-urlencode "grant_type=urn:ibm:params:oauth:grant-type:apikey" \
+--data-urlencode "apikey=123456789" \
+"https://iam.cloud.ibm.com/identity/token"
+
+
+The obtained IAM token needs to be prefixed with the word Bearer, and passed in the Authorization header for API calls.
+
+Python example
+import requests
+
+# Paste your Watson Machine Learning service apikey here
+
+apikey = "example-key-value"
+
+# Get an IAM token from IBM Cloud
+url     = "https://iam.cloud.ibm.com/identity/token"
+headers = { "Content-Type" : "application/x-www-form-urlencoded" }
+data    = "apikey=" + apikey + "&grant_type=urn:ibm:params:oauth:grant-type:apikey"
+response  = requests.post( url, headers=headers, data=data, auth=apikey )
+iam_token = response.json()["access_token"]
+
+Node.js example
+var btoa    = require( "btoa" );
+var request = require( 'request' );
+
+// Paste your Watson Machine Learning service apikey here
+var apikey = "example-key-value";
+
+// Use this code as written to get an access token from IBM Cloud REST API
+//
+var IBM_Cloud_IAM_uid = "bx";
+var IBM_Cloud_IAM_pwd = "bx";
+
+var options = { url     : "https://iam.cloud.ibm.com/identity/token",
+                headers : { "Content-Type"  : "application/x-www-form-urlencoded",
+                            "Authorization" : "Basic " + btoa( IBM_Cloud_IAM_uid + ":" + IBM_Cloud_IAM_pwd ) },
+                body    : "apikey=" + apikey + "&grant_type=urn:ibm:params:oauth:grant-type:apikey" };
+
+request.post( options, function( error, response, body )
+{
+    var iam_token = JSON.parse( body )["access_token"];
+} );
+
+Show more
+
+Parent topic: Managing predictive deployments
+
+Was the topic helpful?
+Yes
+No
+Missing information
+Incorrect information
+Confusing information
+Broken link
+Other
+0/1000
+Send comment
+Contact IBM
+Terms of Use
+Privacy
+Accessibility
+On this page
+Security overview
+Authentication credentials
+Interfaces

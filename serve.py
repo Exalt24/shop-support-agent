@@ -11,7 +11,8 @@ With ZOHO_CLIENT_ID, ZOHO_CLIENT_SECRET and ZOHO_REFRESH_TOKEN set (see docs/enq
 captures consented leads, and the answer carries an "enquiry" object. Send the same conversation_id on every turn of a chat.
 
 The model is Groq unless LLM_PROVIDER=anthropic, which uses the Claude API (ANTHROPIC_API_KEY, model claude-sonnet-5-5; see
-README.md, "Claude API provider").
+README.md, "Claude API provider"), or LLM_PROVIDER=watsonx, which uses IBM watsonx.ai (WATSONX_API_KEY and WATSONX_PROJECT_ID;
+see docs/watsonx.md).
 
 If SUPPORT_AGENT_KEY is set, requests must carry it in X-Agent-Key. The agent reads orders, so the
 endpoint is not left open by default on any machine that sets a key.

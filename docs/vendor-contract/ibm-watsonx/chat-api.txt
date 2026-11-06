@@ -1,0 +1,434 @@
+URL: https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-api-chat.html?context=wx
+STATUS: 200
+
+IBM watsonx
+Log In
+Sign Up
+Docs
+/
+Gen AI solutions
+/
+Building prompts
+/
+Generating text with code
+/
+Chat
+Find information
+Documentation home
+Overview of IBM watsonx
+Developer Hub
+Planning an AI solution
+Getting started and tutorials
+Gen AI solutions
+Terms of use
+Tokens
+Supported foundation models
+Building prompts
+Prompt tips
+Model parameters for prompting
+Filtering model content with AI guardrails
+Sample prompts
+Prompt Lab
+Generating text with code
+Text generation
+Chat
+AI agents
+Coding generative AI solutions
+Forecast future values
+Retrieval-augmented generation
+Projects
+Deployment spaces
+Preparing data
+Data science solutions
+Deploying AI
+Governing AI
+Administration
+Glossary
+Adding generative chat function to your applications with the chat API
+Last updated: Aug 12, 2026
+
+Use the watsonx.ai chat API to build conversational workflows that use foundation models to generate answers.
+
+Required permissions
+To run prompts, you must have the Admin or Editor role in a project.
+Required credentials
+You must generate credentials to authenticate with watsonx.ai APIs. For details, see Generating a bearer token.
+Ways to develop
+
+You must generate credentials to authenticate with watsonx.ai APIs. For details, see Generating a bearer token.
+
+You can build chat workflows by using these programming methods:
+
+REST API
+Python
+Node.js 
+LangChain (Python) 
+LangChain (JS) 
+
+Alternatively, you can use graphical tools from the watsonx.ai UI to build chat workflows. See Chatting with documents and media files.
+
+Overview
+
+The watsonx.ai chat API implements methods for interacting with foundation models in a conversational way. You can identify different message types, such as a system prompt, user inputs, and foundation model outputs, including user-specific follow-up questions and answers. Use the chat API to mimic the workflow that you get when you interact with a foundation model from the Prompt Lab in chat mode.
+
+Supported foundation models
+
+To programmatically get a list of foundation models that support the chat API, specify the filters=function_text_chat parameter when you submit a List the available foundation models method request as follows:
+
+curl -X GET \
+  'https://<region>.<cloud-provider-domain>/ml/v1/foundation_model_specs?version=2024-10-10&filters=function_text_chat'
+
+
+For API method details, see the watsonx.ai API reference documentation.
+
+For more information about foundation models that support tool-calling, see Building agent-driven workflows with the chat API.
+
+You can also use the chat API for building chat workflows from a custom foundation model. For details, see Inferencing deployed custom foundation models.
+
+REST API
+
+You can use the chat API for the following types of tasks:
+
+Have a multiple-user conversation with a foundation model
+Have a conversation with a foundation model with reasoning capabilities
+Chat with a foundation model about images
+Important:
+
+The role parameter used in the chat session messages is case sensitive. Make sure to set the role in lower case.
+
+For API method details, see the watsonx.ai API reference documentation.
+
+Example of a multiple-user chat
+
+The following command submits a request to chat with the foundation model.
+
+Add your own bearer token and project ID in the example.
+
+curl --request POST 'https://<region>.<cloud-provider-domain>/ml/v1/text/chat?version=2024-10-08'
+-H 'Authorization: Bearer ${TOKEN}'
+-H 'Content-Type: application/json'
+-H 'Accept: application/json'
+-d '{
+  "model_id": "meta-llama/llama-3-8b-instruct",
+  "project_id": "<project ID>",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a helpful assistant that avoids causing harm. When you do not know the answer to a question, you say 'I do not know'."
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "I have a question about Earth. How many moons does the Earth have?"
+        }
+      ]
+    },
+    {
+      "role": "assistant",
+      "content": "The Earth has one natural satellite, which is simply called the Moon."
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "What about Saturn?"
+        }
+      ]
+    }
+  ],
+  "max_tokens": 300,
+  "time_limit": 1000
+}'
+
+
+Show more
+
+Sample response:
+
+{
+  "id": "chat-45932923166b4607bde75207a0a9f5d4",
+  "model_id": "meta-llama/llama-3-8b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "Saturn has a total of 82 confirmed moons!"
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "created": 1728404199,
+  "created_at": "2024-10-08T16:16:40.102Z",
+  "usage": {
+    "completion_tokens": 12,
+    "prompt_tokens": 87,
+    "total_tokens": 99
+  },
+  "system": {
+    "warnings": [
+      {
+        "message": "This model is a Non-IBM Product governed by a third-party license that may
+        impose use restrictions and other obligations. By using this model you agree to its terms as
+        identified in the following URL.",
+        "id": "disclaimer_warning",
+        "more_info": "https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models.html?context=wx"
+      }
+    ]
+  }
+}
+
+Show more
+Example of chatting with a model with reasoning capabilities
+
+Some foundation models provide detailed reasoning information along with the generated response to a prompt. The following example API request uses the chat_template_kwargs to configure a foundation model's reasoning capabilities and control the amount of details the model provides in the output.
+
+curl -X POST -kLsS 'https://<region>.<cloud-provider-domain>/ml/v1/text/chat?version=2025-10-25' \
+-H 'Content-Type: application/json' \
+-H "Authorization: Bearer ${TOKEN}" \
+-d '{
+   "stream":  false,
+   "model_id":  "openai/gpt-oss-120b",
+   "project_id": "<project ID>",
+   "messages": [
+     {
+       "role": "user",
+       "content": "Hi there. What weighs more, a pound of feathers or a kilogram of lead?"
+     }
+     ],
+     "chat_template_kwargs": {
+       "thinking": true
+     },
+     "reasoning_effort": "high",
+     "include_reasoning": true,
+     "max_completion_tokens": 5000
+    }'
+
+Show more
+
+Sample response:
+
+{
+  "id": "chatcmpl-dc7b2e8ac2854ab79e57738a6e7bad51",
+  "object": "chat.completion",
+  "model_id": "openai/gpt-oss-120b",
+  "model": "openai/gpt-oss-120b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "The kilogram of lead is heavier.\n\n
+                    **Why?** \n
+                    - **Units:** A pound (lb) and a kilogram (kg) are both units of mass (or weight, depending on the context). On Earth, the conversion is \n\n
+                    \\[\n1\\;\\text{kg} \\approx 2.20462\\;\\text{lb}.\n\\]\n\n
+                    - **Comparison:** \n
+                    - 1 lb ≈ 0.4536 kg \n
+                    - 1 kg ≈ 2.2046 lb \n\n
+                    So the kilogram (≈ 2.2 lb) outweighs the pound (≈ 0.45 kg) by a factor of about 2.2\n\n
+                    ---\n\n
+                    ### A bit of extra context (just for fun)\n\n
+                    | Property | 1 lb of feathers | 1 kg of lead |\n|----------|------------------|--------------|\n
+                    | **Mass** | 0.4536 kg | 1 kg |\n
+                    | **Weight on Earth** | ≈ 4.44 N (newtons) | ≈ 9.81 N |\n| **Density** | ~0.002–0.003 g / cm³ (very airy) | 11.34 g / cm³ (very dense) |\n
+                    | **Approximate volume** | ~150–200 L (think a small couch‑sized bag) | ~0.09 L (a cube ~4.5 cm on a side) |\n\n
+                    Because feathers are extremely light for their volume, a pound of them would fill a sizable bag, while a kilogram of lead would be a compact, heavy block.\n\n
+                    ---\n\n
+                    **Bottom line:** On Earth (or any environment with the same gravity), the kilogram of lead weighs more than a pound of feathers.",
+        "reasoning_content": "We have a user asking a simple question: \"Hi there. What weights more? A pound of feathers or a kilogram of lead\".
+                              This could be answered with explanation that a kilogram is larger than a pound; 1 kg approx 2.2 pounds,
+                              so kilogram (lead) is heavier. Also clarify differences between weight and mass,
+                              and also the confusion about \"pound\" being a unit of weight in US and the difference between mass and weight.
+                              Might also talk about the volume of feathers vs lead. But the user is asking which weighs more.
+                              So answer: the kilogram of lead weighs more than a pound of feathers, because kilogram is roughly 2.20462 pounds.
+                              However, let's expand to double-check possible nuance: In US version, pound is unit of mass (or weight) and kilogram is metric and we have conversion.
+                              So the answer is kilogram of lead weighs more: about double the weight.
+                              Could also note that weight depends on gravity; but for typical Earth, it's heavier. Also may note that in another gravitational environment it would be different.\n\n
+                              But the user likely expects a quick answer: kilogram of lead is heavier, about 2.2 pounds vs 1 pound.\n\nMake sure to respond politely.\n\n
+                              Potential expansions: question might be a joke, but we can provide explanation.\n\n
+                              Thus answer in clear, concise terms.\n\n
+                              We should stay within appropriate content boundaries. No disallowed content. Good.\n\n
+                              Now produce answer with supportive tone.\n\n
+                              I could also discuss physical densities: feathers take a lot more volume than lead for same mass.
+                              So a pound of feathers would be about a cubic foot (?), whereas a kilogram of lead is a small block.\n\n
+                              Let's compute approximate volumes: density of lead ~ 11.34 g/cm³, so 1 kg = 1000 g → 1000/11.34 ≈ 88.2 cm³ (a cube of ~4.45 cm side).
+                              Feathers: density ~0.0025 g/cm³? Actually down? Let's approximate 0.0025 g/cm³ → 453.592 grams (one pound) /0.0025 ≈ 181,437 cm³ i.e., 0.18 m³ (cube ~0.56 m side).
+                              Actually typical goose feather pack maybe. So huge.\n\n
+                              Potential to talk about \"weight\" vs \"mass\". Provide conversion.\n\n
+                              Ok, will answer."
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "created": 1757960415,
+  "created_at": "2025-09-15T18:20:20.492Z",
+  "usage": {
+    "completion_tokens": 868,
+    "prompt_tokens": 85,
+    "total_tokens": 953
+  },
+  "system": {
+    "warnings": [
+      {
+        "message": "This model is a Non-IBM Product governed by a third-party license that may
+                    impose use restrictions and other obligations. By using this model you agree to its terms as
+                    identified in the following URL.",
+        "id": "disclaimer_warning",
+        "more_info": "https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models.html?context=wx"
+      }
+    ]
+  }
+}
+
+Show more
+Example of chatting about an image
+
+This example asks the model to explain what the following image illustrates.
+
+The sample code is equivalent to chatting with an image from the Prompt Lab. For details about the alternative method that uses the UI, see Chatting with uploaded images.
+
+Image requirements for images that you reference from the chat API are as follows:
+
+Add one image per chat
+Supported file types are PNG or JPEG
+One image is counted as approximately 1,200–3,000 tokens depending on the image size
+
+For the image to be processed, you must encode the image as Base64, which converts the binary data for the image into a string of characters. You can use an online tool to convert the image or use code.
+
+The following sample Python code encodes a hosted image. If you call the REST API from a Python notebook, you can use this code to encode the image. Then, when you define the POST request, you can specify the image_b64_encoded_string variable as the url value.
+
+import wget, os, base64
+
+filename = 'downloaded-image.png'
+url = 'https://www.ibm.com/able/static/my-input-image.png'
+
+if not os.path.isfile(filename):
+    wget.download(url, out=filename)
+
+with open(filename, 'rb') as image_file:
+    image_b64_encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+
+
+The following REST API request uses the chat API to chat about an image that is specified with a Base64-encoded string.
+
+In the following example, add your own bearer token and project ID.
+
+curl --request POST 'https://<region>.<cloud-provider-domain>/ml/v1/text/chat?version=2024-10-09'
+-H 'Authorization: Bearer ${TOKEN}'
+-H 'Content-Type: application/json'
+-H 'Accept: application/json'
+-d '{
+    "model_id": "meta-llama/llama-3-2-11b-vision-instruct",
+    "project_id": "<project ID>",
+    "messages": [
+      {
+        "role": "user",
+        "content": [
+          {
+            "type": "image_url",
+            "image_url": {
+              "url": "<encoded_string>"
+            }
+          },
+          {
+            "type": "text",
+            "text": "What does the image convey about alternative image text?"
+          }
+        ]
+      }
+    ],
+    "max_tokens": 300,
+    "time_limit": 10000
+  }'
+
+Show more
+
+Sample response:
+
+{
+  "id": "chat-f5f3ab2b8d7f4657b72a4f868e24f3fd",
+  "model_id": "meta-llama/llama-3-2-90b-vision-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "The image shows a bar chart on a laptop screen with alternative image text that describes the content of the image.
+        The alternative image text is \"bar chart showing month's daily sales against historical average.\"
+        This text provides a clear and concise description of the image, allowing users who cannot see the image to understand its content.\n\n
+        **Key Points:**\n\n
+        *   The image is a bar chart on a laptop screen.\n
+        *   The alternative image text describes the content of the image.\n
+        *   The alternative image text is \"bar chart showing month's daily sales against historical average.\"\n
+        *   The text provides a clear and concise description of the image.\n\n
+        **Conclusion:**\n\n
+        The image conveys that alternative image text should be used to provide a clear and concise description of an image, even if the image
+        cannot be seen. This is important for accessibility reasons, as it allows users who cannot see the image to still understand its content."
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "created": 1728564568,
+  "model_version": "3.2.0",
+  "created_at": "2024-10-10T12:49:35.286Z",
+  "usage": {
+    "completion_tokens": 184,
+    "prompt_tokens": 21,
+    "total_tokens": 205
+  },
+  "system": {
+    "warnings": [
+      {
+        "message": "This model is a Non-IBM Product governed by a third-party license that may
+                    impose use restrictions and other obligations. By using this model you agree to its terms as
+                    identified in the following URL.",
+        "id": "disclaimer_warning",
+        "more_info": "https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models.html?context=wx"
+      }
+    ]
+  }
+}
+
+Show more
+Python
+
+See the ModelInference class of the watsonx.ai Python library.
+
+To get started, see the following sample notebooks:
+
+Use the REST API to complete conversational tasks: Use watsonx, and gpt-oss-120b to make simple chat conversation and tool calls
+Use the Python SDK to chat about an image: Use watsonx, and meta-llama/llama-3-2-11b-vision-instruct model for image processing to generate a description of the IBM logo
+Use the Python SDK to generate responses in JSON format while chatting with the granite-4-h-small model: Use watsonx, and ibm/granite-4-h-small to perform chat conversation with JSON response format
+Troubleshooting the chat API
+
+If the response is in HTML format and mentions Gateway time-out, the request probably took too long and expired. Increase the value of the time_limit field that you specify in the request.
+
+Learn more
+Prompt Lab
+Building agent-driven workflows with the chat API
+Supported foundation models
+Was the topic helpful?
+Yes
+No
+Missing information
+Incorrect information
+Confusing information
+Broken link
+Other
+0/1000
+Send comment
+Contact IBM
+Terms of Use
+Privacy
+Accessibility
+On this page
+Ways to develop
+Overview
+Supported foundation models
+REST API
+Python
+Troubleshooting the chat API
+Learn more

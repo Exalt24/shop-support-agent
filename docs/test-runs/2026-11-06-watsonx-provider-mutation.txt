@@ -1,0 +1,128 @@
+# IBM watsonx.ai provider mutation check, run 2026-11-06
+# command: ./.venv/Scripts/python.exe tests/mutation_check.py, run in a COPY of the repo (the whole harness, 325 mutants; these are the 120
+# lines for this provider, the rest are in the earlier saved runs and the Claude provider's file)
+# each line deletes or bends one guard in the real source, runs the two watsonx test files (then the whole suite if they stay green)
+# and restores the file byte-exact; caught means a test went red
+
+caught agent/watsonx_llm.py   watsonx: the IAM token is sent without the Bearer scheme  <- test_a_normal_answer_is_returned_and_the_chat_request_has_th
+caught agent/watsonx_llm.py   watsonx: the chat request carries no version date  <- test_a_normal_answer_is_returned_and_the_chat_request_has_th
+caught agent/config.py        watsonx: a version date the saved chat page does not show is sent  <- test_a_normal_answer_is_returned_and_the_chat_request_has_th
+caught agent/config.py        watsonx: the token request goes to a URL the saved page does not document  <- test_the_default_version_model_and_urls_are_the_ones_on_the_
+caught agent/config.py        watsonx: the default host is not the Dallas endpoint  <- test_the_default_version_model_and_urls_are_the_ones_on_the_
+caught agent/config.py        watsonx: the default model id is not one the saved pages name  <- test_a_normal_answer_is_returned_and_the_chat_request_has_th
+caught agent/watsonx_llm.py   watsonx: the deprecated max_tokens field is sent instead of max_completion_tokens  <- test_a_normal_answer_is_returned_and_the_chat_request_has_th
+caught agent/watsonx_llm.py   watsonx: temperature 0 is not sent  <- test_a_normal_answer_is_returned_and_the_chat_request_has_th
+caught agent/watsonx_llm.py   watsonx: the role is sent with a capital letter, which the saved page says is case sensitive  <- test_a_normal_answer_is_returned_and_the_chat_request_has_th
+caught agent/watsonx_llm.py   watsonx: the system prompt is merged into the user message  <- test_a_normal_answer_is_returned_and_the_chat_request_has_th
+caught agent/watsonx_llm.py   watsonx: the token request is sent as JSON, not as a form  <- test_a_normal_answer_is_returned_and_the_chat_request_has_th
+caught agent/watsonx_llm.py   watsonx: the token request names a grant type other than apikey  <- test_a_normal_answer_is_returned_and_the_chat_request_has_th
+caught agent/watsonx_llm.py   watsonx: a missing or malformed key is accepted  <- test_a_malformed_key_is_refused_before_any_request_and_never
+caught agent/watsonx_llm.py   watsonx: a key with a space, a line break or a non-ASCII character is accepted  <- test_a_malformed_key_is_refused_before_any_request_and_never
+caught agent/watsonx_llm.py   watsonx: a missing or malformed project id is accepted  <- test_a_malformed_project_id_is_refused_before_any_request[]
+caught agent/watsonx_llm.py   watsonx: a malformed model id is accepted  <- test_a_malformed_model_id_is_refused_before_any_request[]
+caught agent/watsonx_llm.py   watsonx: any URL scheme is accepted for the API or the token endpoint  <- test_a_token_or_key_is_never_sent_over_plain_http_to_another
+caught agent/watsonx_llm.py   watsonx: the key or token can be sent in plain http to another machine  <- test_a_token_or_key_is_never_sent_over_plain_http_to_another
+caught agent/watsonx_llm.py   watsonx: a trailing slash on an https URL doubles the path  <- test_a_trailing_slash_is_dropped_from_an_https_url_too
+caught agent/watsonx_llm.py   watsonx: a trailing slash on a local URL doubles the path  <- test_a_trailing_slash_on_the_url_does_not_double_the_path
+caught agent/watsonx_llm.py   watsonx: a bad max_tokens is sent to the vendor  <- test_max_tokens_must_be_a_positive_integer[0]
+caught agent/watsonx_llm.py   watsonx: True is accepted as max_tokens  <- test_max_tokens_must_be_a_positive_integer[True]
+caught agent/watsonx_llm.py   watsonx: the token is used right up to its expiry, with no renewal margin  <- test_a_token_is_renewed_inside_the_refresh_margin_even_thoug
+caught agent/watsonx_llm.py   watsonx: the token is renewed one tick late at the margin  <- test_a_token_is_renewed_inside_the_refresh_margin_even_thoug
+caught agent/watsonx_llm.py   watsonx: a token the vendor refused is used again  <- test_a_401_from_the_chat_api_refreshes_the_token_once_and_re
+caught agent/watsonx_llm.py   watsonx: threads that start together each fetch their own token  <- test_eight_threads_starting_together_fetch_one_token
+caught agent/watsonx_llm.py   watsonx: a late 401 throws away the token another thread just renewed  <- test_a_stale_401_does_not_throw_away_a_token_another_thread_
+caught agent/watsonx_llm.py   watsonx: expires_in is ignored in favour of the expiration epoch  <- test_expires_in_wins_over_the_expiration_epoch_when_they_dis
+caught agent/watsonx_llm.py   watsonx: the expiration epoch is never used  <- test_a_token_with_only_an_expiration_epoch_is_renewed_by_tha
+caught agent/watsonx_llm.py   watsonx: the expiration epoch is treated as a duration  <- test_the_expiry_comes_from_the_expiration_epoch_when_expires
+caught agent/watsonx_llm.py   watsonx: an answer with no expiry makes every call fetch a new token  <- test_an_iam_answer_with_no_expiry_at_all_is_trusted_for_the_
+caught agent/watsonx_llm.py   watsonx: true is read as a one second expiry  <- test_an_unusable_expiry_falls_back_to_the_documented_hour[bo
+caught agent/watsonx_llm.py   watsonx: nan is accepted as a usage figure  <- test_usage_is_reported_to_the_callback_as_numbers_only
+caught agent/watsonx_llm.py   watsonx: an infinite expiry means the token is never renewed  <- test_an_unusable_expiry_falls_back_to_the_documented_hour[in
+caught agent/watsonx_llm.py   watsonx: a blank access_token is accepted  <- test_an_iam_answer_without_a_usable_token_is_a_named_error[e
+caught agent/watsonx_llm.py   watsonx: an IAM answer with no access_token is accepted  <- test_an_iam_answer_without_a_usable_token_is_a_named_error[m
+caught agent/watsonx_llm.py   watsonx: an IAM 200 that is not JSON crashes instead of naming the error  <- test_an_iam_200_that_is_not_json_is_a_named_error
+caught agent/watsonx_llm.py   watsonx: whitespace around the token is sent in the header  <- test_whitespace_around_the_access_token_is_not_sent_in_the_h
+caught agent/watsonx_llm.py   watsonx: a wrong key is retried at the token endpoint  <- test_a_wrong_key_stops_at_the_token_request_and_names_the_ve
+caught agent/watsonx_llm.py   watsonx: the token endpoint is retried without a doubling backoff  <- test_a_transient_iam_failure_is_retried_and_a_persistent_one
+caught agent/watsonx_llm.py   watsonx: a read timeout at the token endpoint is repeated  <- test_a_read_timeout_while_fetching_the_token_is_not_repeated
+caught agent/watsonx_llm.py   watsonx: a dropped connection at the token endpoint is not retried  <- test_a_transient_iam_failure_is_retried_and_a_persistent_one
+caught agent/watsonx_llm.py   watsonx: token endpoint transport retries do not back off exponentially  <- test_a_transient_iam_failure_is_retried_and_a_persistent_one
+caught agent/watsonx_llm.py   watsonx: the token request has no timeout of its own  <- test_a_read_timeout_while_fetching_the_token_is_not_repeated
+caught agent/watsonx_llm.py   watsonx: a 401 from an expired token is raised instead of refreshed  <- test_a_401_from_the_chat_api_refreshes_the_token_once_and_re
+caught agent/watsonx_llm.py   watsonx: a 401 is refreshed and retried without a limit  <- test_a_second_401_is_raised_and_not_retried_again
+caught agent/watsonx_llm.py   watsonx: the one-refresh limit is forgotten after the first 401  <- test_a_second_401_is_raised_and_not_retried_again
+caught agent/watsonx_llm.py   watsonx: a 401 retries with the same refused token  <- test_a_401_from_the_chat_api_refreshes_the_token_once_and_re
+caught agent/watsonx_llm.py   watsonx: a 429 is not retried  <- test_each_status_is_named_and_only_the_transient_ones_are_re
+caught agent/watsonx_llm.py   watsonx: every 4xx is retried  <- test_a_401_from_the_chat_api_refreshes_the_token_once_and_re
+caught agent/watsonx_llm.py   watsonx: a 500 is not retried  <- test_each_status_is_named_and_only_the_transient_ones_are_re
+caught agent/watsonx_llm.py   watsonx: the exhausted token quota is retried like a rate limit  <- test_the_token_quota_429_is_never_retried
+caught agent/watsonx_llm.py   watsonx: the quota code on a non-429 status stops the retries  <- test_the_quota_code_on_another_status_is_not_a_quota_error
+caught agent/watsonx_llm.py   watsonx: the quota error code is not the one on the saved page  <- test_the_token_quota_429_is_never_retried
+caught agent/watsonx_llm.py   watsonx: the quota error is marked retryable  <- test_the_token_quota_429_is_never_retried
+caught agent/watsonx_llm.py   watsonx: a 400 or 403 is retried  <- test_a_401_from_the_chat_api_refreshes_the_token_once_and_re
+caught agent/watsonx_llm.py   watsonx: one retry too many on a 5xx  <- test_each_status_is_named_and_only_the_transient_ones_are_re
+caught agent/watsonx_llm.py   watsonx: HTTP retries do not back off exponentially  <- test_a_401_refresh_does_not_spend_the_retry_budget
+caught agent/watsonx_llm.py   watsonx: transport retries do not back off exponentially  <- test_retry_and_refresh_rules_hold_over_random_fault_sequence
+caught agent/watsonx_llm.py   watsonx: Retry-After is ignored  <- test_a_429_with_retry_after_waits_that_long_and_then_succeed
+caught agent/watsonx_llm.py   watsonx: a short Retry-After shortens the backoff  <- test_a_429_with_retry_after_waits_that_long_and_then_succeed
+caught agent/watsonx_llm.py   watsonx: a shopper waits as long as the vendor's Retry-After says  <- test_a_retry_after_longer_than_a_shopper_will_wait_fails_fas
+caught agent/watsonx_llm.py   watsonx: a Retry-After exactly at the cap is refused  <- test_a_retry_after_at_the_limit_is_still_waited_for
+caught agent/watsonx_llm.py   watsonx: the Retry-After value is never consulted  <- test_a_429_with_retry_after_waits_that_long_and_then_succeed
+caught agent/watsonx_llm.py   watsonx: the Retry-After header is never read  <- test_a_429_with_retry_after_waits_that_long_and_then_succeed
+caught agent/watsonx_llm.py   watsonx: a read timeout on the chat call is repeated  <- test_a_read_timeout_is_a_named_error_and_is_not_repeated
+caught agent/watsonx_llm.py   watsonx: one transport retry too many  <- test_a_dropped_connection_is_retried_then_reported
+caught agent/watsonx_llm.py   watsonx: the transport error text is the exception's own, which can hold the URL  <- test_a_dropped_connection_is_retried_then_reported
+caught agent/watsonx_llm.py   watsonx: the chat call has no timeout of its own  <- test_a_read_timeout_is_a_named_error_and_is_not_repeated
+caught agent/watsonx_llm.py   watsonx: a trace id that is not an id is shown  <- test_a_trace_that_is_not_an_id_is_left_out
+caught agent/watsonx_llm.py   watsonx: a key or token echoed into the trace field is shown  <- test_neither_the_key_nor_the_token_appears_in_any_error_or_l
+caught agent/watsonx_llm.py   watsonx: an echoed key or token is shown in an error  <- test_neither_the_key_nor_the_token_appears_in_any_error_or_l
+caught agent/watsonx_llm.py   watsonx: a long vendor message is not truncated  <- test_a_long_vendor_message_is_truncated
+caught agent/watsonx_llm.py   watsonx: the vendor's message is not masked  <- test_neither_the_key_nor_the_token_appears_in_any_error_or_l
+caught agent/watsonx_llm.py   watsonx: the vendor's error code is not masked or truncated  <- test_neither_the_key_nor_the_token_appears_in_any_error_or_l
+caught agent/watsonx_llm.py   watsonx: a body that is not the error object is echoed in the error  <- test_an_error_with_no_error_object_still_names_the_status
+caught agent/watsonx_llm.py   watsonx: the vendor's error code is left out of the message  <- test_each_status_is_named_and_only_the_transient_ones_are_re
+caught agent/watsonx_llm.py   watsonx: IBM's trace id is left out of the message  <- test_each_status_is_named_and_only_the_transient_ones_are_re
+caught agent/watsonx_llm.py   watsonx: the token endpoint's error code is left out of the message  <- test_a_wrong_key_stops_at_the_token_request_and_names_the_ve
+caught agent/watsonx_llm.py   watsonx: IAM's errorCode is not read  <- test_a_wrong_key_stops_at_the_token_request_and_names_the_ve
+caught agent/watsonx_llm.py   watsonx: IAM's errorMessage is not read  <- test_a_wrong_key_stops_at_the_token_request_and_names_the_ve
+caught agent/watsonx_llm.py   watsonx: an errors list that is empty or odd crashes the error handling  <- test_a_wrong_key_stops_at_the_token_request_and_names_the_ve
+caught agent/watsonx_llm.py   watsonx: an error body that is not JSON crashes the error handling  <- test_an_error_with_no_error_object_still_names_the_status
+caught agent/watsonx_llm.py   watsonx: an error body that is a list or string crashes the error handling  <- test_an_error_status_whose_body_is_not_an_object_still_names
+caught agent/watsonx_llm.py   watsonx: a chat 200 that is not JSON crashes instead of naming the error  <- test_a_200_that_is_not_a_chat_answer_is_a_named_error[html]
+caught agent/watsonx_llm.py   watsonx: a 200 with no choices crashes or reads as an empty reply  <- test_a_200_that_is_not_a_chat_answer_is_a_named_error[list]
+caught agent/watsonx_llm.py   watsonx: a choice that is not an object crashes  <- test_a_200_that_is_not_a_chat_answer_is_a_named_error[choice
+caught agent/watsonx_llm.py   watsonx: a message that is not an object crashes  <- test_a_200_that_is_not_a_chat_answer_is_a_named_error[no-mes
+caught agent/watsonx_llm.py   watsonx: content that is a list crashes  <- test_every_finish_reason_is_a_reply_or_a_named_error_never_a
+caught agent/watsonx_llm.py   watsonx: whitespace around the reply is sent to the shopper  <- test_every_finish_reason_is_a_reply_or_a_named_error_never_a
+caught agent/watsonx_llm.py   watsonx: an upper-case finish_reason is not recognised  <- test_every_finish_reason_is_a_reply_or_a_named_error_never_a
+caught agent/watsonx_llm.py   watsonx: a reply cut off by the token limit reaches the shopper  <- test_every_finish_reason_is_a_reply_or_a_named_error_never_a
+caught agent/watsonx_llm.py   watsonx: a reply cut off by the time limit is a bad response, not a truncation  <- test_every_finish_reason_is_a_reply_or_a_named_error_never_a
+caught agent/watsonx_llm.py   watsonx: a reply cut off by length is a bad response, not a truncation  <- test_every_finish_reason_is_a_reply_or_a_named_error_never_a
+caught agent/watsonx_llm.py   watsonx: a truncation does not say whether text arrived  <- test_a_truncated_error_says_whether_any_text_arrived
+caught agent/watsonx_llm.py   watsonx: a tool call, a cancellation or an unknown finish_reason is read as a reply  <- test_every_finish_reason_is_a_reply_or_a_named_error_never_a
+caught agent/watsonx_llm.py   watsonx: an empty completion reaches the shopper as a blank reply  <- test_every_finish_reason_is_a_reply_or_a_named_error_never_a
+caught agent/watsonx_llm.py   watsonx: a usage object that is not an object crashes  <- test_usage_is_reported_to_the_callback_as_numbers_only
+caught agent/watsonx_llm.py   watsonx: non-numeric usage figures are passed on  <- test_usage_is_reported_to_the_callback_as_numbers_only
+caught agent/watsonx_llm.py   watsonx: a new TLS client is built for every call  <- test_one_shared_client_for_the_process
+caught agent/llm.py           watsonx: LLM_PROVIDER=watsonx is not recognised  <- test_the_watsonx_provider_needs_its_key_and_project_and_not_
+caught agent/llm.py           watsonx: the token endpoint from the configuration never reaches the client  <- test_the_provider_switch_picks_watsonx_and_not_groq_or_claud
+caught agent/llm.py           watsonx: WATSONX_URL never reaches the client  <- test_the_provider_switch_picks_watsonx_and_not_groq_or_claud
+caught agent/llm.py           watsonx: WATSONX_MODEL_ID never reaches the client  <- test_the_url_and_model_from_the_settings_reach_the_client
+caught agent/llm.py           watsonx: the project id never reaches the client  <- test_the_watsonx_provider_needs_its_key_and_project_and_not_
+caught agent/config.py        watsonx: LLM_PROVIDER=watsonx is refused at start  <- test_the_watsonx_provider_needs_its_key_and_project_and_not_
+caught agent/config.py        watsonx: a missing project id is not noticed at start  <- test_the_watsonx_provider_needs_its_key_and_project_and_not_
+caught agent/config.py        watsonx: a missing key is not noticed at start  <- test_the_watsonx_provider_needs_its_key_and_project_and_not_
+caught agent/config.py        watsonx: the watsonx provider demands a Groq key and does not check its own  <- test_the_watsonx_provider_needs_its_key_and_project_and_not_
+caught agent/config.py        watsonx: printing the settings prints the IBM key  <- test_settings_never_print_the_watsonx_key
+caught agent/config.py        watsonx: the saved secret file is never read  <- test_the_watsonx_key_is_read_from_the_saved_secret_file_when
+caught agent/config.py        watsonx: the WATSONX_API_KEY variable is never read  <- test_the_watsonx_provider_needs_its_key_and_project_and_not_
+caught agent/config.py        watsonx: whitespace around the project id is kept  <- test_the_project_id_is_trimmed
+caught agent/config.py        watsonx: WATSONX_PROJECT_ID is never read  <- test_the_watsonx_provider_needs_its_key_and_project_and_not_
+caught agent/config.py        watsonx: whitespace around WATSONX_URL is kept  <- test_url_and_model_come_from_the_environment_and_default_to_
+caught agent/config.py        watsonx: an empty WATSONX_URL replaces the default  <- test_url_and_model_come_from_the_environment_and_default_to_
+caught agent/config.py        watsonx: whitespace around WATSONX_MODEL_ID is kept  <- test_url_and_model_come_from_the_environment_and_default_to_
+caught agent/config.py        watsonx: an empty WATSONX_MODEL_ID replaces the default  <- test_url_and_model_come_from_the_environment_and_default_to_
+caught agent/config.py        watsonx: WATSONX_URL is never read  <- test_the_provider_switch_picks_watsonx_and_not_groq_or_claud
+caught agent/config.py        watsonx: WATSONX_MODEL_ID is never read  <- test_url_and_model_come_from_the_environment_and_default_to_
+
+All 325 mutants caught, every file restored byte-exact.

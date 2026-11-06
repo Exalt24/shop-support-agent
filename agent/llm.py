@@ -60,6 +60,10 @@ def build_llm(settings: Settings) -> LLM:
         from .anthropic_llm import AnthropicLLM  # imported here because anthropic_llm imports LLMError from this file
         return AnthropicLLM(settings.anthropic_key, config.ANTHROPIC_MODEL, workspace=settings.anthropic_workspace,
                             url=config.ANTHROPIC_URL)
+    if settings.llm_provider == "watsonx":
+        from .watsonx_llm import WatsonxLLM  # same reason: watsonx_llm imports LLMError from this file
+        return WatsonxLLM(settings.watsonx_key, settings.watsonx_project_id, settings.watsonx_model_id, url=settings.watsonx_url,
+                          iam_url=config.WATSONX_IAM_URL)
     if settings.llm_provider == "groq":
         return GroqLLM(settings)
     raise LLMError("unknown LLM provider: %r" % settings.llm_provider)

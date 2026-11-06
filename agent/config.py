@@ -13,7 +13,14 @@ GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
 ANTHROPIC_VERSION = "2026-10-21"
 ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-5-5")
-LLM_PROVIDERS = ("groq", "anthropic")
+# IBM watsonx.ai on IBM Cloud. Taken from the pages saved in docs/vendor-contract/ibm-watsonx/ (see its README): the IAM token
+# endpoint, the chat path and the version date of the reasoning-model example. The Dallas host is from the brief, not from a saved
+# page. WATSONX_URL and WATSONX_MODEL_ID are read when the settings are loaded, so a region or a model is a deployment setting.
+WATSONX_IAM_URL = "https://iam.cloud.ibm.com/identity/token"
+WATSONX_DEFAULT_URL = "https://us-south.ml.cloud.ibm.com"
+WATSONX_API_VERSION = "2025-10-25"
+WATSONX_DEFAULT_MODEL_ID = "ibm/granite-4-h-small"
+LLM_PROVIDERS = ("groq", "anthropic", "watsonx")
 SHOPIFY_API_VERSION = "2025-07"
 
 
@@ -37,6 +44,10 @@ class Settings:
     llm_provider: str = "groq"
     anthropic_key: str = field(default="", repr=False)  # never printed, even by a stray repr(settings)
     anthropic_workspace: str = ""
+    watsonx_key: str = field(default="", repr=False)  # never printed, even by a stray repr(settings)
+    watsonx_project_id: str = ""
+    watsonx_url: str = WATSONX_DEFAULT_URL
+    watsonx_model_id: str = WATSONX_DEFAULT_MODEL_ID
 
 
 def llm_settings_from_env() -> dict[str, str]:
@@ -50,6 +61,10 @@ def llm_settings_from_env() -> dict[str, str]:
         "groq_key": os.environ.get("GROQ_API_KEY") or _read_kv(SECRETS_DIR / "groq_test_key.txt").get("GROQ_API_KEY", ""),
         "anthropic_key": os.environ.get("ANTHROPIC_API_KEY") or _read_kv(SECRETS_DIR / "anthropic_key.txt").get("ANTHROPIC_API_KEY", ""),
         "anthropic_workspace": os.environ.get("ANTHROPIC_WORKSPACE_ID", ""),
+        "watsonx_key": os.environ.get("WATSONX_API_KEY") or _read_kv(SECRETS_DIR / "watsonx_key.txt").get("WATSONX_API_KEY", ""),
+        "watsonx_project_id": os.environ.get("WATSONX_PROJECT_ID", "").strip(),
+        "watsonx_url": (os.environ.get("WATSONX_URL") or WATSONX_DEFAULT_URL).strip(),
+        "watsonx_model_id": (os.environ.get("WATSONX_MODEL_ID") or WATSONX_DEFAULT_MODEL_ID).strip(),
     }
 
 
@@ -58,8 +73,10 @@ def load_settings() -> Settings:
     shop_file = _read_kv(SECRETS_DIR / "shopify_dev_token.txt")
     shop = os.environ.get("SHOPIFY_SHOP") or shop_file.get("SHOP", "")
     token = os.environ.get("SHOPIFY_ACCESS_TOKEN") or shop_file.get("ACCESS_TOKEN", "")
-    model_key = ("ANTHROPIC_API_KEY", llm["anthropic_key"]) if llm["llm_provider"] == "anthropic" else ("GROQ_API_KEY", llm["groq_key"])
-    missing = [n for n, v in (model_key, ("SHOPIFY_SHOP", shop), ("SHOPIFY_ACCESS_TOKEN", token)) if not v]
+    model_keys = {"anthropic": (("ANTHROPIC_API_KEY", llm["anthropic_key"]),),
+                  "watsonx": (("WATSONX_API_KEY", llm["watsonx_key"]), ("WATSONX_PROJECT_ID", llm["watsonx_project_id"]))
+                  }.get(llm["llm_provider"], (("GROQ_API_KEY", llm["groq_key"]),))
+    missing = [n for n, v in (*model_keys, ("SHOPIFY_SHOP", shop), ("SHOPIFY_ACCESS_TOKEN", token)) if not v]
     if missing:
         raise RuntimeError("missing configuration: " + ", ".join(missing))
     return Settings(shop=shop, shopify_token=token, **llm)

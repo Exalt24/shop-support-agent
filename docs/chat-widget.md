@@ -95,3 +95,7 @@ WIDGET_SCREENSHOT_DIR=docs ./.venv/Scripts/python.exe -m pytest tests/test_widge
 - **A host page can still break the widget.** A strict `Content-Security-Policy` that does not allow the script or the fetch will block it, and the widget then does nothing and says so in the console.
 - **English only**, fixed dialogue templates, a keyword consent check. Screen reader support was reasoned from the markup and checked by role and label queries in Chromium; it was not tested with NVDA, JAWS or VoiceOver.
 - The widget has no file upload, no typing indicator from the server, no human handoff screen. An escalated turn is answered with the agent's handoff text.
+
+## Scope and next steps
+
+Tested against stand-in Zoho and Zia servers and the two demo sites. The widget runs locally from `serve.py`, has no analytics, and its limits and chats are held in memory. The MCP consent flag is the caller's statement. Zia is tested as a standalone client.

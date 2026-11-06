@@ -8,7 +8,7 @@
 
 A customer-support agent for a Shopify store. It looks up orders and products through the Admin GraphQL API, answers from the store's own policy file, and hands anything it should not decide to a person. Built as a working proof of the first of the five agents in an e-commerce AI-agent brief: support.
 
-**Register: built, tested and run live against a Shopify development store with sample customers. It runs locally, on one platform (Shopify).** The human handoff produces a ticket-shaped payload, and wiring it to a helpdesk is the next step. Enquiry routing, the chat widget, the Zoho MCP server, the Zia client and the Claude API provider are built and tested against stand-in servers written from the vendors' saved documentation pages (see their sections).
+**Register: built, tested and run live against a Shopify development store with sample customers. It runs locally, on one platform (Shopify).** The human handoff produces a ticket-shaped payload, and wiring it to a helpdesk is the next step. Enquiry routing, the chat widget, the Zoho MCP server, the Zia client and the Claude API and watsonx.ai providers are built and tested against stand-in servers written from the vendors' saved documentation pages.
 
 ## What it does
 
@@ -24,17 +24,17 @@ A customer-support agent for a Shopify store. It looks up orders and products th
 ## Proof
 
 ```
-./.venv/Scripts/python.exe -m pytest tests -q              # 625 tests, offline (scripted model, stand-in shop, stand-in Zoho, stand-in Claude API; the widget tests drive Chromium and skip without it)
-./.venv/Scripts/python.exe tests/mutation_check.py         # 205 mutants: each guard broken on purpose
+./.venv/Scripts/python.exe -m pytest tests -q              # 836 tests, offline (scripted model, stand-in shop, Zoho, Claude API and IBM watsonx.ai; the widget tests drive Chromium and skip without it)
+./.venv/Scripts/python.exe tests/mutation_check.py         # 325 mutants: each guard broken on purpose
 ./.venv/Scripts/python.exe demo.py                         # nine messages, live store + live model
 ./.venv/Scripts/python.exe demo_memory.py                  # five turns with memory, live store + model + Postgres
 ./.venv/Scripts/python.exe demo_enquiry.py                 # five enquiries, scripted model + fake Zoho (no live anything)
 ./.venv/Scripts/python.exe demo_mcp.py                      # the MCP server over stdio against the fake Zoho
 ```
 
-- **Mutation harness:** each of 205 guards (the original 11, 14 for customer memory, 40 for enquiry routing, lead capture and the Zoho client, 27 for the chat server and widget, 39 for the MCP tools, the Zoho reads and the Zia client, 74 for the Claude API provider) is deleted from the real source, the suite is run, and the file is restored byte-exact. All 205 mutants are caught. The identity check, the throttle-as-HTTP-200 handling, the legal-threat rule, the grounding guard, the number-word check and `status:active` product filtering each have a test that fails without them.
-- **Live transcript:** `demo_transcript.md`. Nine messages including three hostile ones (a refund demand, a prompt injection asking for a 50% discount code, a legal threat). 7 answered, 2 escalated, and no promise, invented figure or foreign order detail reached a customer.
-- **Through n8n:** `n8n/workflow.json` (webhook, agent, "needs a person?" branch, handoff ticket, reply) was imported into a real n8n 2.41.6 server, published, and called over its webhook with an answered message, a wrong-email message and a legal threat. Regenerate it with `python n8n/build_workflow.py`.
+- **Mutation harness:** each of 325 guards (the original 11, 14 for customer memory, 40 for enquiry routing, lead capture and the Zoho client, 27 for the chat server and widget, 39 for the MCP tools, the Zoho reads and the Zia client, 74 for the Claude API provider, 120 for the watsonx.ai provider) is deleted from the real source, the suite is run, and the file is restored byte-exact. All 325 mutants are caught. The identity check, the throttle-as-HTTP-200 handling, the legal-threat rule, the grounding guard, the number-word check and `status:active` product filtering each have a test that fails without them.
+- **Live transcript:** `demo_transcript.md`. Nine messages including three hostile ones (a refund demand, a prompt injection asking for a 50% discount code, a legal threat). 7 answered, 2 escalated, and no promise, invented figure or foreign order detail reached a customer. What the live runs changed (stemming, active products only, unsupported outcomes, number words) is in [docs/live-runs.md](docs/live-runs.md).
+- **Through n8n:** `n8n/workflow.json` (webhook, agent, "needs a person?" branch, handoff ticket, reply) was imported into a real n8n 2.41.6 server and called over its webhook with an answered message, a wrong-email message and a legal threat. Regenerate it with `python n8n/build_workflow.py`.
 
 ## Customer memory
 
@@ -69,40 +69,28 @@ For a sales site as well as a shop: the agent sorts each enquiry, routes it to a
 ./.venv/Scripts/python.exe demo_widget.py                                                      # the two demo sites on :8101 and :8102
 ```
 
-**Scope and next steps.** Tested against stand-in Zoho and Zia servers and the two demo sites. The widget runs locally from `serve.py`, has no analytics, and its limits and chats are held in memory. The MCP consent flag is the caller's statement. Zia is tested as a standalone client.
+**Scope and next steps.** Tested against stand-in Zoho and Zia servers and the two demo sites; the limits are in [docs/chat-widget.md](docs/chat-widget.md).
 
-## What the live runs taught
+## Claude API and watsonx.ai providers (tested against stand-ins)
 
-The four things the live runs changed (stemming, active products only, unsupported outcomes, number words) are in [docs/live-runs.md](docs/live-runs.md).
+`LLM_PROVIDER=anthropic` makes the agent answer with Anthropic's Claude API (model `claude-sonnet-5-5`) instead of Groq, and Groq stays the default when nothing is set. It is one switch for every path: the `/support` endpoint, the chat widget backend and the support console all build their model the same way, so the grounding guard and the escalation floor judge a Claude reply exactly as they judge a Groq one. `LLM_PROVIDER=watsonx` answers through IBM watsonx.ai the same way, written from IBM's documentation and tested against a stand-in server that follows it (a live run needs `WATSONX_API_KEY` and `WATSONX_PROJECT_ID`; see [docs/watsonx.md](docs/watsonx.md)).
 
-## Claude API provider (tested against a stand-in)
-
-`LLM_PROVIDER=anthropic` makes the agent answer with Anthropic's Claude API (model `claude-sonnet-5-5`, the id on the saved models page) instead of Groq. It is one switch for every path: the `/support` endpoint, the chat widget backend and the support console all build their model the same way, and Groq stays the default when nothing is set. Details, the status and stop reason tables and the list of what is not done are in [docs/claude-api-provider.md](docs/claude-api-provider.md).
-
-**Built and tested against a stand-in server I wrote from Anthropic's documentation (the pages are saved in [docs/vendor-contract/anthropic/](docs/vendor-contract/anthropic/README.md)). Never called the live API: no Anthropic key or credit was used.**
-
-- **Direct HTTP, no vendor SDK.** `agent/anthropic_llm.py` posts to `/v1/messages` with the version header the saved pages name. It sends no `temperature`, because the saved versioning page says API version 2026-10-21 answers that with a 400 on every model, and it asks Sonnet 5.5 for the lowest thinking setting so a short reply is not spent on thinking.
-- **No empty reply, ever.** A refusal (which arrives as HTTP 200), a `max_tokens` stop, an empty completion, an unexpected stop reason, a body that is not a message, every documented HTTP error, a dropped connection and a timeout are each a named error, and the agent hands that case to a person.
-- **Retries that follow the pages.** At most two, with a doubling backoff, waiting the `retry-after` seconds when the header asks for longer, failing fast when it asks for more than 30 s, and never retrying the monthly spend cap or a 4xx.
-- **The key stays out of every message.** An error line is the status, the vendor's error type, a truncated vendor message and the request id. The key is masked if the vendor echoes it, and a gateway page is not echoed at all.
-- **The same guards judge Claude's words.** The grounding guard and the escalation floor sit after the model, so a Claude reply with an invented figure is refused exactly as a Groq one is. A test drives that through `/support`, and drives the widget backend and the console engine on Claude too.
+Both are plain HTTP clients with no vendor SDK, and each failure (a refusal, a cut-off or empty reply, any HTTP error, a dropped connection) is a named error that ends in a person, with the key kept out of every message. Neither has called its live service. The status tables, the retry rules and the list of what is not done are in [docs/claude-api-provider.md](docs/claude-api-provider.md) and [docs/watsonx.md](docs/watsonx.md).
 
 ```
 LLM_PROVIDER=anthropic ANTHROPIC_API_KEY=... ./.venv/Scripts/python.exe -m uvicorn serve:app --port 8008
-./.venv/Scripts/python.exe -m pytest tests/test_anthropic_llm.py tests/test_anthropic_chat_path.py -q   # 142 tests against the stand-in
-./.venv/Scripts/python.exe tests/mutation_check.py "Claude API"                                         # 74 mutants for this provider
+LLM_PROVIDER=watsonx WATSONX_API_KEY=... WATSONX_PROJECT_ID=... ./.venv/Scripts/python.exe -m uvicorn serve:app --port 8008
+./.venv/Scripts/python.exe -m pytest tests/test_anthropic_llm.py tests/test_anthropic_chat_path.py -q   # 142 tests against the Claude stand-in
+./.venv/Scripts/python.exe -m pytest tests/test_watsonx_llm.py tests/test_watsonx_chat_path.py -q      # 211 tests against the IBM stand-in
+./.venv/Scripts/python.exe tests/mutation_check.py "Claude API"                                         # 74 mutants for the Claude provider
+./.venv/Scripts/python.exe tests/mutation_check.py "watsonx"                                            # 120 mutants for the watsonx provider
 ```
-
-Run on 2026-11-06: 142 new tests (about 4 s), the engine suite 625 passed, the console suite 63 passed, 205 of 205 mutants caught. The saved output is in `docs/test-runs/`. **Scope and next steps.** The first real call needs an Anthropic key, and it is the way to confirm every header and field name against the live service. Streaming, tools, prompt caching, usage and cost logging, and a fallback model after a refusal are not built.
 
 ## The support console (login, roles, many stores)
 
 A web console around the same engine, so a team can use it and a new store is a new row rather than a new build. `console_api/` (FastAPI) holds the rules and `console_web/` (Next.js) is the screen.
 
-- **Roles and stores.** Sign in with email and password. An **admin** sees everything for a store, plus the audit log and the policy editor. An **agent** sees the inbox, handoffs, live chat and lookup. One person can belong to several stores and switch between them. A store you do not belong to answers 404, never 403, so its existence is not confirmed.
-- **Pages.** Dashboard, a three-pane inbox (list, thread, order and agent steps), a handoff queue with one owner per case (claim, reply, resolve), a live chat that talks to the real agent as a customer, order and product lookup, an admin audit log, and a policy editor. Every status is an icon plus a word. It works at phone width.
-- **Isolation lives in the database.** One Postgres database, a `tenant_id` on every tenant table, row level security enabled and forced. The API connects as `console_app`, which is not a superuser, does not bypass row security and does not own the tables; startup refuses to serve otherwise. The tenant is bound per transaction. The audit log is append-only and admin-readable. The Shopify token is stored encrypted and is never sent to the browser.
-- **Login.** bcrypt, a signed session cookie (httponly, SameSite=Lax), a lockout after five failures per ten minutes per email and address, and a CSRF guard on writes.
+Sign in with email and password as an **admin** (everything for a store, the audit log, the policy editor) or an **agent** (inbox, handoffs, live chat, lookup); one person can belong to several stores. Tenant isolation is Postgres row level security, enabled and forced, and the API connects as a role that cannot bypass it. Roles, pages, login rules, the demo logins and how to point it at another store are in [docs/support-console.md](docs/support-console.md).
 
 ```
 docker run -d --name support-console-pg -e POSTGRES_PASSWORD=localsuper -e POSTGRES_DB=console -p 54931:5432 postgres:17
@@ -112,8 +100,6 @@ CONSOLE_ALLOWED_ORIGINS=http://localhost:3100 ./.venv/Scripts/python.exe -m uvic
 cd console_web && npm install && npx next dev --port 3100        # then open http://localhost:3100
 ```
 
-Demo logins (local only, written in `console_api/seed.py`): `admin@demo.test` / `demo-admin-pass` (both stores), `agent@demo.test` / `demo-agent-pass` (one store).
-
 ```
 ./.venv/Scripts/python.exe -m pytest tests_console -q             # 63 tests: isolation, roles, login, the API, customer memory
 ./.venv/Scripts/python.exe tests_console/mutation_check.py        # 22 mutants: each database rule broken on purpose
@@ -122,14 +108,6 @@ cd console_web && node tests/e2e.js                               # 37 browser c
 
 Run the engine and console suites as two commands, not one (two `conftest.py` files collide). The mutation harness rebuilds the local `console` database, so reseed afterwards and run it only against that local database.
 
-**Before any real use:** `python -m console_api.seed --purge` removes every demo row, then set real passwords and connect a real store. The seed passwords are public in this file on purpose and must never reach a live database.
-
-**Reusing it for another store:** insert a `tenants` row (slug, name, shop domain, encrypted token via `console_api/secrets_store.py`, policy markdown) and a `memberships` row per person. The engine reads that store's orders and policy; nothing else changes. A different shop platform means swapping `agent/shopify.py`, not the console.
-
-## The demo video
-
-How the three minute narrated walkthrough of the console is regenerated is in [docs/demo-video.md](docs/demo-video.md).
-
 ## Scope and next steps
 
 - The console runs locally, with session lockout counters in memory (one process); a shared store is next.
@@ -137,14 +115,14 @@ How the three minute narrated walkthrough of the console is regenerated is in [d
 - Policy retrieval is word overlap over a handful of sections, which fits this size; a vector store is the step for a larger knowledge base.
 - Out-of-scope messages are escalated rather than answered, the conservative choice, so it produces more human work than a looser agent.
 - Zoho CRM is the one CRM, tested against a stand-in server; Klaviyo, Gorgias, Zendesk, HubSpot, Salesforce and the ad platforms are possible next connectors.
-- **Memory.** Memory is API and agent only, and a console screen for it is next. It costs one extra model call per answered turn (the extraction), and the staleness thresholds are my choices. In the live run a note saying the customer prefers email nudged the reply into "we'll send you email updates", a mild promise the facts do not state, which is why the guard stays layered with human review. The memory ran on one dev store with a handful of sample customers.
+- **Memory.** API and agent only, a console screen is next; it costs one extra model call per answered turn, and the live run showed a stored preference nudging a reply toward a mild promise, so the guard stays layered with human review ([docs/customer-memory.md](docs/customer-memory.md)).
 
 ## Run it
 
 ```
 python -m venv .venv && ./.venv/Scripts/python.exe -m pip install -r requirements.txt
 # keys: GROQ_API_KEY, SHOPIFY_SHOP, SHOPIFY_ACCESS_TOKEN in the environment (or the saved secret files, see agent/config.py)
-# for Claude instead of Groq: LLM_PROVIDER=anthropic and ANTHROPIC_API_KEY (the Claude API provider section above)
+# for Claude or IBM watsonx.ai instead of Groq: LLM_PROVIDER=anthropic and ANTHROPIC_API_KEY, or LLM_PROVIDER=watsonx, WATSONX_API_KEY and WATSONX_PROJECT_ID
 ./.venv/Scripts/python.exe seed_fulfillment.py              # marks one dev-store order shipped with tracking
 SUPPORT_AGENT_KEY=demo-key ./.venv/Scripts/python.exe -m uvicorn serve:app --port 8008
 ```
