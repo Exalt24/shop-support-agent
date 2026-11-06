@@ -296,17 +296,170 @@ MUTANTS = [
      "tool arguments of any shape are posted to the agent"),
     ("agent/zia_agent.py", "text[:MAX_ANSWER_CHARS], truncated", "text, truncated",
      "an agent answer of any length reaches the caller"),
+    # ---- the Claude API provider (tests/test_anthropic_llm.py, tests/test_anthropic_chat_path.py) ------------------------------
+    ("agent/anthropic_llm.py", '"Authorization": "Bearer " + self._key', '"Authorization": self._key',
+     "Claude API: the key is sent without the Bearer scheme"),
+    ("agent/anthropic_llm.py", ', "anthropic-version": ANTHROPIC_VERSION}', '}',
+     "Claude API: the required anthropic-version header is not sent"),
+    ("agent/config.py", 'ANTHROPIC_VERSION = "2026-10-21"', 'ANTHROPIC_VERSION = "2023-06-01"',
+     "Claude API: an API version the saved versioning page does not name is sent"),
+    ("agent/config.py", 'ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"', 'ANTHROPIC_URL = "https://api.anthropic.com/v1/message"',
+     "Claude API: the request goes to a URL the saved reference does not document"),
+    ("agent/config.py", '"ANTHROPIC_MODEL", "claude-sonnet-5-5")', '"ANTHROPIC_MODEL", "claude-sonnet-5")',
+     "Claude API: the default model id is not the one on the models page"),
+    ("agent/anthropic_llm.py", '"max_tokens": max_tokens, "system": system,', '"max_tokens": max_tokens, "system": system, "temperature": 0,',
+     "Claude API: temperature is sent, which API version 2026-10-21 answers with a 400 on every model"),
+    ("agent/anthropic_llm.py", '(dict(BETWEEN_TOOLS) if model == SONNET_5_5 else None)', 'dict(BETWEEN_TOOLS)',
+     "Claude API: between_tools is sent to a model that answers it with a 400"),
+    ("agent/anthropic_llm.py", 'if self._thinking:', 'if False:',
+     "Claude API: Sonnet 5.5 is left on adaptive thinking, so the short reply budget can go on thinking"),
+    ("agent/anthropic_llm.py", 'dict(thinking) if thinking is not None else (', '(',
+     "Claude API: an explicit thinking setting is ignored"),
+    ("agent/anthropic_llm.py", 'if self._workspace:\n            headers', 'if False:\n            headers',
+     "Claude API: a key that is not scoped to a workspace never says which one"),
+    ("agent/anthropic_llm.py", 'if workspace and not WORKSPACE_OK.match(workspace):', 'if False:',
+     "Claude API: a workspace id with a line break splits a request header"),
+    ("agent/anthropic_llm.py", 'if not KEY_OK.match(key or ""):', 'if False:',
+     "Claude API: a missing or malformed key is sent anyway"),
+    ("agent/anthropic_llm.py", 'KEY_OK = re.compile(r"^[\\x21-\\x7e]{8,}$")', 'KEY_OK = re.compile(r"^.{8,}$", re.S)',
+     "Claude API: a key with a space or a line break reaches a header"),
+    ("agent/anthropic_llm.py", 'if not isinstance(max_tokens, int) or isinstance(max_tokens, bool) or max_tokens < 1:', 'if False:',
+     "Claude API: a max_tokens the API rejects is posted"),
+    ("agent/anthropic_llm.py", 'or isinstance(max_tokens, bool) or max_tokens < 1', 'or max_tokens < 1',
+     "Claude API: max_tokens=True is posted as JSON true"),
+    ("agent/anthropic_llm.py", 'return self.status == 429 or self.status >= 500', 'return self.status >= 500',
+     "Claude API: a rate limit is a failure instead of a retry"),
+    ("agent/anthropic_llm.py", 'return self.status == 429 or self.status >= 500', 'return self.status >= 400',
+     "Claude API: a bad request or a bad key is retried"),
+    ("agent/anthropic_llm.py", 'return self.status == 429 or self.status >= 500', 'return self.status == 429 or self.status > 500',
+     "Claude API: a 500 is not retried"),
+    ("agent/anthropic_llm.py", 'kind = LLMSpendLimitError if r.status_code == 429 and code == SPEND_LIMIT_CODE else LLMAPIError', 'kind = LLMAPIError',
+     "Claude API: the monthly spend cap is retried as if it were a passing rate limit"),
+    ("agent/anthropic_llm.py", 'SPEND_LIMIT_CODE = "enforced_spend_limit_reached"', 'SPEND_LIMIT_CODE = "spend_limit"',
+     "Claude API: the spend cap is not recognised by the code the saved page names"),
+    ("agent/anthropic_llm.py", '        return False\n\n\nclass LLMRefusalError', '        return True\n\n\nclass LLMRefusalError',
+     "Claude API: the spend-cap error says it can be retried"),
+    ("agent/anthropic_llm.py", 'if not err.retryable or attempt >= self._max_retries:', 'if attempt >= self._max_retries:',
+     "Claude API: a 400 or 401 is retried"),
+    ("agent/anthropic_llm.py", 'if not err.retryable or attempt >= self._max_retries:', 'if not err.retryable or attempt > self._max_retries:',
+     "Claude API: one retry too many against an overloaded API"),
+    ("agent/anthropic_llm.py", '            wait = BACKOFF_BASE_SECONDS * 2 ** attempt\n', '            wait = BACKOFF_BASE_SECONDS\n',
+     "Claude API: the retry delay does not grow"),
+    ("agent/anthropic_llm.py", 'self._sleep(BACKOFF_BASE_SECONDS * 2 ** attempt)', 'self._sleep(BACKOFF_BASE_SECONDS)',
+     "Claude API: the delay after a dropped connection does not grow"),
+    ("agent/anthropic_llm.py", 'wait = max(wait, err.retry_after)', 'wait = wait',
+     "Claude API: the retry-after header is ignored"),
+    ("agent/anthropic_llm.py", 'wait = max(wait, err.retry_after)', 'wait = min(wait, err.retry_after)',
+     "Claude API: a retry-after shorter than the backoff shortens it"),
+    ("agent/anthropic_llm.py", 'if err.retry_after > MAX_RETRY_AFTER_SECONDS:', 'if False:',
+     "Claude API: a shopper waits as long as the vendor says, however long"),
+    ("agent/anthropic_llm.py", 'if err.retry_after > MAX_RETRY_AFTER_SECONDS:', 'if err.retry_after >= MAX_RETRY_AFTER_SECONDS:',
+     "Claude API: a retry-after exactly at the limit is refused"),
+    ("agent/anthropic_llm.py", 'if err.retry_after is not None:', 'if False:',
+     "Claude API: the retry-after header is read and then never used"),
+    ("agent/anthropic_llm.py", 'retry_after = parse_retry_after(r.headers.get("retry-after"))', 'retry_after = None',
+     "Claude API: the retry-after header is never read"),
+    ("agent/anthropic_llm.py", 'return seconds if math.isfinite(seconds) and seconds >= 0 else None', 'return seconds if seconds >= 0 else None',
+     "Claude API: retry-after: inf is believed"),
+    ("agent/anthropic_llm.py", 'return seconds if math.isfinite(seconds) and seconds >= 0 else None', 'return seconds if math.isfinite(seconds) else None',
+     "Claude API: a negative retry-after is believed"),
+    ("agent/anthropic_llm.py", '    except ValueError:\n        return None\n    return seconds if', '    except KeyError:\n        return None\n    return seconds if',
+     "Claude API: a retry-after that is not a number crashes the retry"),
+    ("agent/anthropic_llm.py", 'if attempt < self._max_retries and not isinstance(e, httpx.ReadTimeout):', 'if False:',
+     "Claude API: a dropped connection is not retried"),
+    ("agent/anthropic_llm.py", 'if attempt < self._max_retries and not isinstance(e, httpx.ReadTimeout):', 'if attempt < self._max_retries:',
+     "Claude API: a read timeout is repeated, so a shopper waits several timeouts"),
+    ("agent/anthropic_llm.py", 'if attempt < self._max_retries and not isinstance(e, httpx.ReadTimeout):', 'if attempt <= self._max_retries and not isinstance(e, httpx.ReadTimeout):',
+     "Claude API: one retry too many after a dropped connection"),
+    ("agent/anthropic_llm.py", '"transport error: %s" % type(e).__name__', '"transport error: %s" % e',
+     "Claude API: a transport error names its exception text, which can carry the URL"),
+    ("agent/anthropic_llm.py", 'request_id if REQUEST_ID_OK.match(request_id) else ""', 'request_id',
+     "Claude API: a request-id header with spaces or control characters reaches the audit log"),
+    ("agent/anthropic_llm.py", 'request_id = r.headers.get("request-id", "")', 'request_id = r.headers.get("x-request-id", "")',
+     "Claude API: the request id that support asks for is never recorded"),
+    ("agent/anthropic_llm.py", '        s = s.replace(key, "[key]")', '        s = s',
+     "Claude API: a vendor message that echoes the key puts it in a log line"),
+    ("agent/anthropic_llm.py", '    return s[:limit]', '    return s',
+     "Claude API: a vendor error of any length goes into the audit log"),
+    ("agent/anthropic_llm.py", '(message or "no error object in the response")', '(message or r.text[:200])',
+     "Claude API: a gateway page that is not the error object is echoed"),
+    ("agent/anthropic_llm.py", 'if error_type:\n            text += " " + error_type', 'if False:\n            text += " " + error_type',
+     "Claude API: the error type (rate_limit_error, overloaded_error) is missing from the message"),
+    ("agent/anthropic_llm.py", 'code = details.get("error_code") if isinstance(details, dict) else ""', 'code = details.get("code") if isinstance(details, dict) else ""',
+     "Claude API: the spend cap is looked for under a key the saved page does not use"),
+    ("agent/anthropic_llm.py", '        except ValueError:\n            data = None', '        except KeyError:\n            data = None',
+     "Claude API: an HTML error page from a gateway crashes the error handling"),
+    ("agent/anthropic_llm.py", 'or data.get("type") != "message" or not isinstance', 'or not isinstance',
+     "Claude API: an error object delivered with HTTP 200 is read as a reply"),
+    ("agent/anthropic_llm.py", 'or not isinstance(data.get("content"), list):', ':',
+     "Claude API: a 200 whose content is not a list is read as an empty reply"),
+    ("agent/anthropic_llm.py", '        except ValueError:\n            raise LLMBadResponseError(', '        except KeyError:\n            raise LLMBadResponseError(',
+     "Claude API: a 200 that is not JSON crashes the reply handling"),
+    ("agent/anthropic_llm.py", 'if stop == "refusal":', 'if False:',
+     "Claude API: a refusal (HTTP 200) is not recognised as one"),
+    ("agent/anthropic_llm.py", 'category = _tidy(details.get("category") or "", self._key, 40) if isinstance(details, dict) else ""', 'category = ""',
+     "Claude API: a refusal does not say which policy category fired"),
+    ("agent/anthropic_llm.py", 'if stop in ("max_tokens", "model_context_window_exceeded"):', 'if stop in ("model_context_window_exceeded",):',
+     "Claude API: a reply cut off at max_tokens is sent to a shopper"),
+    ("agent/anthropic_llm.py", 'if stop in ("max_tokens", "model_context_window_exceeded"):', 'if stop in ("max_tokens",):',
+     "Claude API: a reply that filled the context window is sent to a shopper"),
+    ("agent/anthropic_llm.py", 'if text:\n                raise LLMTruncatedError(', 'if False:\n                raise LLMTruncatedError(',
+     "Claude API: a cut-off reply is reported as having no text at all"),
+    ("agent/anthropic_llm.py", 'if stop != "end_turn":', 'if False:',
+     "Claude API: a tool_use, pause_turn or unknown stop_reason is read as a finished reply"),
+    ("agent/anthropic_llm.py", '        if not text:\n            raise LLMEmptyError', '        if False:\n            raise LLMEmptyError',
+     "Claude API: an empty completion is sent to a shopper as a blank reply"),
+    ("agent/anthropic_llm.py", 'text = "".join(b["text"]', 'text = " ".join(b["text"]',
+     "Claude API: text blocks are joined with a space that the model did not write"),
+    ("agent/anthropic_llm.py", 'isinstance(b.get("text"), str)).strip()', 'isinstance(b.get("text"), str))',
+     "Claude API: the reply keeps leading and trailing whitespace, and a blank one is not empty"),
+    ("agent/anthropic_llm.py", 'json=body, timeout=self._timeout)', 'json=body)',
+     "Claude API: the configured timeout is not applied"),
+    ("agent/anthropic_llm.py", 'if _shared_client is None:', 'if True:',
+     "Claude API: a new TLS client is built for every message"),
+    ("agent/llm.py", 'if settings.llm_provider == "anthropic":', 'if False:',
+     "Claude API: LLM_PROVIDER=anthropic still answers with Groq"),
+    ("agent/llm.py", 'if settings.llm_provider == "groq":\n        return GroqLLM(settings)', 'if True:\n        return GroqLLM(settings)',
+     "Claude API: an unknown provider silently falls back to Groq"),
+    ("agent/llm.py", 'workspace=settings.anthropic_workspace,', 'workspace="",',
+     "Claude API: the workspace id from the environment never reaches the client"),
+    ("agent/config.py", 'if provider not in LLM_PROVIDERS:', 'if False:',
+     "Claude API: a mistyped LLM_PROVIDER is accepted"),
+    ("agent/config.py", '(os.environ.get("LLM_PROVIDER") or "groq").strip().lower()', '(os.environ.get("LLM_PROVIDER") or "groq").strip()',
+     "Claude API: LLM_PROVIDER=Anthropic is refused"),
+    ("agent/config.py", '(os.environ.get("LLM_PROVIDER") or "groq")', '(os.environ.get("LLM_PROVIDER") or "anthropic")',
+     "Claude API: a deployment that sets nothing new is moved off Groq"),
+    ("agent/config.py", 'model_key = ("ANTHROPIC_API_KEY", llm["anthropic_key"]) if llm["llm_provider"] == "anthropic" else ("GROQ_API_KEY", llm["groq_key"])', 'model_key = ("GROQ_API_KEY", llm["groq_key"])',
+     "Claude API: the Anthropic provider demands a Groq key and does not check its own"),
+    ("agent/config.py", 'anthropic_key: str = field(default="", repr=False)', 'anthropic_key: str = ""',
+     "Claude API: printing the settings prints the Anthropic key"),
+    ("agent/config.py", '_read_kv(SECRETS_DIR / "anthropic_key.txt").get("ANTHROPIC_API_KEY", "")', '""',
+     "Claude API: the saved secret file is never read"),
+    ("agent/config.py", 'os.environ.get("ANTHROPIC_WORKSPACE_ID", "")', '""',
+     "Claude API: ANTHROPIC_WORKSPACE_ID is never read"),
+    ("console_api/engine.py", 'shopify_token=decrypt_token(tenant["shopify_token_enc"]), **llm_settings_from_env())', 'shopify_token=decrypt_token(tenant["shopify_token_enc"]), groq_key="")',
+     "Claude API: the console ignores LLM_PROVIDER"),
+    ("console_api/engine.py", 'return SupportAgent(build_llm(s), ShopifyAdmin(s), parse_policy', 'return SupportAgent(__import__("agent.llm", fromlist=["x"]).GroqLLM(s), ShopifyAdmin(s), parse_policy',
+     "Claude API: the console builds a Groq client whatever the provider"),
+    ("serve.py", 'return SupportAgent(build_llm(s), ShopifyAdmin(s), load_policy', 'return SupportAgent(__import__("agent.llm", fromlist=["x"]).GroqLLM(s), ShopifyAdmin(s), load_policy',
+     "Claude API: /support builds a Groq client whatever the provider"),
+    ("serve.py", 'llm, shop, policy, audit = build_llm(s),', 'llm, shop, policy, audit = __import__("agent.llm", fromlist=["x"]).GroqLLM(s),',
+     "Claude API: the chat widget builds a Groq client whatever the provider"),
 ]
 
 
 # The two slow files (a real Chromium, a real child process over stdio) run only for a mutant the fast tests did not catch.
 SLOW = ["tests/test_widget_browser.py", "tests/test_mcp_stdio.py"]
+# The Claude API mutants run their own two files first (about 4 s, and a catch there is final); only a mutant those files
+# did not catch goes on to the whole suite, so a guard that some other test happens to catch still counts as caught.
+CLAUDE_PREFIX = "Claude API: "
+CLAUDE_TESTS = ["tests/test_anthropic_llm.py", "tests/test_anthropic_chat_path.py"]
 
 
 def run_pytest(args: list[str], retries: int = 2) -> tuple[str, str]:
     try:
         p = subprocess.run([sys.executable, "-m", "pytest", *args, "-q", "-x", "-rf", "-p", "no:cacheprovider"],
-                           cwd=ROOT, capture_output=True, text=True, encoding="utf-8", timeout=180)
+                           cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=180)
     except subprocess.TimeoutExpired:
         return "hang", ""
     if p.returncode != 0 and "WinError 10055" in p.stdout and retries:
@@ -314,7 +467,11 @@ def run_pytest(args: list[str], retries: int = 2) -> tuple[str, str]:
     return ("green" if p.returncode == 0 else "red"), p.stdout[-600:]
 
 
-def run_suite() -> tuple[str, str]:
+def run_suite(targeted: bool = False) -> tuple[str, str]:
+    if targeted:
+        outcome, out = run_pytest(CLAUDE_TESTS)
+        if outcome != "green":
+            return outcome, out
     outcome, out = run_pytest(["tests", *["--ignore=" + f for f in SLOW]])
     if outcome != "green":
         return outcome, out
@@ -340,7 +497,7 @@ def main() -> int:
             return 2
         try:
             path.write_bytes(text.replace(old, new).encode("utf-8"))
-            outcome, tail = run_suite()
+            outcome, tail = run_suite(consequence.startswith(CLAUDE_PREFIX))
         finally:
             path.write_bytes(original)
         if path.read_bytes() != original:

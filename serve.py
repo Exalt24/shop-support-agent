@@ -10,6 +10,9 @@ variables per tenant; CHAT_TRUST_PROXY=1 only when a proxy of yours sets X-Forwa
 With ZOHO_CLIENT_ID, ZOHO_CLIENT_SECRET and ZOHO_REFRESH_TOKEN set (see docs/enquiry-routing.md) the agent also routes enquiries and
 captures consented leads, and the answer carries an "enquiry" object. Send the same conversation_id on every turn of a chat.
 
+The model is Groq unless LLM_PROVIDER=anthropic, which uses the Claude API (ANTHROPIC_API_KEY, model claude-sonnet-5-5; see
+README.md, "Claude API provider").
+
 If SUPPORT_AGENT_KEY is set, requests must carry it in X-Agent-Key. The agent reads orders, so the
 endpoint is not left open by default on any machine that sets a key.
 """
@@ -29,7 +32,7 @@ from agent.chat_guard import ConversationSigner
 from agent.config import load_settings
 from agent.core import SupportAgent
 from agent.leads import desk_from_env
-from agent.llm import GroqLLM
+from agent.llm import build_llm
 from agent.policy import load_policy
 from agent.shopify import ShopifyAdmin
 from agent.tenants import TenantRegistry, desk_for, zoho_settings_for
@@ -46,7 +49,7 @@ class SupportRequest(BaseModel):
 
 def build_default_agent() -> SupportAgent:
     s = load_settings()
-    return SupportAgent(GroqLLM(s), ShopifyAdmin(s), load_policy(HERE / "policy.md"),
+    return SupportAgent(build_llm(s), ShopifyAdmin(s), load_policy(HERE / "policy.md"),
                         AuditLog(HERE / "logs" / "audit.jsonl"), enquiry=desk_from_env())
 
 
@@ -62,7 +65,7 @@ def chat_from_env(env: Mapping[str, str] | None = None) -> ChatBackend | None:
         raise RuntimeError("CHAT_SIGNING_KEY must be set to a random string of at least 32 characters")
     registry = TenantRegistry.from_file(Path(path))
     s = load_settings()
-    llm, shop, policy, audit = GroqLLM(s), ShopifyAdmin(s), load_policy(HERE / "policy.md"), AuditLog(HERE / "logs" / "audit.jsonl")
+    llm, shop, policy, audit = build_llm(s), ShopifyAdmin(s), load_policy(HERE / "policy.md"), AuditLog(HERE / "logs" / "audit.jsonl")
     # Credentials for every tenant are read now, so a missing variable stops the server at start and not on a visitor's first lead.
     crms = {t.id: ZohoCrmClient(zoho_settings_for(t, env)) for t in registry.tenants}
     return ChatBackend(registry, ConversationSigner(key.encode("utf-8")),

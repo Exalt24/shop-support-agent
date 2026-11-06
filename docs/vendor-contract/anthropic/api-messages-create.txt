@@ -1,0 +1,555 @@
+RETRIEVED: 2026-11-06 with Operations/tools/webread/webread.cjs (real Chromium). Vendor page text, saved as data.
+URL: https://platform.claude.com/docs/en/api/messages/create
+STATUS: 200
+
+Claude Platform Docs
+Messages
+Managed Agents
+Admin
+Resources
+
+
+API reference
+
+English
+
+
+Console
+Log in
+
+Search
+Ctrl
+K
+
+Include beta APIs
+Using the API
+Features overview
+Beta headers
+Errors
+Messages
+
+Create a Message
+
+Count tokens in a Message
+Batches
+
+Managed Agents
+
+Agents
+
+Environments
+
+Sessions
+
+Deployments
+
+Deployment Runs
+
+Vaults
+
+Memory Stores
+
+Dreams
+
+Files
+
+Upload File
+
+List Files
+
+Download File
+
+Get File Metadata
+
+Delete File
+Models
+
+List Models
+
+Get a Model
+Organization
+
+Get Current Organization
+API Keys
+
+External Keys
+
+Federation
+
+Invites
+
+Service Accounts
+
+Users
+
+Workspaces
+
+Rate Limits
+
+Compliance Settings
+
+Usage Report
+
+Cost Report
+
+MCP Tunnels
+
+
+Analytics
+
+Spend Limits
+
+RBAC Groups
+
+RBAC Roles
+
+Plugins
+
+
+Plugin Marketplaces
+
+
+Telemetry Destinations
+
+
+Webhooks
+
+
+Claude Tag
+
+Skills
+
+Create Skill
+
+List Skills
+
+Get Skill
+
+Delete Skill
+Versions
+
+User Profiles
+
+Create User Profile
+
+List User Profiles
+
+Get User Profile
+
+Update User Profile
+
+Delete User Profile
+
+Create Enrollment URL
+Action URLs
+
+Tunnels
+
+
+Create Tunnel
+
+Get Tunnel
+
+List Tunnels
+
+Archive Tunnel
+
+Reveal Tunnel Token
+
+Rotate Tunnel Token
+Certificates
+
+Compliance API
+Activities
+
+Organizations
+
+Groups
+
+Apps
+
+OpenTelemetry
+Spans
+
+Support & configuration
+Rate limits
+Service tiers
+AWS IAM actions
+Google Cloud IAM permissions
+Versions
+Migrating to API version 2026-10-21
+IP addresses
+Supported regions
+Claude Code
+Trigger a routine
+
+
+A beta version of this method exists and may have additional functionality. View the beta version.
+API reference
+
+Messages
+Create a Message
+
+Copy page
+
+API version 2026-10-21
+
+cURL
+
+
+POST
+/v1/messages
+
+Send a structured list of input messages with text and/or image content, and the model will generate the next message in the conversation.
+
+The Messages API can be used for either single queries or stateless multi-turn conversations.
+
+Learn more about the Messages API in our user guide
+
+Headers
+"anthropic-version": optional string
+
+
+The version of the Claude API you want to use.
+
+"anthropic-user-profile-id": optional string
+
+
+The user profile ID to attribute this request to. Use when acting on behalf of a party other than your organization.
+
+"anthropic-workspace-id": optional string
+
+
+Optional header to select the Workspace for this request. The value is a Workspace ID (for example, wrkspc_011CZkZaBF1tNoB5wlCeusgy).
+
+Body
+max_tokens: number
+
+
+The maximum number of tokens to generate before stopping.
+
+
+messages: array of MessageParam
+
+
+Input messages.
+
+
+model: Model
+
+
+The model that will complete your prompt.
+
+
+cache_control: optional CacheControlEphemeral { type: "ephemeral", ttl } or null
+
+
+Top-level cache control automatically applies a cache_control marker to the last cacheable block in the request.
+
+
+container: optional MessageCreateParamsContainer or null
+
+
+Container identifier for reuse across requests.
+
+
+diagnostics: optional DiagnosticsParam { previous_message_id } or null
+
+
+Request-level diagnostics. Supply previous_message_id to have the response include diagnostics.cache_miss_reason explaining any prompt-cache divergence from that prior request.
+
+inference_geo: optional string or null
+
+
+Specifies the geographic region for inference processing. If not specified, the workspace's default_inference_geo is used.
+
+
+metadata: optional Metadata { user_id }
+
+
+An object describing metadata about the request.
+
+
+output_config: optional OutputConfig { effort, format }
+
+
+Configuration options for the model's output, such as the output format.
+
+
+service_tier: optional "auto" or "standard_only"
+
+
+Determines whether to use priority capacity (if available) or standard capacity for this request.
+
+
+speed: optional "standard" or "fast" or null
+
+
+The inference speed mode for this request. "fast" enables high output-tokens-per-second inference.
+
+stop_sequences: optional array of string
+
+
+Custom text sequences that will cause the model to stop generating.
+
+stream: optional boolean
+
+
+Whether to incrementally stream the response using server-sent events. When true, SDKs return a raw event stream.
+
+
+system: optional string or array of TextBlockParam
+
+
+System prompt.
+
+
+thinking: optional ThinkingConfigParam
+
+
+Configuration for Claude's thinking.
+
+
+tool_choice: optional ToolChoice
+
+
+How the model should use the provided tools. The model can use a specific tool, any available tool, decide by itself, or not use tools at all.
+
+
+tools: optional array of ToolUnion
+
+
+Definitions of tools that the model may use.
+
+Returns
+
+Message
+
+type: "message"
+
+
+Object type.
+
+id: string
+
+
+Unique object identifier.
+
+
+container: Container { id, expires_at, skills } or null
+
+
+Information about the container used in this request.
+
+
+content: array of ContentBlock
+
+
+Content generated by the model.
+
+
+diagnostics: Diagnostics { cache_miss_reason } or null
+
+
+Request-level diagnostics. null when the request did not supply diagnostics, or when it did and no prompt-cache divergence was detected.
+
+
+model: Model
+
+
+The model that will complete your prompt.
+
+role: "assistant"
+
+
+Conversational role of the generated message.
+
+
+stop_details: RefusalStopDetails { type: "refusal", category, explanation } or null
+
+
+Structured information about why model output stopped.
+
+
+stop_reason: StopReason or null
+
+
+The reason that we stopped.
+
+stop_sequence: string or null
+
+
+Which custom stop sequence was generated, if any.
+
+
+usage: Usage { cache_creation, cache_creation_input_tokens, cache_read_input_tokens, 7 more }
+
+
+Billing and rate-limit usage.
+
+
+RawMessageStreamEvent = RawMessageStartEvent or RawMessageDeltaEvent or RawMessageStopEvent or 3 more
+
+
+Create a Message
+cURL
+
+
+curl https://api.anthropic.com/v1/messages \
+    -H 'Content-Type: application/json' \
+    -H 'anthropic-version: 2026-10-21' \
+    -H "Authorization: Bearer $ANTHROPIC_API_KEY" \
+    --max-time 600 \
+    -d '{
+          "max_tokens": 1024,
+          "messages": [
+            {
+              "content": "Hello, world",
+              "role": "user"
+            }
+          ],
+          "model": "claude-opus-5-5",
+          "stream": false,
+          "system": [
+            {
+              "text": "Today'\''s date is 2024-06-01.",
+              "type": "text"
+            }
+          ],
+          "thinking": {
+            "type": "adaptive"
+          },
+          "tools": [
+            {
+              "input_schema": {
+                "type": "object",
+                "properties": {
+                  "location": "bar",
+                  "unit": "bar"
+                },
+                "required": [
+                  "location"
+                ]
+              },
+              "name": "name"
+            }
+          ]
+        }'
+Response 200
+
+{
+  "id": "msg_013Zva2CMHLNnXjNJJKqJ2EF",
+  "container": {
+    "id": "container_011CpZohnwH4vuy7gazohgSP",
+    "expires_at": "2019-12-27T18:11:19.117Z",
+    "skills": [
+      {
+        "skill_id": "pdf",
+        "type": "anthropic",
+        "version": "latest"
+      }
+    ]
+  },
+  "content": [
+    {
+      "citations": [
+        {
+          "cited_text": "The grass is green. The sky is blue.",
+          "document_index": 0,
+          "document_title": "My Document",
+          "end_char_index": 0,
+          "file_id": "file_011CNha8iCJcU1wXNR6q4V8w",
+          "start_char_index": 0,
+          "type": "char_location"
+        }
+      ],
+      "text": "Hi! My name is Claude.",
+      "type": "text"
+    }
+  ],
+  "diagnostics": {
+    "cache_miss_reason": {
+      "cache_missed_input_tokens": 0,
+      "type": "model_changed"
+    }
+  },
+  "model": "claude-opus-5-5",
+  "role": "assistant",
+  "stop_details": {
+    "category": "cyber",
+    "explanation": "This request was declined because it conflicts with Anthropic's Usage Policy.",
+    "type": "refusal"
+  },
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "type": "message",
+  "usage": {
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 0,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "cache_creation_input_tokens": 2051,
+    "cache_read_input_tokens": 2051,
+    "inference_geo": "global",
+    "input_tokens": 2095,
+    "output_tokens": 503,
+    "output_tokens_details": {
+      "thinking_tokens": 0
+    },
+    "server_tool_use": {
+      "web_fetch_requests": 2,
+      "web_search_requests": 0
+    },
+    "service_tier": "standard",
+    "speed": "standard"
+  }
+}
+Claude Platform Docs
+
+
+Solutions
+AI agents
+Code modernization
+Coding
+Customer support
+Financial services
+Government
+Higher education
+K-12 teachers
+Life sciences
+Partners
+Claude on AWS
+Claude on Google Cloud
+Company
+Anthropic
+Careers
+Economic Futures
+Research
+News
+Responsible Scaling Policy
+Security and compliance
+Transparency
+Learn
+Blog
+Courses
+Use cases
+Connectors
+Customer stories
+Engineering at Anthropic
+Events
+Powered by Claude
+Service partners
+Startups program
+Help and security
+Availability
+Status
+Support
+Discord
+Terms and policies
+Privacy policy
+Responsible disclosure policy
+Terms of service: Commercial
+Terms of service: Consumer
+Usage policy
+Ask Docs
+

@@ -2,24 +2,17 @@
 not new code."""
 from __future__ import annotations
 
-import os
-
-from agent.config import SECRETS_DIR, Settings, _read_kv
+from agent.config import Settings, llm_settings_from_env
 from agent.core import SupportAgent
-from agent.llm import GroqLLM
+from agent.llm import build_llm
 from agent.policy import parse_policy
 from agent.shopify import ShopifyAdmin
 
 from .secrets_store import decrypt_token
 
 
-def _groq_key() -> str:
-    return os.environ.get("GROQ_API_KEY") or _read_kv(SECRETS_DIR / "groq_test_key.txt").get("GROQ_API_KEY", "")
-
-
 def _settings(tenant: dict) -> Settings:
-    return Settings(groq_key=_groq_key(), shop=tenant["shop_domain"],
-                    shopify_token=decrypt_token(tenant["shopify_token_enc"]))
+    return Settings(shop=tenant["shop_domain"], shopify_token=decrypt_token(tenant["shopify_token_enc"]), **llm_settings_from_env())
 
 
 def store_shop(tenant: dict) -> ShopifyAdmin:
@@ -29,4 +22,4 @@ def store_shop(tenant: dict) -> ShopifyAdmin:
 
 def build_agent(tenant: dict) -> SupportAgent:
     s = _settings(tenant)
-    return SupportAgent(GroqLLM(s), ShopifyAdmin(s), parse_policy(tenant["policy_md"]), audit=None)
+    return SupportAgent(build_llm(s), ShopifyAdmin(s), parse_policy(tenant["policy_md"]), audit=None)

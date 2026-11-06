@@ -11,6 +11,7 @@ from typing import Protocol
 
 import httpx
 
+from . import config
 from .config import GROQ_URL, MODEL, Settings
 
 
@@ -51,6 +52,17 @@ class GroqLLM:
         if not text:
             raise LLMError("empty completion, finish_reason=%s" % choice.get("finish_reason"))
         return text
+
+
+def build_llm(settings: Settings) -> LLM:
+    """The model client for the configured provider (LLM_PROVIDER, default groq)."""
+    if settings.llm_provider == "anthropic":
+        from .anthropic_llm import AnthropicLLM  # imported here because anthropic_llm imports LLMError from this file
+        return AnthropicLLM(settings.anthropic_key, config.ANTHROPIC_MODEL, workspace=settings.anthropic_workspace,
+                            url=config.ANTHROPIC_URL)
+    if settings.llm_provider == "groq":
+        return GroqLLM(settings)
+    raise LLMError("unknown LLM provider: %r" % settings.llm_provider)
 
 
 def parse_json(text: str) -> dict:

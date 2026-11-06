@@ -15,7 +15,7 @@ import psycopg
 
 from agent.config import load_settings
 from agent.core import SupportAgent
-from agent.llm import GroqLLM
+from agent.llm import build_llm
 from agent.policy import load_policy
 from agent.shopify import ShopifyAdmin
 from console_api import db
@@ -39,7 +39,7 @@ def seed(admin):
 
 def main() -> int:
     settings = load_settings()
-    llm, shop, policy = GroqLLM(settings), ShopifyAdmin(settings), load_policy(HERE / "policy.md")
+    llm, shop, policy = build_llm(settings), ShopifyAdmin(settings), load_policy(HERE / "policy.md")
     out = ["# Live memory demo transcript", "",
            "Real Shopify dev store (fake customers), real model, real Postgres with forced row-level security. "
            "Every turn is one call to `SupportAgent.handle` with a `PgMemory` attached for that store.", ""]

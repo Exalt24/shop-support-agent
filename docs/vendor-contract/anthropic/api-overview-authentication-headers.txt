@@ -1,0 +1,474 @@
+RETRIEVED: 2026-11-06 with Operations/tools/webread/webread.cjs (real Chromium). Vendor page text, saved as data.
+URL: https://platform.claude.com/docs/en/api/overview
+STATUS: 200
+
+Claude Platform Docs
+Messages
+Managed Agents
+Admin
+Resources
+
+
+API reference
+
+English
+
+
+Console
+Log in
+
+Search
+Ctrl
+K
+
+Include beta APIs
+Using the API
+Features overview
+Beta headers
+Errors
+Messages
+
+Create a Message
+
+Count tokens in a Message
+Batches
+
+Managed Agents
+
+Agents
+
+Environments
+
+Sessions
+
+Deployments
+
+Deployment Runs
+
+Vaults
+
+Memory Stores
+
+Dreams
+
+Files
+
+Upload File
+
+List Files
+
+Download File
+
+Get File Metadata
+
+Delete File
+Models
+
+List Models
+
+Get a Model
+Organization
+
+Get Current Organization
+API Keys
+
+External Keys
+
+Federation
+
+Invites
+
+Service Accounts
+
+Users
+
+Workspaces
+
+Rate Limits
+
+Compliance Settings
+
+Usage Report
+
+Cost Report
+
+MCP Tunnels
+
+
+Analytics
+
+Spend Limits
+
+RBAC Groups
+
+RBAC Roles
+
+Plugins
+
+
+Plugin Marketplaces
+
+
+Telemetry Destinations
+
+
+Webhooks
+
+
+Claude Tag
+
+Skills
+
+Create Skill
+
+List Skills
+
+Get Skill
+
+Delete Skill
+Versions
+
+User Profiles
+
+Create User Profile
+
+List User Profiles
+
+Get User Profile
+
+Update User Profile
+
+Delete User Profile
+
+Create Enrollment URL
+Action URLs
+
+Tunnels
+
+
+Create Tunnel
+
+Get Tunnel
+
+List Tunnels
+
+Archive Tunnel
+
+Reveal Tunnel Token
+
+Rotate Tunnel Token
+Certificates
+
+Compliance API
+Activities
+
+Organizations
+
+Groups
+
+Apps
+
+OpenTelemetry
+Spans
+
+Support & configuration
+Rate limits
+Service tiers
+AWS IAM actions
+Google Cloud IAM permissions
+Versions
+Migrating to API version 2026-10-21
+IP addresses
+Supported regions
+Claude Code
+Trigger a routine
+
+API reference
+
+Using the API
+API overview
+
+Copy page
+
+
+Understand the Claude API’s available endpoints, authentication headers, client SDKs, pagination, rate limits, and cloud platform access options.
+
+The Claude API is a RESTful API at https://api.anthropic.com that provides programmatic access to Claude models and Claude Managed Agents.
+
+
+
+New to Claude? For direct model access, start with Get started and Working with Messages. For managed agent infrastructure, see the Claude Managed Agents quickstart.
+
+Prerequisites
+
+
+To use the Claude API, you need:
+
+A Claude Console account
+An API key from the Console, or a configured Workload Identity Federation rule
+
+For step-by-step setup instructions, see Get started.
+
+Available APIs
+
+
+The Claude API includes the following APIs:
+
+Messages API
+Preview with links to the API reference available — press Tab until focus enters the card, Escape to return.
+: Send messages to Claude for conversational interactions (POST /v1/messages)
+Message Batches API
+Preview with links to the API reference available — press Tab until focus enters the card, Escape to return.
+: Process large volumes of Messages requests asynchronously with a 50 percent cost reduction (POST /v1/messages/batches)
+Token Counting API
+Preview with links to the API reference available — press Tab until focus enters the card, Escape to return.
+: Count tokens in a message before sending to manage costs and rate limits (POST /v1/messages/count_tokens)
+Models API
+Preview with links to the API reference available — press Tab until focus enters the card, Escape to return.
+: List available Claude models and their details (GET /v1/models)
+Files API
+Preview with links to the API reference available — press Tab until focus enters the card, Escape to return.
+: Upload and manage files for use across multiple API calls (POST /v1/files, GET /v1/files)
+Skills API
+Preview with links to the API reference available — press Tab until focus enters the card, Escape to return.
+: Create and manage custom agent skills (POST /v1/skills, GET /v1/skills)
+
+The following APIs are in beta:
+
+Agents API: Define reusable, versioned agent configurations for Claude Managed Agents (POST /v1/agents, GET /v1/agents)
+Sessions API: Run stateful agent sessions in managed cloud sandboxes (POST /v1/sessions, GET /v1/sessions/{id}/events/stream)
+Environments API: Configure sandbox templates for agent sessions (POST /v1/environments, GET /v1/environments)
+
+For the complete API reference with all endpoints, parameters, and response schemas, explore the API reference pages listed in the navigation. To access beta features, see Beta headers.
+
+Authentication
+
+
+For details on each authentication method and when to use it, see Authentication. Requests to the Claude API include these headers:
+
+Header	Value	Required
+Authorization	Bearer <token>, where <token> is your API key or a short-lived access token obtained from POST /v1/oauth/token through Workload Identity Federation	Yes, unless x-api-key is set
+x-api-key	Your API key from Console. Legacy fallback for Authorization, still supported	No
+anthropic-workspace-id	ID of the workspace the request runs in (for example, wrkspc_01JwQvzr7rXLA5AGx3HKfFUJ). See Select a workspace.	Required with an API key that isn’t scoped to a workspace. Optional for other API keys. A key created for a single workspace runs in that workspace when you omit the header. Not used with Workload Identity Federation tokens, which select a workspace at token exchange.
+anthropic-version	API version (for example, 2026-10-21)	Yes
+content-type	application/json	Yes
+
+If you are using the Client SDKs, the SDK sends the authentication, version, and content-type headers automatically; you pass anthropic-workspace-id yourself when your key needs it. For API versioning details, see API versions.
+
+When accessing Claude through a cloud platform, authentication is integrated with the cloud provider’s IAM system. See the platform-specific documentation for supported credential types, required headers, and authentication options.
+
+Getting API keys
+
+
+The API is made available through the web Console. In the Console, you can use playground (platform.claude.com/playground) to try out the API in the browser and then generate API keys on the API keys page (platform.claude.com/settings/keys). To learn how, see Get your Claude API key. You choose each key’s type (see Key types) and its expiration when you create it. Use workspaces in the Console to separate environments and control spend by use case.
+
+Client SDKs
+
+
+Anthropic provides official SDKs that simplify API integration by handling authentication, request formatting, error handling, and more.
+
+Benefits:
+
+Automatic header management (authentication, anthropic-version, content-type)
+Type-safe request and response handling
+Built-in retry logic and error handling
+Streaming support
+Request timeouts and connection management
+
+For a list of client SDKs, see SDKs, CLI, and libraries.
+
+Claude API versus cloud platforms
+
+
+Claude is available through the first-party Claude API and through cloud platforms. Choose based on your infrastructure, feature availability, compliance requirements, and pricing preferences.
+
+Claude API
+
+Direct access to the latest models and features
+Anthropic billing and support
+Best for: New integrations, full feature access, direct relationship with Anthropic
+Cloud platform APIs
+
+
+Access Claude through AWS, Google Cloud, or Microsoft Azure:
+
+Integrated with cloud provider billing and IAM
+Feature availability varies by platform: Anthropic-operated platforms include Claude Platform on AWS, Claude Models on Google Cloud (Anthropic managed), and Microsoft Foundry; partner-operated platforms include Claude Models on Google Cloud (Google managed) and Amazon Bedrock. See each platform’s page for feature availability and timing.
+Best for: Existing cloud commitments, specific compliance requirements, consolidated cloud billing
+Platform	Provider	Documentation
+Claude Models on Google Cloud (Google managed)	Google Cloud	Claude Models on Google Cloud (Google managed)
+Amazon Bedrock	AWS	Claude in Amazon Bedrock
+Claude Platform on AWS	AWS (Anthropic-operated)	Claude Platform on AWS
+Claude Models on Google Cloud (Anthropic managed)	Google Cloud (Anthropic-operated)	Claude Models on Google Cloud (Anthropic managed)
+Microsoft Foundry	Microsoft Azure (Anthropic-operated)	Claude in Microsoft Foundry
+
+
+Claude Managed Agents is available through the first-party Claude API, Claude Platform on AWS, and Claude Models on Google Cloud (Anthropic managed). For feature availability across platforms, see the Features overview.
+
+Request and response format
+
+Request size limits
+
+
+The first-party Claude API enforces these request size limits:
+
+Endpoint	Maximum request size
+Messages, Token Counting	128 MB
+Message Batches API (see Batch processing)	256 MB
+Files API	500 MB
+Sessions, Agents, Environments	32 MB
+
+If you exceed these limits, you’ll receive a 413 request_too_large error.
+
+
+
+Partner-operated platforms have their own request size limits: Bedrock limits requests to 20 MB, and Claude Models on Google Cloud (Google managed) limits requests to 30 MB. Claude Platform on AWS, Claude Models on Google Cloud (Anthropic managed), and Microsoft Foundry support Messages and Token Counting requests of up to 32 MB. Consult your platform’s documentation for current values.
+
+Response headers
+
+
+The Claude API includes the following headers in its responses:
+
+Header	Description
+request-id	A globally unique identifier for the request, such as req_018EeWyXxfu5pfWkrYcMdjWG. Include it when you contact support about a specific request. See Request ID.
+anthropic-organization-id	The ID of the organization that the API key or access token used in the request belongs to.
+anthropic-workspace-id	The wrkspc_-prefixed ID of the workspace that the API key or access token resolved to, such as wrkspc_01JwQvzr7rXLA5AGx3HKfFUJ, including when that is your organization’s Default Workspace. Absent when the credential doesn’t resolve to a workspace (for example, on Admin API requests) or the request fails before authentication completes. See Identify the workspace behind an API response.
+
+For the rate limit headers, see Response headers in Rate limits. For examples that read a response header by name with each SDK, see Identify the workspace behind an API response.
+
+
+
+Claude Platform on AWS adds an AWS request ID (x-amzn-requestid) alongside the standard request-id header. See Request IDs for the dual-ID handling pattern.
+
+Pagination
+
+
+List endpoints return results in pages. Most newer list endpoints use the page and next_page cursor scheme described in this section. Some use a different scheme; see the note at the end of this section. Use the limit query parameter to control the page size and the page query parameter to fetch an adjacent page. Each response includes a data array alongside cursor fields for navigating between pages.
+
+Name	Location	Description
+limit	Query parameter	Maximum number of items to return per page.
+page	Query parameter	Opaque cursor from a previous response. Pass a next_page or prev_page value here to fetch the adjacent page.
+order	Query parameter	Sort direction for the results (asc or desc), on list endpoints that support sorting. A page cursor is only valid with the order it was created with.
+next_page	Response field	Cursor for the next page, or null if there are no more results.
+prev_page	Response field	Cursor for the previous page on endpoints that support backward pagination (currently GET /v1/sessions), or null if you are on the first page. Other list endpoints omit the field.
+
+To go back a page, pass prev_page as the page parameter. prev_page is null when you’re on the first page. Not all list endpoints support prev_page. Only GET /v1/sessions returns prev_page; on list endpoints that do not support backward pagination, the field is absent from the response rather than null. For a request walkthrough, see Listing sessions.
+
+The SDK provides an auto-paginating iterator that follows next_page for you. For example, for session in client.beta.sessions.list() walks through every session. SDK auto-pagination is forward-only; to go back a page, read prev_page from the response and pass it back as the page parameter yourself. See SDKs, CLI, and libraries for details.
+
+
+
+Some list endpoints use a different cursor scheme. The Message Batches API (see Batch processing), the Models API
+Preview with links to the API reference available — press Tab until focus enters the card, Escape to return.
+, and several Admin API endpoints take after_id and before_id query parameters instead of page. Their responses return has_more, first_id, and last_id instead of next_page. See the reference page for each endpoint for its exact pagination fields.
+
+Rate limits and availability
+
+Rate limits
+
+
+The API enforces rate limits and spend limits to prevent misuse and manage capacity. Limits are organized into usage tiers; your organization is placed on a tier automatically and can move to a higher tier over time. Each tier has:
+
+Spend limits: Maximum monthly cost for API usage
+Rate limits: Maximum number of requests per minute (RPM) and tokens per minute (TPM)
+
+You can view your rate limits under Rate limits in the Claude Console and your spend limits on the Console’s Billing page. For higher rate limits or a higher monthly spend cap, use Request tier increase on the Rate limits page.
+
+For detailed information about limits, tiers, and the token bucket algorithm used for rate limiting, see Rate limits.
+
+Availability
+
+
+The Claude API is available in many countries and regions worldwide. Check the supported regions page to confirm availability in your location.
+
+Next steps
+
+
+Messages API reference
+
+Complete API specification for direct model interactions
+
+
+Claude Managed Agents reference
+
+Agents, Sessions, and Environments endpoints
+
+
+Client SDKs
+
+Python, TypeScript, C#, Go, Java, PHP, and Ruby
+
+
+Rate limits
+
+Usage tiers, requesting higher limits, and the token bucket algorithm
+
+Was this page helpful?
+
+
+
+Prerequisites
+Available APIs
+Authentication
+Getting API keys
+Client SDKs
+Claude API versus cloud platforms
+Claude API
+Cloud platform APIs
+Request and response format
+Request size limits
+Response headers
+Pagination
+Rate limits and availability
+Rate limits
+Availability
+Next steps
+Claude Platform Docs
+
+
+Solutions
+AI agents
+Code modernization
+Coding
+Customer support
+Financial services
+Government
+Higher education
+K-12 teachers
+Life sciences
+Partners
+Claude on AWS
+Claude on Google Cloud
+Company
+Anthropic
+Careers
+Economic Futures
+Research
+News
+Responsible Scaling Policy
+Security and compliance
+Transparency
+Learn
+Blog
+Courses
+Use cases
+Connectors
+Customer stories
+Engineering at Anthropic
+Events
+Powered by Claude
+Service partners
+Startups program
+Help and security
+Availability
+Status
+Support
+Discord
+Terms and policies
+Privacy policy
+Responsible disclosure policy
+Terms of service: Commercial
+Terms of service: Consumer
+Usage policy
+Ask Docs
+
