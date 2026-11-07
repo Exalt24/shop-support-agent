@@ -75,7 +75,7 @@ For a sales site as well as a shop: the agent sorts each enquiry, routes it to a
 
 `LLM_PROVIDER=anthropic` makes the agent answer with Anthropic's Claude API (model `claude-sonnet-5-5`) instead of Groq, and Groq stays the default when nothing is set. It is one switch for every path: the `/support` endpoint, the chat widget backend and the support console all build their model the same way, so the grounding guard and the escalation floor judge a Claude reply exactly as they judge a Groq one. `LLM_PROVIDER=watsonx` answers through IBM watsonx.ai the same way, written from IBM's documentation and tested against a stand-in server that follows it (a live run needs `WATSONX_API_KEY` and `WATSONX_PROJECT_ID`; see [docs/watsonx.md](docs/watsonx.md)).
 
-Both are plain HTTP clients with no vendor SDK, and each failure (a refusal, a cut-off or empty reply, any HTTP error, a dropped connection) is a named error that ends in a person, with the key kept out of every message. Neither has called its live service. The status tables, the retry rules and the list of what is not done are in [docs/claude-api-provider.md](docs/claude-api-provider.md) and [docs/watsonx.md](docs/watsonx.md).
+Both are plain HTTP clients with no vendor SDK, and each failure (a refusal, a cut-off or empty reply, any HTTP error, a dropped connection) is a named error that ends in a person, with the key kept out of every message. Both are tested against stand-in servers. The status tables, the retry rules and the open items are in [docs/claude-api-provider.md](docs/claude-api-provider.md) and [docs/watsonx.md](docs/watsonx.md).
 
 ```
 LLM_PROVIDER=anthropic ANTHROPIC_API_KEY=... ./.venv/Scripts/python.exe -m uvicorn serve:app --port 8008
