@@ -724,6 +724,40 @@ MUTANTS = [
      'Discord: an unknown button is treated as a resolve'),
     ('agent/discord_handoff.py', 'take["disabled"] = True', 'pass',
      'Discord: the Take button stays live after someone took the ticket'),
+    ('agent/whatsapp_lane.py', 'mode == "subscribe" and challenge is not None and', 'challenge is not None and',
+     'WhatsApp: a handshake that is not a subscribe request is accepted'),
+    ('agent/whatsapp_lane.py', 'hmac.compare_digest(token.encode("utf-8"), verify_token.encode("utf-8"))', 'True',
+     'WhatsApp: anyone can register a webhook with any verify token'),
+    ('agent/whatsapp_lane.py', 'return 403, ""', 'return 200, ""',
+     'WhatsApp: a refused handshake is answered 200'),
+    ('agent/whatsapp_lane.py', 'header[len("sha256="):].strip().lower()', 'header[len("sha256="):].strip()',
+     'WhatsApp: an upper case hex signature is refused'),
+    ('agent/whatsapp_lane.py', 'if not verify_signature(self._secret, h.get("x-hub-signature-256"), raw):', 'if False:',
+     'WhatsApp: anyone can post a message to the endpoint and get a reply sent'),
+    ('agent/whatsapp_lane.py', 'return 400, {"error": "not json"}', 'return 200, {}',
+     'WhatsApp: a signed body that is not JSON is accepted silently'),
+    ('agent/whatsapp_lane.py', 'return 200, {}        # always 200', 'return 202, {}        # always 200',
+     'WhatsApp: Meta gets a non-200 and retries a notification for up to 7 days'),
+    ('agent/whatsapp_lane.py', 'if wamid in self._seen:', 'if False:',
+     "WhatsApp: Meta's retry of a notification gets a second reply"),
+    ('agent/whatsapp_lane.py', 'self._seen[wamid] = None', 'pass',
+     'WhatsApp: a handled message id is forgotten, so a retry is answered again'),
+    ('agent/whatsapp_lane.py', 'if not isinstance(text, str) or not text.strip():', 'if not isinstance(text, str):',
+     'WhatsApp: a blank message goes to the agent'),
+    ('agent/whatsapp_lane.py', 'except Exception:      # a failing agent', 'except ZeroDivisionError:      # a failing agent',
+     'WhatsApp: a model outage becomes a failed webhook and a week of retries'),
+    ('agent/whatsapp_lane.py', 'str(body)[:MAX_BODY]', 'str(body)',
+     'WhatsApp: a long reply makes WhatsApp refuse the send'),
+    ('agent/whatsapp_lane.py', 'r.status_code not in (429,) and r.status_code < 500', 'r.status_code < 500',
+     'WhatsApp: a rate limit on send is treated as final'),
+    ('agent/whatsapp_lane.py', '                wait *= 2', '                pass',
+     'WhatsApp: send retries hammer at a fixed pace'),
+    ('agent/whatsapp_lane.py', 'if escalated and self._handoff:', 'if False:',
+     'WhatsApp: an escalated WhatsApp message reaches no person'),
+    ('agent/whatsapp_lane.py', 'return "wa-" + hashlib.sha256(sender.encode("utf-8")).hexdigest()[:16]', 'return "wa-" + sender',
+     'WhatsApp: the phone number becomes the conversation id'),
+    ('agent/whatsapp_lane.py', 'return got if isinstance(got, list) else []', 'return got or []',
+     'WhatsApp: a wrongly typed notification level crashes the endpoint'),
 ]
 
 
@@ -739,7 +773,9 @@ WATSONX_TESTS = ["tests/test_watsonx_llm.py", "tests/test_watsonx_chat_path.py"]
 # The Discord mutants run their own file first (under a second).
 DISCORD_PREFIX = "Discord: "
 DISCORD_TESTS = ["tests/test_discord_handoff.py"]
-TARGETED = {CLAUDE_PREFIX: CLAUDE_TESTS, WATSONX_PREFIX: WATSONX_TESTS, DISCORD_PREFIX: DISCORD_TESTS}
+WHATSAPP_PREFIX = "WhatsApp: "
+WHATSAPP_TESTS = ["tests/test_whatsapp_lane.py"]
+TARGETED = {CLAUDE_PREFIX: CLAUDE_TESTS, WATSONX_PREFIX: WATSONX_TESTS, DISCORD_PREFIX: DISCORD_TESTS, WHATSAPP_PREFIX: WHATSAPP_TESTS}
 
 
 def targeted_files(consequence: str) -> list[str] | None:

@@ -1,0 +1,270 @@
+URL: https://developers.facebook.com/docs/whatsapp/cloud-api/guides/set-up-webhooks
+STATUS: 200
+
+Build with us
+Docs
+Blog
+Resources
+Developer centers
+Login
+WhatsApp Business Platform
+Business Messaging
+WhatsApp Business Platform
+WhatsApp Business Platform
+Overview
+Get started
+Direct Send messages
+Marketing messages
+In-App Signup
+Utility messages
+Authentication messages
+Service messages
+Calling
+Groups
+Catalogs
+Partners
+Conversation Routing
+Webhooks
+Overview
+Create a webhook endpoint
+Create a test webhook endpoint
+Override the callback URL
+Webhooks reference
+Template fundamentals
+Messaging features
+Account assets
+Analytics
+Ads that click to WhatsApp
+Payments
+Data, Privacy, & Policy
+Support
+Resources
+API Reference
+Changelog
+Error codes
+Docs
+Overview
+WhatsApp webhooks
+Was this helpful?
+WhatsApp webhooks
+Updated: Nov 4, 2026
+Copy for LLM
+View as Markdown
+This document describes webhooks and how the WhatsApp Business Platform uses them.
+Webhooks are HTTP requests containing JSON payloads that Meta’s servers send to a server of your designation. The WhatsApp Business Platform uses webhooks to inform you of incoming messages, the status of outgoing messages, call events, and other important information, such as changes to your account status, messaging capability upgrades, and changes to your template quality scores.
+For example, this is a webhook describing a message sent from a WhatsApp user to a business:
+{
+  "object": "whatsapp_business_account",
+  "entry": [
+    {
+      "id": "102290129340398",
+      "changes": [
+        {
+          "value": {
+            "messaging_product": "whatsapp",
+            "metadata": {
+              "display_phone_number": "15550783881",
+              "phone_number_id": "106540352242922"
+            },
+            "contacts": [
+              {
+                "profile": {
+                  "name": "Sheena Nelson"
+                },
+                "wa_id": "16505551234",
+                "user_id": "US.13491208655302741918"
+              }
+            ],
+            "messages": [
+              {
+                "from": "16505551234",
+                "from_user_id": "US.13491208655302741918",
+                "id": "wamid.HBgLMTY1MDM4Nzk0MzkVAgASGBQzQTRBNjU5OUFFRTAzODEwMTQ0RgA=",
+                "timestamp": "1749416383",
+                "type": "text",
+                "text": {
+                  "body": "Does it come in another color?"
+                }
+              }
+            ]
+          },
+          "field": "messages"
+        }
+      ]
+    }
+  ]
+}
+
+Message webhooks also identify the WhatsApp user by their business-scoped user ID (BSUID), in fields such as user_id and from_user_id above. If the user has adopted a username, phone number fields such as wa_id and from may be omitted, so use the BSUID to identify users.
+Create a webhook endpoint
+To receive webhooks, you must create and configure a webhook endpoint. To create your own endpoint, see the Create a webhook endpoint document.
+If you aren’t ready to create your own endpoint yet, you can create a test webhook endpoint that logs webhook payloads to the console. Note, however, that before you can use your app in a production capacity, you must create your own endpoint.
+Permissions
+You need the following permissions to receive webhooks:
+whatsapp_business_messaging — for messages and calls webhooks
+whatsapp_business_management — for all other webhooks
+If you are a direct developer, use your system user to grant your app these permissions when generating your system token.
+If you are a partner and need these permissions to provide appropriate services to your business customers, you must be approved for advanced access for the permissions via App Review before your business customers will be able to grant your app these permissions during onboarding.
+Fields
+Once you have created and configured your webhook endpoint (or have set up a test webhook endpoint), use the App Dashboard > WhatsApp > Configuration panel to subscribe to individual webhook fields.
+Note that if you created your app using the Connect with customers through WhatsApp use case, navigate to App Dashboard > Use cases > Customize > Configuration instead.
+Field name	Description
+
+account_alerts
+	
+The account_alerts webhook notifies you of changes to a business phone number’s messaging limit, business profile, and Official Business Account status.
+
+
+account_review_update
+	
+The account_review_update webhook notifies you when a WhatsApp account associated with your Messaging account has been reviewed against our policy guidelines. The notification is delivered on the Messaging account, and its entry.id is the Messaging account ID.
+
+
+account_update
+	
+The account_update webhook is delivered on your Messaging account, and notifies of changes to the associated WhatsApp account’s partner-led business verification submission, the Messaging account’s authentication-international rate eligibility, or the WhatsApp account’s primary business location, when the Messaging account is shared with a Solution Partner, policy or terms violations, offboarding, reconnection, or when the Messaging account is deleted.
+
+
+automatic_events
+	
+The automatic_events webhook notifies you when we detect a purchase or lead event in a chat thread between you and a WhatsApp user who has messaged you via your Click to WhatsApp ad, if you have opted-in to Automatic Events reporting.
+
+
+business_capability_update
+	
+The business_capability_update webhook notifies you of WhatsApp account hierarchy or business portfolio capability changes (messaging limits, phone number limits, etc.). You receive these notifications through the associated Messaging account, which holds the webhook subscription.
+
+
+calls
+	
+The calls webhook notifies you of call events for user-initiated calls and business-initiated calls, such as when a call is connected or terminated.
+
+
+history
+	
+The history webhook is used to synchronize the WhatsApp Business app chat history of a business customer onboarded by a solution provider.
+
+
+message_template_components_update
+	
+The message_template_components_update webhook notifies you of changes to a template’s components.
+
+
+message_template_quality_update
+	
+The message_template_quality_update webhook notifies you of changes to a template’s quality score.
+
+
+message_template_status_update
+	
+The message_template_status_update webhook notifies you of changes to the status of an existing template.
+
+
+messages
+	
+The messages webhook describes messages sent from a WhatsApp user to a business and the status of messages sent by a business to a WhatsApp user.
+
+
+partner_solutions
+	
+The partner_solutions webhook describes changes to the status of a Multi-Partner Solution.
+
+
+payment_configuration_update
+	
+The payment_configuration_update webhook notifies you of changes to payment configurations for Payments API India and Payments API Brazil.
+
+
+phone_number_name_update
+	
+The phone_number_name_update webhook notifies you of business phone number display name verification outcomes.
+
+
+phone_number_quality_update
+	
+The phone_number_quality_update webhook notifies you of changes to a business phone number’s throughput level.
+
+
+security
+	
+The security webhook notifies you of changes to a business phone number’s security settings.
+
+
+smb_app_state_sync
+	
+The smb_app_state_sync webhook is used for synchronizing contacts of WhatsApp Business app users who have been onboarded via a solution provider.
+
+
+smb_message_echoes
+	
+The smb_message_echoes webhook notifies you of messages sent via the WhatsApp Business app or a companion (“linked”) device by a business customer who has been onboarded to Cloud API via a solution provider.
+
+
+template_category_update
+	
+The template_category_update webhook notifies you of changes to template’s category.
+
+
+user_preferences
+	
+The user_preferences webhook notifies you of changes to a WhatsApp user’s marketing message preferences.
+Override webhooks
+You can use an alternate webhook endpoint for certain webhook fields for your Messaging account or business phone number. An alternate endpoint can be useful for testing purposes, or if you are a partner and wish to use unique webhook endpoints for each of your onboarded customers.
+See the Webhook overrides document to learn how to override webhooks.
+Payload size
+Webhook payloads can be up to 3 MB.
+Webhook delivery failure
+If a webhook request to your endpoint receives an HTTP status code other than 200, or if the webhook cannot be delivered for another reason, Meta retries delivery with decreasing frequency until the request succeeds, for up to 7 days.
+Note that Meta sends retries to all apps that have subscribed to webhooks (and their appropriate fields) for the Messaging account. These retries can result in duplicate webhook notifications.
+Mutual TLS
+Webhooks support mutual TLS (mTLS) for added security. See Graph API’s mTLS for webhooks document to learn how to enable and use mTLS.
+IP addresses
+You can get the IP addresses of Meta’s webhook servers by running the following command in your terminal:
+whois -h whois.radb.net — '-i origin AS32934' | grep '^route' | awk '{print $2}' | sort
+You can also use the geofeed to download a CSV⁠ that lists Meta’s IP addresses.
+Note, however, that Meta periodically changes its IP addresses, so to avoid having to regenerate your list of allowed IP addresses, consider using mTLS instead.
+Troubleshooting
+If you are not receiving webhooks:
+Make sure your endpoint is accepting requests.
+Send a test payload to your endpoint via the App Dashboard > WhatsApp > Configurations panel.
+Make sure your app is in Live mode; some webhooks will not be sent if your app is in Dev mode.
+Use the test webhook endpoint. If the test endpoint is digesting webhook payloads and displaying them in the console, the issue is likely with your endpoint code.
+Learn more
+See the Using Node.js to implement webhooks⁠ WhatsApp Business blog post.
+Did you find this page helpful?
+ON THIS PAGE
+Create a webhook endpoint
+Permissions
+Fields
+Override webhooks
+Payload size
+Webhook delivery failure
+Mutual TLS
+IP addresses
+Troubleshooting
+Learn more
+Build with Meta
+AI
+Meta Horizon
+Social technologies
+Wearables
+News
+Meta for Developers
+Blog
+Success stories
+Support
+Developer Support
+Bug tool
+Platform status
+Developer community forum
+Report an incident
+About us
+About
+Careers
+Terms and policies
+Responsible platform initiatives
+Platform terms
+Developer policies
+Privacy policy
+Cookies
+English (US)

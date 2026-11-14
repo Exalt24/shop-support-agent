@@ -1,0 +1,294 @@
+URL: https://developers.facebook.com/docs/whatsapp/cloud-api/webhooks/components
+STATUS: 200
+
+Build with us
+Docs
+Blog
+Resources
+Developer centers
+Login
+WhatsApp Business Platform
+Business Messaging
+WhatsApp Business Platform
+WhatsApp Business Platform
+Overview
+Get started
+Direct Send messages
+Marketing messages
+In-App Signup
+Utility messages
+Authentication messages
+Service messages
+Calling
+Groups
+Catalogs
+Partners
+Conversation Routing
+Webhooks
+Overview
+Create a webhook endpoint
+Create a test webhook endpoint
+Override the callback URL
+Webhooks reference
+account_alerts
+account_review_update
+account_update
+business_capability_update
+history
+message_template_components_update
+message_template_quality_update
+message_template_status_update
+messages
+Overview
+audio messages
+button messages
+contacts messages
+document messages
+edit messages
+errors messages
+group messages
+image messages
+interactive messages
+location messages
+order messages
+reaction messages
+revoke messages
+status messages
+sticker messages
+system messages
+text messages
+unsupported messages
+video messages
+messaging_handovers
+partner_solutions
+payment_configuration_update
+phone_number_name_update
+phone_number_quality_update
+security
+smb_app_state_sync
+smb_message_echoes
+standby
+template_category_update
+user_preferences
+Template fundamentals
+Messaging features
+Account assets
+Analytics
+Ads that click to WhatsApp
+Payments
+Data, Privacy, & Policy
+Support
+Resources
+API Reference
+Changelog
+Error codes
+Docs
+Overview
+messages webhook reference
+Was this helpful?
+messages webhook reference
+Updated: Nov 4, 2026
+Copy for LLM
+View as Markdown
+The messages webhook describes messages sent from a WhatsApp user to a business and the status of messages sent by a business to a WhatsApp user.
+Payload structures
+Incoming messages
+Messages webhooks describing a message sent by a WhatsApp user — either directly, via an ad, or via a UI component in a previously received message — all have the same common structure. You can easily identify these webhooks because they include a messages array. For example, this webhook describes a text message sent to a business:
+{
+  "object": "whatsapp_business_account",
+  "entry": [
+    {
+      "id": "102290129340398",
+      "changes": [
+        {
+          "value": {
+            "messaging_product": "whatsapp",
+            "metadata": {
+              "display_phone_number": "15550783881",
+              "phone_number_id": "106540352242922"
+            },
+            "contacts": [
+              {
+                "profile": {
+                  "name": "Sheena Nelson"
+                },
+                "wa_id": "16505551234",
+                "user_id": "US.13491208655302741918"
+              }
+            ],
+            "messages": [
+              {
+                "from": "16505551234",
+                "from_user_id": "US.13491208655302741918",
+                "id": "wamid.HBgLMTY1MDM4Nzk0MzkVAgASGBQzQTRBNjU5OUFFRTAzODEwMTQ0RgA=",
+                "timestamp": "1749416383",
+                "type": "text",
+                "text": {
+                  "body": "Does it come in another color?"
+                }
+              }
+            ]
+          },
+          "field": "messages"
+        }
+      ]
+    }
+  ]
+}
+
+Objects in the messages array can vary greatly based on message type (indicated by the object’s type property). For this reason, each incoming message type has a dedicated reference, linked in the menu on the left.
+Outgoing messages
+Messages webhooks describing a message sent by a business to a WhatsApp user have a different structure. You can easily identify these because they include a statuses array. For example, this webhook describes a message that has been delivered to a WhatsApp user’s device:
+{
+  "object": "whatsapp_business_account",
+  "entry": [
+    {
+      "id": "102290129340398",
+      "changes": [
+        {
+          "value": {
+            "messaging_product": "whatsapp",
+            "metadata": {
+              "display_phone_number": "15550783881",
+              "phone_number_id": "106540352242922"
+            },
+            "contacts": [
+              {
+                "profile": {
+                  "name": "Sheena Nelson"
+                },
+                "wa_id": "16505551234",
+                "user_id": "US.13491208655302741918"
+              }
+            ],
+            "statuses": [
+              {
+                "id": "wamid.HBgLMTY1MDM4Nzk0MzkVAgARGBI3MTE5MjVBOTE3MDk5QUVFM0YA",
+                "status": "delivered",
+                "timestamp": "1750263773",
+                "recipient_id": "16505551234",
+                "recipient_user_id": "US.13491208655302741918",
+                "conversation": {
+                  "id": "6ceb9d929c9bdc4f90e967a32f8639b4",
+                  "origin": {
+                    "type": "service"
+                  }
+                },
+                "pricing": {
+                  "billable": true,
+                  "pricing_model": "CBP",
+                  "category": "service"
+                }
+              }
+            ]
+          },
+          "field": "messages"
+        }
+      ]
+    }
+  ]
+}
+
+These webhooks don’t describe the contents of the outgoing message itself, only its status, and each outgoing message can have up to three separate webhooks (one for a status of sent, one for delivered, and one for read).
+Status webhooks also have a dedicated reference.
+User identifiers
+Incoming user messages and individual-message status webhooks (sent, delivered, and read) identify the WhatsApp user by their business-scoped user ID (BSUID). The user’s phone number is omitted when the user has adopted a username and their phone number is unavailable, so build your integration to identify users by BSUID. An integration that relies only on phone number fields will not be able to process messages from these users.
+Incoming messages
+Field	User has a username	User does not have a username
+
+contacts.user_id, messages.from_user_id
+	
+Included
+	
+Included
+
+
+contacts.wa_id, messages.from
+	
+Included if the phone number is available
+	
+Always included
+
+
+contacts.parent_user_id, messages.from_parent_user_id
+	
+Included if parent BSUIDs are enabled
+	
+Included if parent BSUIDs are enabled
+
+
+contacts.profile.username
+	
+Always included
+	
+Not included
+Outgoing message statuses
+These fields apply to sent, delivered, and read status webhooks. Failed status webhooks omit the contacts array. If the original message was sent to a phone number, statuses.recipient_user_id is also omitted. Use statuses.id to correlate the failure with the original send request. See the status reference.
+Field	Sent to phone number	Sent to BSUID
+
+contacts.user_id, statuses.recipient_user_id
+	
+Included
+	
+Included
+
+
+contacts.wa_id, statuses.recipient_id
+	
+Always included
+	
+Included if the phone number is available
+
+
+contacts.parent_user_id, statuses.recipient_parent_user_id
+	
+Included if parent BSUIDs are enabled
+	
+Included if parent BSUIDs are enabled
+
+
+contacts.profile.username
+	
+Included in delivered/read if the user has a username
+	
+Included in delivered/read if the user has a username
+To send a message to a user identified only by BSUID, set the recipient field to their BSUID. See Business-scoped user IDs.
+Errors
+Errors in messages webhooks can be surfaced in three places:
+System-, app-, and account-level errors appear as a value object property (entry.changes.value.errors). See the errors reference.
+Incoming message errors appear in the messages array (entry.changes.value.messages.errors). These webhooks have type set to unsupported. See the unsupported reference.
+Outgoing message errors appear in the statuses array (entry.changes.value.statuses.errors). See the status reference.
+Did you find this page helpful?
+ON THIS PAGE
+Payload structures
+Incoming messages
+Outgoing messages
+User identifiers
+Incoming messages
+Outgoing message statuses
+Errors
+Build with Meta
+AI
+Meta Horizon
+Social technologies
+Wearables
+News
+Meta for Developers
+Blog
+Success stories
+Support
+Developer Support
+Bug tool
+Platform status
+Developer community forum
+Report an incident
+About us
+About
+Careers
+Terms and policies
+Responsible platform initiatives
+Platform terms
+Developer policies
+Privacy policy
+Cookies
+English (US)
