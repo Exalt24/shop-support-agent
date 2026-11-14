@@ -1238,7 +1238,9 @@ GCAL_TESTS = ["tests/test_gcal_booking.py"]
 # The xAI mutants ("xAI: " for the chat client and the shared layer, "xAI Imagine: " for the image and video client) run their three files first.
 XAI_PREFIX = "xAI"
 XAI_TESTS = ["tests/test_xai_llm.py", "tests/test_xai_chat_path.py", "tests/test_xai_imagine.py"]
-TARGETED = {XAI_PREFIX: XAI_TESTS, GCAL_PREFIX: GCAL_TESTS, CLAUDE_PREFIX: CLAUDE_TESTS, WATSONX_PREFIX: WATSONX_TESTS, DISCORD_PREFIX: DISCORD_TESTS, WHATSAPP_PREFIX: WHATSAPP_TESTS, NOTION_PREFIX: NOTION_TESTS}
+XAI_IMAGINE_PREFIX = "xAI Imagine: "  # the image and video client has its own file, which is where its mutants go red first
+XAI_IMAGINE_TESTS = ["tests/test_xai_imagine.py"]
+TARGETED = {XAI_IMAGINE_PREFIX: XAI_IMAGINE_TESTS, XAI_PREFIX: XAI_TESTS, GCAL_PREFIX: GCAL_TESTS, CLAUDE_PREFIX: CLAUDE_TESTS, WATSONX_PREFIX: WATSONX_TESTS, DISCORD_PREFIX: DISCORD_TESTS, WHATSAPP_PREFIX: WHATSAPP_TESTS, NOTION_PREFIX: NOTION_TESTS}
 
 
 def targeted_files(consequence: str) -> list[str] | None:

@@ -24,15 +24,15 @@ A customer-support agent for a Shopify store. It looks up orders and products th
 ## Proof
 
 ```
-./.venv/Scripts/python.exe -m pytest tests -q              # 1183 tests, offline (scripted model, stand-in shop, Zoho, Discord, WhatsApp, Notion, Google Calendar, Claude API and IBM watsonx.ai; the widget tests drive Chromium and skip without it)
-./.venv/Scripts/python.exe tests/mutation_check.py         # 429 mutants: each guard broken on purpose
+./.venv/Scripts/python.exe -m pytest tests -q              # 1618 tests, offline (scripted model, stand-in shop, Zoho, Discord, WhatsApp, Notion, Google Calendar, Claude API, IBM watsonx.ai and xAI; the widget tests drive Chromium and skip without it)
+./.venv/Scripts/python.exe tests/mutation_check.py         # 587 mutants: each guard broken on purpose
 ./.venv/Scripts/python.exe demo.py                         # nine messages, live store + live model
 ./.venv/Scripts/python.exe demo_memory.py                  # five turns with memory, live store + model + Postgres
-./.venv/Scripts/python.exe demo_enquiry.py                 # five enquiries, scripted model + fake Zoho (no live anything)
+./.venv/Scripts/python.exe demo_enquiry.py                 # five enquiries, scripted model + fake Zoho
 ./.venv/Scripts/python.exe demo_mcp.py                      # the MCP server over stdio against the fake Zoho
 ```
 
-- **Mutation harness:** each of 375 guards (the per-feature counts are in [docs/mutation-groups.md](docs/mutation-groups.md)) is deleted from the real source. The suite is run. The file is restored byte-exact. All 375 mutants are caught.
+- **Mutation harness:** each of 587 guards (the per-feature counts are in [docs/mutation-groups.md](docs/mutation-groups.md)) is deleted from the real source. The suite is run. The file is restored byte-exact. All 587 mutants are caught.
 - **Live transcript:** `demo_transcript.md`. Nine messages including three hostile ones (a refund demand, a prompt injection asking for a 50% discount code, a legal threat). 7 answered and 2 escalated. No promise, invented figure or foreign order detail reached a customer. Details: [docs/live-runs.md](docs/live-runs.md).
 - **Through n8n:** `n8n/workflow.json` (webhook, agent, "needs a person?" branch, handoff ticket, reply) was imported into a real n8n 2.41.6 server. It was called over its webhook with an answered message, a wrong-email message and a legal threat.
 
@@ -100,10 +100,10 @@ All three are plain HTTP clients with no vendor SDK. Each failure is a named err
 LLM_PROVIDER=xai XAI_API_KEY=... ./.venv/Scripts/python.exe -m uvicorn serve:app --port 8008   # or anthropic with ANTHROPIC_API_KEY, or watsonx with WATSONX_API_KEY and WATSONX_PROJECT_ID
 ./.venv/Scripts/python.exe -m pytest tests/test_anthropic_llm.py tests/test_anthropic_chat_path.py -q   # 142 tests against the Claude stand-in
 ./.venv/Scripts/python.exe -m pytest tests/test_watsonx_llm.py tests/test_watsonx_chat_path.py -q      # 211 tests against the IBM stand-in
-./.venv/Scripts/python.exe -m pytest tests/test_xai_llm.py tests/test_xai_chat_path.py tests/test_xai_imagine.py -q   # XAI_TESTS tests against the xAI stand-in
+./.venv/Scripts/python.exe -m pytest tests/test_xai_llm.py tests/test_xai_chat_path.py tests/test_xai_imagine.py -q   # 435 tests against the xAI stand-in
 ./.venv/Scripts/python.exe tests/mutation_check.py "Claude API"                                         # 74 mutants for the Claude provider
 ./.venv/Scripts/python.exe tests/mutation_check.py "watsonx"                                            # 120 mutants for the watsonx provider
-./.venv/Scripts/python.exe tests/mutation_check.py xAI                                                  # XAI_MUTANTS mutants for the xAI code
+./.venv/Scripts/python.exe tests/mutation_check.py xAI                                                  # 158 mutants for the xAI code
 ```
 
 ## The support console (login, roles, many stores)

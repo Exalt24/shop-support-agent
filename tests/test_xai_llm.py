@@ -143,6 +143,13 @@ def test_a_missing_or_malformed_key_is_refused_before_any_request(server, key):
     assert "XAI_API_KEY" in str(e.value) and not server.requests
 
 
+def test_the_shortest_allowed_key_and_every_listed_reasoning_effort_are_accepted(server):
+    XaiLLM("abcdefgh", base_url=server.base)  # eight printable characters is the floor
+    for effort in ("low", "medium", "high", "xhigh"):
+        Rig(server, reasoning_effort=effort).ask()
+        assert server.of_kind("chat")[-1]["body"]["reasoning_effort"] == effort
+
+
 @pytest.mark.parametrize("model", ["", "grok 4", "grok/4.7", "x" * 101, None, "grok-4.7\n"])
 def test_a_malformed_model_is_refused(server, model):
     with pytest.raises(XaiConfigError):

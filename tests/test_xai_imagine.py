@@ -251,7 +251,7 @@ def test_a_200_that_is_not_an_image_answer_is_a_named_error(rig, server, raw):
         rig.api.generate("a kite")
 
 
-@pytest.mark.parametrize("entry", [{}, {"b64_json": ""}, {"b64_json": 5}, {"b64_json": "not base64!!"}, {"url": "https://a.example/x.jpg"}])
+@pytest.mark.parametrize("entry", [{}, {"b64_json": ""}, {"b64_json": 5}, {"b64_json": "not base64!!"}, {"b64_json": "QUJD!!"},{"url": "https://a.example/x.jpg"}])
 def test_a_b64_request_with_a_bad_entry_is_a_named_error(rig, server, entry):
     rig.control()
     server.script("image", Fault(200, {"data": [entry]}))
@@ -381,6 +381,19 @@ def test_a_poll_answer_that_is_not_documented_is_a_named_error(rig, server, body
     server.script("image_poll", Fault(status, body))
     with pytest.raises(XaiBadResponseError):
         rig.api.poll_images(rid)
+
+
+def test_an_unknown_status_is_not_read_as_done_even_when_it_carries_a_result(rig, server):
+    rid = rig.api.start_deferred("a kite")
+    server.script("image_poll", Fault(200, {"request_id": rid, "status": "weird", "data": [{"url": "https://a.example/1.jpg"}]}))
+    with pytest.raises(XaiBadResponseError) as e:
+        rig.api.poll_images(rid)
+    assert "status" in str(e.value)
+    vid = rig.api.start_video("a lake")
+    server.script("video_poll", Fault(200, {"status": "weird", "video": {"url": "https://a.example/v.mp4", "respect_moderation": True}}))
+    with pytest.raises(XaiBadResponseError) as e:
+        rig.api.poll_video(vid)
+    assert "status" in str(e.value)
 
 
 @pytest.mark.parametrize("raw", [b"", b"nope", b"{"])
@@ -538,7 +551,7 @@ def test_the_names_urls_and_limits_are_the_ones_on_the_saved_pages():
     assert config.XAI_IMAGE_MODEL == "grok-imagine-image-2.0" and config.XAI_IMAGE_MODEL in imagine and "$0.04 / image" in imagine
     assert config.XAI_VIDEO_MODEL == "grok-imagine-video-1.5" and config.XAI_VIDEO_MODEL in imagine
     assert config.XAI_DEFAULT_URL + "/images/generations" in gen and config.XAI_DEFAULT_URL + "/videos/generations" in video
-    assert "(`1`–`10`)" in gen and "`low`, `medium`, and `auto`" in gen and "only supported for `grok-imagine-image-2.0`" in gen
+    assert "(`1`\u2013`10`)" in gen and "`low`, `medium`, and `auto`" in gen and "only supported for `grok-imagine-image-2.0`" in gen
     assert "`1k` (default when omitted)" in gen and "`2k`" in gen and "`url`, which returns temporary hosted URLs" in gen
     assert "GET /v1/images/\\{request\\_id}" in ref and "`pending` (HTTP `202`)" in gen and "(HTTP `200`)" in gen
     assert "Deferred requests support `response_format: \"url\"` only" in gen and "retained for 24 hours" in gen
