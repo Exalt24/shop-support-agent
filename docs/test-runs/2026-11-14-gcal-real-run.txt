@@ -1,0 +1,9 @@
+created temporary calendar 13f90068ca68...
+1: These times are free: 1) Sun 15 Nov at 12:00 AM PST, 2) Mon 16 Nov at 12:00 AM PST, 3) Tue 17 Nov at 12:00 AM PST. Reply with the number you want, or say cancel.
+2: What name should I put the booking under?
+3: You are booked for Mon 16 Nov at 12:00 AM PST under the name Maria Santos.
+steps: ['booking: offered 3 time(s)', 'booking: a time was chosen', 'booking: booked']
+events on the temporary calendar: 1 [('08ce3679', 'Appointment: Maria Santos', {'dateTime': '2026-11-16T00:00:00+08:00', 'timeZone': 'Asia/Manila'})]
+offers after booking: ['Sun 15 Nov at 12:00 AM PST', 'Mon 16 Nov at 12:30 AM PST', 'Tue 17 Nov at 12:00 AM PST']
+booked slot still offered: False
+deleted temporary calendar: 204

@@ -1,6 +1,6 @@
 # Mutation harness groups
 
-`tests/mutation_check.py` deletes one guard at a time from the real source, runs the suite and restores the file byte-exact. 375 mutants, all caught.
+`tests/mutation_check.py` deletes one guard at a time from the real source, runs the suite and restores the file byte-exact. 429 mutants, all caught.
 
 | Group | Mutants |
 |---|---|
@@ -16,3 +16,4 @@
 Six guards each have a test that fails without them: the identity check, the throttle-as-HTTP-200 handling, the legal-threat rule, the grounding guard, the number-word check and `status:active` product filtering.
 | WhatsApp lane (`agent/whatsapp_lane.py`, run with `tests/mutation_check.py WhatsApp`) | 17 |
 | Notion ticket log (`agent/notion_log.py`, run with `tests/mutation_check.py Notion`) | 14 |
+| Google Calendar booking (`agent/gcal_booking.py` and the booking turn in `agent/core.py`, run with `tests/mutation_check.py GCal`) | 54 |

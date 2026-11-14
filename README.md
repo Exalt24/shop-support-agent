@@ -24,8 +24,8 @@ A customer-support agent for a Shopify store. It looks up orders and products th
 ## Proof
 
 ```
-./.venv/Scripts/python.exe -m pytest tests -q              # 1059 tests, offline (scripted model, stand-in shop, Zoho, Discord, WhatsApp, Notion, Claude API and IBM watsonx.ai; the widget tests drive Chromium and skip without it)
-./.venv/Scripts/python.exe tests/mutation_check.py         # 375 mutants: each guard broken on purpose
+./.venv/Scripts/python.exe -m pytest tests -q              # 1183 tests, offline (scripted model, stand-in shop, Zoho, Discord, WhatsApp, Notion, Google Calendar, Claude API and IBM watsonx.ai; the widget tests drive Chromium and skip without it)
+./.venv/Scripts/python.exe tests/mutation_check.py         # 429 mutants: each guard broken on purpose
 ./.venv/Scripts/python.exe demo.py                         # nine messages, live store + live model
 ./.venv/Scripts/python.exe demo_memory.py                  # five turns with memory, live store + model + Postgres
 ./.venv/Scripts/python.exe demo_enquiry.py                 # five enquiries, scripted model + fake Zoho (no live anything)
@@ -44,12 +44,9 @@ The agent remembers returning customers, and the design is about what memory is 
 
 It works for a sales site as well as a shop. The agent sorts each enquiry and routes it to an owner queue. With the visitor's explicit yes, it puts the enquiry in Zoho CRM as a Lead, a follow-up Task and a Note. Details, field rules and the vendor citations are in `docs/enquiry-routing.md`. The Zoho pages it relies on are saved in `docs/vendor-contract/`.
 
-- **Same order as above.** The escalation floor runs first. The model then only proposes an intent from a fixed list of seven. Code checks it. Anything unlisted becomes `human_needed`. A routing table in code gives the owner queue and the follow-up. The model can add an escalation, never remove one.
-- **Consent is code, not the model.** The agent asks once, in plain words, whether it may pass the visitor's details to the team. Only an explicit yes in the visitor's own message, after the question, counts ("yes but don't share my phone" does not).
-- **A lead is only what the visitor wrote.** Name, email and phone are validated. A company is kept only if the visitor named it. Card-like numbers and secrets are dropped. A message with two different emails uses neither. The note is built by code from their words, shortened.
-- **One lead per email per tenant per day.** A stable idempotency key stops a retried request from creating twice. A second enquiry the same day adds a Note to the same lead. Nothing is captured on an escalated turn.
-- **The CRM never changes the answer.** The reply is final before Zoho is called. A refusal is recorded with the vendor's code. 429 and 5xx are retried with backoff. An expired token is refreshed once. An Australian account is `ZOHO_REGION=au` (`accounts.zoho.com.au`, `www.zohoapis.com.au`).
-- **The audit log holds counts and kinds** (intent, queue, consent yes or no, captured yes or no, vendor code), never the visitor's words or email.
+- **Same order as above.** The escalation floor runs first. The model only proposes an intent from a fixed list of seven, code checks it, and anything unlisted becomes `human_needed`. A routing table in code gives the owner queue and the follow-up.
+- **Consent is code, not the model.** The agent asks once whether it may pass the visitor's details to the team. Only an explicit yes in the visitor's own message, after the question, counts ("yes but don't share my phone" does not).
+- **A lead is only what the visitor wrote, once a day.** Fields are validated, card-like numbers are dropped, and a stable idempotency key stops a retry from creating twice. The reply is final before Zoho is called, and the audit log holds counts and kinds, never the visitor's words or email. Retries, token refresh and the Australian region (`ZOHO_REGION=au`) are in `docs/enquiry-routing.md`.
 
 ```
 ./.venv/Scripts/python.exe -m pytest tests -q       # tests/test_enquiry.py, test_zoho_crm.py and test_leads_property.py (seeded random worlds with faults)
@@ -81,6 +78,17 @@ A WhatsApp message reaches the agent and the reply goes back. An escalated turn 
 ```
 
 **Scope and next steps.** Tested against stand-ins written from the saved vendor pages. Next: a live run of each. Not wired into `serve.py`.
+
+## Appointment booking on Google Calendar (tested against a stand-in, run once for real)
+
+A visitor asks for an appointment, the agent offers the next three free times, takes a pick and a name, and books one event. It reads free/busy again right before the write, looks an event up after a lost answer instead of sending it twice, and never treats a calendar Google could not read as free. Every reply is written in code from the calendar's own times. [Details](docs/gcal-booking.md)
+
+```
+./.venv/Scripts/python.exe -m pytest tests/test_gcal_booking.py -q   # 124 tests, 40 seeded random worlds
+./.venv/Scripts/python.exe tests/mutation_check.py GCal               # 54 mutants, all caught
+```
+
+**Scope and next steps.** Tested against a stand-in, and run once for real on a temporary calendar that was deleted afterwards ([record](docs/test-runs/2026-11-14-gcal-real-run.txt)). The OAuth exchange is the caller's. Not wired into `serve.py`.
 
 ## Claude API and watsonx.ai providers (tested against stand-ins)
 
@@ -121,12 +129,10 @@ Run the engine and console suites as two commands, not one. Two `conftest.py` fi
 
 ## Scope and next steps
 
-- The console runs locally. Session lockout counters are in memory (one process). A shared store is next.
-- The guard checks figures, a list of commitment phrases and unsupported outcomes. Wording-level claims beyond those patterns rely on the prompt and on human review of escalations.
-- Policy retrieval is word overlap over a handful of sections, which fits this size. A vector store is the step for a larger knowledge base.
-- Out-of-scope messages are escalated rather than answered. That is the conservative choice. It produces more human work than a looser agent.
+- The console runs locally, and its session lockout counters are in memory (one process).
+- The guard checks figures, a list of commitment phrases and unsupported outcomes, so other wording claims rely on the prompt and on human review of escalations. Policy retrieval is word overlap over a handful of sections, and out-of-scope messages are escalated, which costs more human work than a looser agent would.
 - Zoho CRM is the one CRM, tested against a stand-in server. Klaviyo, Gorgias, Zendesk, HubSpot, Salesforce and the ad platforms are possible next connectors.
-- **Memory.** API and agent only. A console screen is next. It costs one extra model call per answered turn. The live run showed a stored preference nudging a reply toward a mild promise, so the guard stays layered with human review ([docs/customer-memory.md](docs/customer-memory.md)).
+- **Memory.** API and agent only; a console screen is next. It costs one extra model call per answered turn ([docs/customer-memory.md](docs/customer-memory.md)).
 
 ## Run it
 

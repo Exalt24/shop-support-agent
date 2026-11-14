@@ -1,0 +1,56 @@
+caught agent/gcal_booking.py  GCal: every call goes out without the bearer token  <- test_freebusy_sends_the_documented_url_and_body
+caught agent/gcal_booking.py  GCal: a 401 gets a new token that is never used  <- test_a_401_gets_one_new_token_and_the_call_is_repeated
+caught agent/gcal_booking.py  GCal: a refused token is refreshed again and again  <- test_every_call_carries_the_bearer_token
+caught agent/gcal_booking.py  GCal: a 429 is treated as a final refusal  <- test_limits_and_outages_back_off_and_retry[429-rateLimitExce
+caught agent/gcal_booking.py  GCal: a 403 rate limit is treated as a final refusal  <- test_limits_and_outages_back_off_and_retry[403-rateLimitExce
+caught agent/gcal_booking.py  GCal: a Google outage (5xx) is treated as a final refusal  <- test_limits_and_outages_back_off_and_retry[500-backendError]
+caught agent/gcal_booking.py  GCal: every 403 is retried, including a quota stop that waiting cannot fix  <- test_permanent_errors_are_not_retried[403-quotaExceeded]
+caught agent/gcal_booking.py  GCal: after a server error the event is sent again without a lookup  <- test_a_server_error_after_the_event_was_created_is_looked_up
+caught agent/gcal_booking.py  GCal: retries hammer at a fixed pace  <- test_limits_and_outages_back_off_and_retry[403-rateLimitExce
+caught agent/gcal_booking.py  GCal: backoff grows without a cap  <- test_backoff_doubles_and_is_capped
+caught agent/gcal_booking.py  GCal: a dropped answer is resent without looking whether the event exists  <- test_a_lost_answer_is_looked_up_before_the_event_is_sent_aga
+caught agent/gcal_booking.py  GCal: a calendar Google could not read is treated as completely free  <- test_a_calendar_that_comes_back_with_errors_is_not_read_as_f
+caught agent/gcal_booking.py  GCal: an errors entry on a calendar is ignored  <- test_a_calendar_that_comes_back_with_errors_is_not_read_as_f
+caught agent/gcal_booking.py  GCal: a failed free/busy call is read as an answer  <- test_every_call_carries_the_bearer_token
+caught agent/gcal_booking.py  GCal: a slot that touches a meeting is blocked  <- test_a_busy_block_moves_the_offer_to_the_next_free_slot
+caught agent/gcal_booking.py  GCal: any meeting that started earlier blocks every later slot  <- test_a_slot_that_starts_when_a_busy_block_ends_is_free
+caught agent/gcal_booking.py  GCal: a time inside the lead window is offered  <- test_the_first_offer_is_two_hours_ahead_and_the_offers_are_t
+caught agent/gcal_booking.py  GCal: weekends are offered  <- test_a_weekend_is_skipped
+caught agent/gcal_booking.py  GCal: a slot that runs past closing time is offered  <- test_a_slot_that_would_run_past_closing_is_never_offered
+caught agent/gcal_booking.py  GCal: times beyond the horizon are offered  <- test_nothing_is_offered_beyond_the_horizon
+caught agent/gcal_booking.py  GCal: the three offers are all on one day  <- test_the_first_offer_is_two_hours_ahead_and_the_offers_are_t
+caught agent/gcal_booking.py  GCal: a time outside the business hours can be booked  <- test_a_time_that_is_not_one_of_the_business_slots_is_refused
+caught agent/gcal_booking.py  GCal: a slot of any length can be booked  <- test_a_slot_of_the_wrong_length_is_refused
+caught agent/gcal_booking.py  GCal: a weekend slot can be booked  <- test_a_time_that_is_not_one_of_the_business_slots_is_refused
+caught agent/gcal_booking.py  GCal: a slot inside the lead window can be booked  <- test_a_time_that_is_not_one_of_the_business_slots_is_refused
+caught agent/gcal_booking.py  GCal: a time off the slot grid can be booked  <- test_a_time_that_is_not_one_of_the_business_slots_is_refused
+caught agent/gcal_booking.py  GCal: a slot taken after it was offered is booked over  <- test_booking_the_same_slot_twice_makes_one_event
+caught agent/gcal_booking.py  GCal: something that is not a name is booked as a guest  <- test_something_that_is_not_a_name_is_never_written_to_the_ca
+caught agent/gcal_booking.py  GCal: a failed read before the write crashes the chat turn  <- test_a_failed_free_busy_read_before_the_write_refuses_the_bo
+caught agent/gcal_booking.py  GCal: a refused insert crashes the chat turn  <- test_a_refused_booking_goes_to_a_person
+caught agent/gcal_booking.py  GCal: the event id is shorter than Google allows  <- test_a_booking_creates_one_event_with_the_documented_shape
+caught agent/gcal_booking.py  GCal: the same visitor in another email case gets a second event  <- test_the_event_id_is_stable_per_slot_and_visitor_and_ignores
+caught agent/gcal_booking.py  GCal: every booking by one visitor shares one event id  <- test_the_event_id_is_stable_per_slot_and_visitor_and_ignores
+caught agent/gcal_booking.py  GCal: a repeated id is reported as a failure  <- test_a_failed_lookup_does_not_stop_the_booking
+caught agent/gcal_booking.py  GCal: another event holding the id is reported as our booking  <- test_a_409_for_the_same_start_is_a_success_and_for_another_s
+caught agent/gcal_booking.py  GCal: a lost answer is resent without looking first, so a calendar that misses collisions holds two events  <- test_a_lost_answer_is_looked_up_before_the_event_is_sent_aga
+caught agent/gcal_booking.py  GCal: a lookup that found nothing is taken as found  <- test_a_server_error_before_anything_was_created_is_resent_on
+caught agent/gcal_booking.py  GCal: a failed lookup stops the booking  <- test_a_failed_lookup_does_not_stop_the_booking
+caught agent/gcal_booking.py  GCal: Google is never asked to email the guest  <- test_a_booking_creates_one_event_with_the_documented_shape
+caught agent/gcal_booking.py  GCal: an undocumented sendUpdates value reaches Google  <- test_send_updates_must_be_a_documented_value
+caught agent/gcal_booking.py  GCal: a phone number or an email typed as a name goes into the calendar  <- test_something_that_is_not_a_name_is_never_written_to_the_ca
+caught agent/gcal_booking.py  GCal: a junk email becomes a guest  <- test_without_a_valid_email_there_is_no_guest_and_no_invitati
+caught agent/gcal_booking.py  GCal: Google is asked to email a visitor who gave no valid address  <- test_without_a_valid_email_there_is_no_guest_and_no_invitati
+caught agent/gcal_booking.py  GCal: an empty calendar answer is offered as three choices of nothing  <- test_no_free_time_goes_to_a_person
+caught agent/gcal_booking.py  GCal: an old conversation books a time hours later  <- test_an_old_conversation_is_dropped
+caught agent/gcal_booking.py  GCal: cancel is ignored  <- test_cancel_clears_the_conversation_and_books_nothing
+caught agent/gcal_booking.py  GCal: a visitor who never picks a time is asked forever instead of reaching a person  <- test_an_unclear_choice_is_asked_again_once_and_then_goes_to_
+caught agent/gcal_booking.py  GCal: a visitor who never gives a name is asked forever instead of reaching a person  <- test_an_unclear_choice_is_asked_again_once_and_then_goes_to_
+caught agent/gcal_booking.py  GCal: "1 or 2" is read as 1  <- test_an_unclear_choice_is_asked_again_once_and_then_goes_to_
+caught agent/gcal_booking.py  GCal: a number that was not offered is taken as a choice  <- test_a_number_that_was_not_offered_is_not_a_choice
+caught agent/gcal_booking.py  GCal: a number after the booking books again  <- test_a_visitor_books_in_three_messages
+caught agent/gcal_booking.py  GCal: a time taken after it was chosen ends in a failure instead of new offers  <- test_a_time_taken_between_the_offer_and_the_name_makes_a_new
+caught agent/core.py          GCal: a booking that needs a person is not escalated  <- test_a_booking_that_needs_a_person_escalates_the_turn
+caught agent/core.py          GCal: every conversation of one email address shares one booking state  <- test_the_conversation_key_is_the_conversation_id_or_the_emai
+
+All 54 mutants caught, every file restored byte-exact.

@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 from .audit import AuditLog, mask_email
 from .enquiry import EnquiryDesk, EnquiryInfo
 from .escalation import HOLDING_REPLY, decide
+from .gcal_booking import BookingChat
 from .guard import figures, verify_grounded
 from .llm import LLM, LLMError, parse_json
 from .memory import MAX_PER_TURN, Candidate, MemoryStore, clean_candidate, format_hints, last_order_number
@@ -68,9 +69,10 @@ class Result:
 
 class SupportAgent:
     def __init__(self, llm: LLM, shop: Shop, policy: list[PolicySection], audit: AuditLog | None = None,
-                 memory: MemoryStore | None = None, enquiry: EnquiryDesk | None = None):
+                 memory: MemoryStore | None = None, enquiry: EnquiryDesk | None = None, booking: BookingChat | None = None):
         self._llm, self._shop, self._policy, self._audit, self._memory = llm, shop, policy, audit, memory
         self._enquiry = enquiry  # None: the agent behaves exactly as it did before enquiry routing existed
+        self._booking = booking  # None: no appointment booking; a Google Calendar desk adds the booking conversation
 
     def attach_memory(self, memory: MemoryStore | None) -> None:
         """Memory is per request (it carries the tenant and the staff member), so the console attaches it per turn."""
@@ -171,6 +173,17 @@ class SupportAgent:
         if hard:
             res.steps.append("hard escalation rule matched before triage")
             return self._escalate(res, hard)
+
+        # 1b. appointment booking, when a Google Calendar desk is attached. It runs after the escalation floor (a legal threat still
+        # goes to a person) and before triage: the booking conversation is written in code from the calendar's own times, so it
+        # needs no model call, no facts and no grounding guard.
+        if self._booking:
+            turn = self._booking.converse(str(conversation_id or email).strip().lower(), message, email, res.steps)
+            if turn:
+                res.intent, res.reply = "booking", turn.reply
+                if turn.escalate:
+                    return self._escalate(res, turn.escalate)
+                return res
 
         # 2. triage
         try:
