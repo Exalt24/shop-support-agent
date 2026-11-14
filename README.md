@@ -24,7 +24,7 @@ A customer-support agent for a Shopify store. It looks up orders and products th
 ## Proof
 
 ```
-./.venv/Scripts/python.exe -m pytest tests -q              # 1618 tests, offline (scripted model, stand-in shop, Zoho, Discord, WhatsApp, Notion, Google Calendar, Claude API, IBM watsonx.ai and xAI; the widget tests drive Chromium and skip without it)
+./.venv/Scripts/python.exe -m pytest tests -q              # 1620 tests, offline (scripted model, stand-in shop, Zoho, Discord, WhatsApp, Notion, Google Calendar, Claude API, IBM watsonx.ai and xAI; the widget tests drive Chromium and skip without it)
 ./.venv/Scripts/python.exe tests/mutation_check.py         # 587 mutants: each guard broken on purpose
 ./.venv/Scripts/python.exe demo.py                         # nine messages, live store + live model
 ./.venv/Scripts/python.exe demo_memory.py                  # five turns with memory, live store + model + Postgres
@@ -100,7 +100,7 @@ All three are plain HTTP clients with no vendor SDK. Each failure is a named err
 LLM_PROVIDER=xai XAI_API_KEY=... ./.venv/Scripts/python.exe -m uvicorn serve:app --port 8008   # or anthropic with ANTHROPIC_API_KEY, or watsonx with WATSONX_API_KEY and WATSONX_PROJECT_ID
 ./.venv/Scripts/python.exe -m pytest tests/test_anthropic_llm.py tests/test_anthropic_chat_path.py -q   # 142 tests against the Claude stand-in
 ./.venv/Scripts/python.exe -m pytest tests/test_watsonx_llm.py tests/test_watsonx_chat_path.py -q      # 211 tests against the IBM stand-in
-./.venv/Scripts/python.exe -m pytest tests/test_xai_llm.py tests/test_xai_chat_path.py tests/test_xai_imagine.py -q   # 435 tests against the xAI stand-in
+./.venv/Scripts/python.exe -m pytest tests/test_xai_llm.py tests/test_xai_chat_path.py tests/test_xai_imagine.py -q   # 437 tests against the xAI stand-in
 ./.venv/Scripts/python.exe tests/mutation_check.py "Claude API"                                         # 74 mutants for the Claude provider
 ./.venv/Scripts/python.exe tests/mutation_check.py "watsonx"                                            # 120 mutants for the watsonx provider
 ./.venv/Scripts/python.exe tests/mutation_check.py xAI                                                  # 158 mutants for the xAI code

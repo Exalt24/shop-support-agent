@@ -1,0 +1,167 @@
+# xAI Grok provider and Grok Imagine client mutation check, run 2026-11-15
+# command: ./.venv/Scripts/python.exe tests/mutation_check.py "xAI: " and then tests/mutation_check.py "xAI Imagine: ", run in a COPY of the repo
+# each line deletes or bends one guard in the real source, runs the three xAI test files (then the whole suite if they stay green)
+# and restores the file byte-exact; caught means a test went red
+
+caught agent/config.py        xAI: the default base URL is not the one on the saved pages  <- test_the_defaults_are_the_ones_on_the_saved_pages
+caught agent/config.py        xAI: the default chat model is not one the saved pages name  <- test_the_defaults_are_the_ones_on_the_saved_pages
+caught agent/config.py        xAI: the default image model is not the one on the saved pages  <- test_a_plain_image_request_has_the_documented_shape_and_cost
+caught agent/config.py        xAI: the default video model is not the one on the saved pages  <- test_a_paid_post_is_never_repeated_after_a_dropped_connectio
+caught agent/config.py        xAI: LLM_PROVIDER=xai is refused as an unknown provider  <- test_the_provider_list_names_xai_and_an_unknown_one_is_refus
+caught agent/config.py        xAI: the xAI provider starts without an xAI key, or demands a Groq key  <- test_the_provider_list_names_xai_and_an_unknown_one_is_refus
+caught agent/config.py        xAI: a stray repr of the settings prints the xAI key  <- test_settings_never_print_the_xai_key
+caught agent/config.py        xAI: the XAI_API_KEY environment variable is ignored  <- test_the_provider_list_names_xai_and_an_unknown_one_is_refus
+caught agent/config.py        xAI: the saved secret file is never read  <- test_the_key_can_come_from_the_saved_secret_file
+caught agent/config.py        xAI: XAI_BASE_URL is ignored, so a regional endpoint cannot be set  <- test_the_key_model_and_url_come_from_the_environment
+caught agent/config.py        xAI: XAI_MODEL is ignored  <- test_the_key_model_and_url_come_from_the_environment
+caught agent/config.py        xAI: a model name with spaces around it from the environment is refused  <- test_the_key_model_and_url_come_from_the_environment
+caught agent/llm.py           xAI: LLM_PROVIDER=xai builds no xAI client  <- test_build_llm_makes_the_xai_client_and_groq_stays_the_defau
+caught agent/llm.py           xAI: the base URL setting never reaches the client  <- test_build_llm_makes_the_xai_client_and_groq_stays_the_defau
+caught agent/llm.py           xAI: the model setting never reaches the client  <- test_build_llm_makes_the_xai_client_and_groq_stays_the_defau
+caught agent/xai_http.py      xAI: a key with a space, a line break or a non-ASCII character is accepted  <- test_a_missing_or_malformed_key_is_refused_before_any_reques
+caught agent/xai_http.py      xAI: a key with a trailing line break is accepted  <- test_a_missing_or_malformed_key_is_refused_before_any_reques
+ALIVE  agent/xai_http.py      xAI: an eight character key is refused
+caught agent/xai_http.py      xAI: a model name with a space, a slash or a line break is accepted  <- test_a_malformed_model_is_refused[grok
+caught agent/xai_http.py      xAI: a model name with a trailing line break is accepted  <- test_a_malformed_model_is_refused[grok-4.7\n]
+caught agent/xai_http.py      xAI: a 101 character model name is accepted  <- test_a_malformed_model_is_refused[xxxxxxxxxxxxxxxxxxxxxxxxxx
+caught agent/xai_http.py      xAI: a missing key is accepted and sent  <- test_a_missing_or_malformed_key_is_refused_before_any_reques
+caught agent/xai_http.py      xAI: a malformed model name is accepted  <- test_a_malformed_model_is_refused[]
+caught agent/xai_http.py      xAI: any URL scheme is accepted for the base URL  <- test_only_https_or_this_machine_is_accepted_as_the_base_url[
+caught agent/xai_http.py      xAI: the key can be sent in plain http to another machine  <- test_only_https_or_this_machine_is_accepted_as_the_base_url[
+caught agent/xai_http.py      xAI: a trailing slash on an https URL doubles the path  <- test_a_trailing_slash_on_the_base_url_does_not_double_the_pa
+caught agent/xai_http.py      xAI: a trailing slash on a local URL doubles the path  <- test_a_trailing_slash_on_the_base_url_does_not_double_the_pa
+caught agent/xai_http.py      xAI: the IPv6 loopback address is refused  <- 1]:9/v1]
+caught agent/xai_http.py      xAI: the key is sent without the Bearer scheme  <- test_a_normal_answer_is_returned_and_the_request_has_the_doc
+caught agent/xai_http.py      xAI: an overloaded engine (503) is treated as a final refusal  <- test_a_rate_limit_or_overload_is_retried_with_exponential_ba
+caught agent/xai_http.py      xAI: a rate limit (429) is treated as a final refusal  <- test_a_rate_limit_or_overload_is_retried_with_exponential_ba
+caught agent/xai_http.py      xAI: a server error the pages do not list is retried  <- test_a_server_error_the_pages_do_not_list_is_not_retried[500
+caught agent/xai_http.py      xAI: the backoff does not start at one second  <- test_a_rate_limit_or_overload_is_retried_with_exponential_ba
+caught agent/xai_http.py      xAI: a waiting shopper is kept through a third retry  <- test_a_rate_limit_or_overload_is_retried_with_exponential_ba
+caught agent/xai_http.py      xAI: a 429 is retried at a fixed pace, not exponentially  <- test_a_rate_limit_or_overload_is_retried_with_exponential_ba
+caught agent/xai_http.py      xAI: a dropped connection is retried at a fixed pace  <- test_a_dropped_connection_is_retried_and_then_a_transport_er
+caught agent/xai_http.py      xAI: a paid POST is repeated after a dropped connection and may be billed twice  <- test_a_paid_post_is_never_repeated_after_a_dropped_connectio
+caught agent/xai_http.py      xAI: a read timeout is repeated, so a slow answer waits for the whole timeout again  <- test_a_read_timeout_is_not_repeated
+caught agent/xai_http.py      xAI: a dropped connection is retried one time too many  <- test_a_dropped_connection_is_retried_and_then_a_transport_er
+caught agent/xai_http.py      xAI: a 429 is retried one time too many  <- test_a_rate_limit_or_overload_is_retried_with_exponential_ba
+caught agent/xai_http.py      xAI: a refusal that waiting cannot fix (a 401 or a 400) is retried  <- test_a_client_error_is_named_from_the_status_table_and_not_r
+caught agent/xai_http.py      xAI: a 202 or any other 2xx counts as the answer  <- test_a_202_on_the_chat_endpoint_is_not_a_reply
+caught agent/xai_http.py      xAI: a failure does not carry its HTTP status  <- test_a_client_error_is_named_from_the_status_table_and_not_r
+caught agent/xai_http.py      xAI: a 200 whose body is a JSON list is read as an answer  <- test_a_200_that_is_not_a_chat_answer_is_a_named_error[[]]
+caught agent/xai_http.py      xAI: a NaN or infinite number is accepted  <- test_usage_is_reported_and_junk_in_it_is_ignored
+caught agent/xai_http.py      xAI: True is accepted as a number  <- test_usage_is_reported_and_junk_in_it_is_ignored
+caught agent/xai_http.py      xAI: a 5xx is not named a server error  <- test_a_server_error_the_pages_do_not_list_is_not_retried[500
+caught agent/xai_llm.py       xAI: the deprecated max_tokens field is sent instead of max_completion_tokens  <- test_a_normal_answer_is_returned_and_the_request_has_the_doc
+caught agent/xai_llm.py       xAI: temperature 0 is not sent  <- test_a_normal_answer_is_returned_and_the_request_has_the_doc
+caught agent/xai_llm.py       xAI: the role is sent with a capital letter  <- test_a_normal_answer_is_returned_and_the_request_has_the_doc
+caught agent/xai_llm.py       xAI: the system prompt is merged into the user message  <- test_a_normal_answer_is_returned_and_the_request_has_the_doc
+caught agent/xai_llm.py       xAI: the chat request goes to a path the saved pages do not document  <- test_a_normal_answer_is_returned_and_the_request_has_the_doc
+caught agent/xai_llm.py       xAI: reasoning_effort is sent to a model that does not take it  <- test_a_model_without_the_reasoning_parameter_is_not_sent_one
+caught agent/xai_llm.py       xAI: a reasoning model always thinks at the high default, slowing every support reply  <- test_a_normal_answer_is_returned_and_the_request_has_the_doc
+caught agent/xai_llm.py       xAI: grok-4.5 is not sent reasoning_effort although the page says it takes it  <- test_the_defaults_are_the_ones_on_the_saved_pages
+caught agent/xai_llm.py       xAI: a reasoning effort the page does not list is accepted  <- test_a_reasoning_effort_the_page_does_not_list_is_refused[]
+caught agent/xai_llm.py       xAI: the default reasoning effort is the slow one  <- test_a_normal_answer_is_returned_and_the_request_has_the_doc
+ALIVE  agent/xai_llm.py       xAI: xhigh, which grok-4.7 takes, is refused
+caught agent/xai_llm.py       xAI: a bad max_tokens is sent to the vendor  <- test_a_bad_max_tokens_is_refused_before_a_request[0]
+caught agent/xai_llm.py       xAI: True is accepted as max_tokens  <- test_a_bad_max_tokens_is_refused_before_a_request[True]
+caught agent/xai_llm.py       xAI: max_tokens 0 is accepted  <- test_a_bad_max_tokens_is_refused_before_a_request[0]
+caught agent/xai_llm.py       xAI: a refusal is returned to the shopper as if it were an answer  <- test_a_refusal_is_a_named_error_even_when_text_came_with_it
+caught agent/xai_llm.py       xAI: a tool call that nothing can run is read as an empty or finished reply  <- test_a_tool_call_is_refused_because_no_tools_were_sent
+caught agent/xai_llm.py       xAI: a cut-off reply is not reported as cut off  <- test_a_cut_off_reply_is_a_named_error_and_says_whether_there
+caught agent/xai_llm.py       xAI: a reply that finished for a reason other than stop is sent  <- test_any_other_finish_reason_is_not_a_reply[tool_calls]
+caught agent/xai_llm.py       xAI: a cut-off reply with no text is reported as having text  <- test_a_cut_off_reply_is_a_named_error_and_says_whether_there
+caught agent/xai_llm.py       xAI: an empty reply is returned as an answer  <- test_a_finished_reply_with_no_text_is_an_empty_error[None]
+caught agent/xai_llm.py       xAI: a blank reply counts as text  <- test_the_reply_is_trimmed
+caught agent/xai_llm.py       xAI: a 200 with no choices crashes instead of raising a named error  <- test_a_200_that_is_not_a_chat_answer_is_a_named_error[{"choi
+caught agent/xai_llm.py       xAI: a choice with no message crashes instead of raising a named error  <- test_a_200_that_is_not_a_chat_answer_is_a_named_error[{"choi
+caught agent/xai_llm.py       xAI: an answer with no usage object crashes the usage callback  <- test_usage_is_reported_and_junk_in_it_is_ignored
+caught agent/xai_llm.py       xAI: the cost of a request is not reported  <- test_usage_is_reported_and_junk_in_it_is_ignored
+caught agent/xai_llm.py       xAI: an unseen finish_reason is echoed raw into the message  <- test_any_other_finish_reason_is_not_a_reply[x
+caught agent/xai_llm.py       xAI: a finish_reason with a trailing line break is echoed  <- test_any_other_finish_reason_is_not_a_reply[tool\n]
+caught agent/xai_llm.py       xAI: a very long finish_reason is echoed  <- test_any_other_finish_reason_is_not_a_reply[xxxxxxxxxxxxxxxx
+caught agent/xai_http.py      xAI: a NaN is accepted as a number  <- test_usage_is_reported_and_junk_in_it_is_ignored
+caught agent/xai_imagine.py   xAI Imagine: the 1.5k resolution of the reference is refused  <- test_the_edges_of_the_documented_ranges_are_accepted[kw6]
+caught agent/xai_imagine.py   xAI Imagine: a resolution the pages do not list is accepted  <- test_a_bad_image_argument_is_refused_before_any_request[reso
+caught agent/xai_imagine.py   xAI Imagine: quality auto is refused  <- test_the_edges_of_the_documented_ranges_are_accepted[kw7]
+caught agent/xai_imagine.py   xAI Imagine: a quality the page does not list is accepted  <- test_a_bad_image_argument_is_refused_before_any_request[qual
+caught agent/xai_imagine.py   xAI Imagine: the auto aspect ratio is refused  <- test_the_edges_of_the_documented_ranges_are_accepted[kw2]
+caught agent/xai_imagine.py   xAI Imagine: the 19.5:9 aspect ratio is refused  <- test_the_edges_of_the_documented_ranges_are_accepted[kw3]
+caught agent/xai_imagine.py   xAI Imagine: an image aspect ratio the pages do not list is accepted  <- test_a_bad_image_argument_is_refused_before_any_request[aspe
+caught agent/xai_imagine.py   xAI Imagine: eleven images in one request are accepted  <- test_a_bad_image_argument_is_refused_before_any_request[n=11
+caught agent/xai_imagine.py   xAI Imagine: zero images are asked for  <- test_a_bad_image_argument_is_refused_before_any_request[n=0]
+caught agent/xai_imagine.py   xAI Imagine: True is accepted as the number of images  <- test_a_bad_image_argument_is_refused_before_any_request[n=Tr
+caught agent/xai_imagine.py   xAI Imagine: quality is sent to a model that does not support it  <- test_quality_is_refused_for_a_model_that_does_not_take_it
+caught agent/xai_imagine.py   xAI Imagine: a deferred request is not marked deferred, so it is billed and answered at once  <- test_a_deferred_request_returns_an_id_and_the_poll_goes_pend
+caught agent/xai_imagine.py   xAI Imagine: unset image options are sent as null  <- test_a_plain_image_request_has_the_documented_shape_and_cost
+caught agent/xai_imagine.py   xAI Imagine: unset video options are sent as null  <- test_a_paid_post_is_never_repeated_after_a_dropped_connectio
+caught agent/xai_imagine.py   xAI Imagine: a dropped connection repeats a paid image request  <- test_a_paid_post_is_never_repeated_after_a_dropped_connectio
+caught agent/xai_imagine.py   xAI Imagine: a dropped connection repeats a paid deferred image request  <- test_a_paid_post_is_never_repeated_after_a_dropped_connectio
+caught agent/xai_imagine.py   xAI Imagine: a dropped connection repeats a paid video request  <- test_a_paid_post_is_never_repeated_after_a_dropped_connectio
+caught agent/xai_imagine.py   xAI Imagine: a base64 answer is read as if it were URLs  <- test_base64_output_is_decoded_on_request
+caught agent/xai_imagine.py   xAI Imagine: a request for several images fails because only one is expected back  <- test_every_option_is_sent_under_its_documented_name_and_n_im
+caught agent/xai_imagine.py   xAI Imagine: more images than were asked for are accepted  <- test_a_200_that_is_not_an_image_answer_is_a_named_error[{"da
+caught agent/xai_imagine.py   xAI Imagine: a pending deferred image (HTTP 202) is raised as an error  <- test_a_deferred_request_returns_an_id_and_the_poll_goes_pend
+caught agent/xai_imagine.py   xAI Imagine: a pending video poll answered 202 is raised as an error  <- test_a_video_poll_reports_progress_while_pending_whatever_th
+caught agent/xai_imagine.py   xAI Imagine: a failed image job is not reported  <- test_a_failed_deferred_job_is_a_body_not_an_http_error_and_i
+caught agent/xai_imagine.py   xAI Imagine: a failed video job is not reported  <- test_a_failed_video_job_names_the_documented_code
+ALIVE  agent/xai_imagine.py   xAI Imagine: an unknown image poll status is read as done
+ALIVE  agent/xai_imagine.py   xAI Imagine: an unknown video poll status is read as done
+caught agent/xai_imagine.py   xAI Imagine: a done image answer that is not HTTP 200 is accepted  <- test_a_poll_answer_that_is_not_documented_is_a_named_error[b
+caught agent/xai_imagine.py   xAI Imagine: a finished image batch forgets its request id  <- test_a_deferred_request_returns_an_id_and_the_poll_goes_pend
+caught agent/xai_imagine.py   xAI Imagine: a finished image batch forgets its cost  <- test_a_deferred_request_returns_an_id_and_the_poll_goes_pend
+caught agent/xai_imagine.py   xAI Imagine: a finished video forgets its request id  <- test_wait_video_returns_the_url_duration_and_cost
+caught agent/xai_imagine.py   xAI Imagine: a finished video forgets its duration  <- test_wait_video_returns_the_url_duration_and_cost
+caught agent/xai_imagine.py   xAI Imagine: an error code the pages do not list is passed on as if it were documented  <- test_a_failed_job_error_is_shown_cut_and_with_an_unknown_cod
+caught agent/xai_imagine.py   xAI Imagine: a job error message is not cut  <- test_a_failed_job_error_is_shown_cut_and_with_an_unknown_cod
+caught agent/xai_imagine.py   xAI Imagine: a job error message keeps its line breaks  <- test_a_failed_deferred_job_is_a_body_not_an_http_error_and_i
+caught agent/xai_imagine.py   xAI Imagine: a request id with a slash or dots can change the URL that is polled  <- test_a_request_id_that_could_change_the_url_is_refused[../et
+caught agent/xai_imagine.py   xAI Imagine: a request id with a trailing line break is accepted  <- test_a_request_id_that_could_change_the_url_is_refused[id\n]
+caught agent/xai_imagine.py   xAI Imagine: a 129 character request id is accepted  <- test_a_request_id_that_could_change_the_url_is_refused[xxxxx
+caught agent/xai_imagine.py   xAI Imagine: an image poll accepts any request id  <- test_a_request_id_that_could_change_the_url_is_refused[]
+caught agent/xai_imagine.py   xAI Imagine: a video poll accepts any request id  <- test_a_request_id_that_could_change_the_url_is_refused[]
+caught agent/xai_imagine.py   xAI Imagine: the number 5 passes as a request id  <- test_a_request_id_that_could_change_the_url_is_refused[None]
+caught agent/xai_imagine.py   xAI Imagine: a start answer with no usable request id is accepted  <- test_a_start_answer_without_a_usable_request_id_is_a_named_e
+caught agent/xai_imagine.py   xAI Imagine: an answer with no images is returned as an empty batch  <- test_a_200_that_is_not_an_image_answer_is_a_named_error[{"da
+caught agent/xai_imagine.py   xAI Imagine: more images than were asked for are accepted  <- test_a_200_that_is_not_an_image_answer_is_a_named_error[{"da
+caught agent/xai_imagine.py   xAI Imagine: an image entry that is not an object crashes  <- test_a_200_that_is_not_an_image_answer_is_a_named_error[{"da
+caught agent/xai_imagine.py   xAI Imagine: an image URL that is not https is accepted  <- test_a_200_that_is_not_an_image_answer_is_a_named_error[{"da
+caught agent/xai_imagine.py   xAI Imagine: an image entry with no base64 data crashes  <- test_a_b64_request_with_a_bad_entry_is_a_named_error[entry0]
+ALIVE  agent/xai_imagine.py   xAI Imagine: base64 with junk characters is accepted
+caught agent/xai_imagine.py   xAI Imagine: an odd mime type is trusted  <- test_an_odd_mime_type_is_dropped_not_trusted[5]
+caught agent/xai_imagine.py   xAI Imagine: a mime type with a trailing line break is trusted  <- test_an_odd_mime_type_is_dropped_not_trusted[image/jpeg\n]
+caught agent/xai_imagine.py   xAI Imagine: a junk cost figure is passed on  <- test_a_junk_cost_is_ignored[many]
+caught agent/xai_imagine.py   xAI Imagine: True is accepted as a cost in ticks  <- test_a_junk_cost_is_ignored[True]
+caught agent/xai_imagine.py   xAI Imagine: a negative cost is passed on  <- test_a_junk_cost_is_ignored[-5]
+caught agent/xai_imagine.py   xAI Imagine: the cost in dollars is ten times too high  <- test_a_plain_image_request_has_the_documented_shape_and_cost
+caught agent/xai_imagine.py   xAI Imagine: asking a URL image for its bytes crashes with a TypeError  <- test_base64_output_is_decoded_on_request
+caught agent/xai_imagine.py   xAI Imagine: a 16 second video is asked for  <- test_a_bad_video_argument_is_refused_before_any_request[prom
+caught agent/xai_imagine.py   xAI Imagine: a zero second video is asked for  <- test_a_bad_video_argument_is_refused_before_any_request[prom
+caught agent/xai_imagine.py   xAI Imagine: True is accepted as a duration  <- test_a_bad_video_argument_is_refused_before_any_request[prom
+caught agent/xai_imagine.py   xAI Imagine: a video aspect ratio the pages do not list is accepted  <- test_a_bad_video_argument_is_refused_before_any_request[prom
+caught agent/xai_imagine.py   xAI Imagine: a video resolution the pages do not list is accepted  <- test_a_bad_video_argument_is_refused_before_any_request[prom
+caught agent/xai_imagine.py   xAI Imagine: 1080p video is refused  <- test_the_edges_of_the_documented_video_ranges_are_accepted[k
+caught agent/xai_imagine.py   xAI Imagine: an image alone is refused, though the prompt is optional for image to video  <- test_an_image_alone_is_enough_because_the_prompt_is_optional
+caught agent/xai_imagine.py   xAI Imagine: a video with neither prompt nor image is sent  <- test_a_bad_video_argument_is_refused_before_any_request[empt
+caught agent/xai_imagine.py   xAI Imagine: an image-only video sends a null prompt  <- test_an_image_alone_is_enough_because_the_prompt_is_optional
+caught agent/xai_imagine.py   xAI Imagine: the image is sent as a bare string, not as an object with a url  <- test_an_image_to_video_request_sends_the_image_object_and_ev
+caught agent/xai_imagine.py   xAI Imagine: an image URL with a space in it is accepted  <- test_a_bad_video_argument_is_refused_before_any_request[prom
+caught agent/xai_imagine.py   xAI Imagine: a gif data URI is accepted as the video source image  <- test_a_bad_video_argument_is_refused_before_any_request[prom
+caught agent/xai_imagine.py   xAI Imagine: any URL scheme, such as javascript or file, is accepted as the source image  <- test_a_bad_video_argument_is_refused_before_any_request[prom
+caught agent/xai_imagine.py   xAI Imagine: a pending job reports 100 percent  <- test_a_pending_progress_outside_zero_to_ninety_nine_is_dropp
+caught agent/xai_imagine.py   xAI Imagine: True is accepted as a progress figure  <- test_a_pending_progress_outside_zero_to_ninety_nine_is_dropp
+caught agent/xai_imagine.py   xAI Imagine: a pending job at zero percent loses its progress  <- test_a_pending_progress_outside_zero_to_ninety_nine_is_dropp
+caught agent/xai_imagine.py   xAI Imagine: a video that failed moderation is reported as an unusable answer instead of a moderation refusal  <- test_a_video_that_did_not_pass_moderation_is_a_named_error_n
+caught agent/xai_imagine.py   xAI Imagine: a missing respect_moderation is reported as a moderation refusal  <- test_a_video_poll_answer_that_is_not_documented_is_a_named_e
+caught agent/xai_imagine.py   xAI Imagine: a done video answer with no video object crashes  <- test_a_video_poll_answer_that_is_not_documented_is_a_named_e
+caught agent/xai_imagine.py   xAI Imagine: a video URL that is not https is accepted  <- test_a_video_poll_answer_that_is_not_documented_is_a_named_e
+caught agent/xai_imagine.py   xAI Imagine: a fractional video duration crashes  <- test_a_junk_video_duration_is_dropped[2.5-None]
+caught agent/xai_imagine.py   xAI Imagine: a zero or negative video duration is passed on  <- test_a_junk_video_duration_is_dropped[0-None]
+caught agent/xai_imagine.py   xAI Imagine: jobs are polled every ten seconds, not every five  <- test_wait_images_polls_every_five_seconds_until_done
+caught agent/xai_imagine.py   xAI Imagine: a wait gives up after one minute, not ten  <- test_the_default_wait_is_ten_minutes
+caught agent/xai_imagine.py   xAI Imagine: a wait gives up one poll early at the timeout boundary  <- test_a_poll_that_times_out_keeps_the_request_id
+caught agent/xai_imagine.py   xAI Imagine: a wait polls once more after the timeout has run out  <- test_a_poll_that_times_out_keeps_the_request_id
+caught agent/xai_imagine.py   xAI Imagine: a pending job is polled every second, hammering the API  <- test_wait_images_polls_every_five_seconds_until_done
+caught agent/xai_imagine.py   xAI Imagine: a timed-out wait forgets the request id, so the job cannot be fetched later  <- test_a_poll_that_times_out_keeps_the_request_id
+# First pass: 153 of 158 caught and 5 ALIVE (the five ALIVE lines above): an eight character key refused, xhigh refused, an unknown
+# image poll status read as done, an unknown video poll status read as done, base64 with junk characters accepted. Each was a missing
+# test, not a missing guard: one test or one test parameter was added for each, and each of the five was re-run on its own and caught
+# (the harness reports the file restored byte-exact each time). Result after the fixes: all 158 caught.
