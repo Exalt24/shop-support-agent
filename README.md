@@ -24,15 +24,15 @@ A customer-support agent for a Shopify store. It looks up orders and products th
 ## Proof
 
 ```
-./.venv/Scripts/python.exe -m pytest tests -q              # 836 tests, offline (scripted model, stand-in shop, Zoho, Claude API and IBM watsonx.ai; the widget tests drive Chromium and skip without it)
-./.venv/Scripts/python.exe tests/mutation_check.py         # 325 mutants: each guard broken on purpose
+./.venv/Scripts/python.exe -m pytest tests -q              # 912 tests, offline (scripted model, stand-in shop, Zoho, Discord, Claude API and IBM watsonx.ai; the widget tests drive Chromium and skip without it)
+./.venv/Scripts/python.exe tests/mutation_check.py         # 344 mutants: each guard broken on purpose
 ./.venv/Scripts/python.exe demo.py                         # nine messages, live store + live model
 ./.venv/Scripts/python.exe demo_memory.py                  # five turns with memory, live store + model + Postgres
 ./.venv/Scripts/python.exe demo_enquiry.py                 # five enquiries, scripted model + fake Zoho (no live anything)
 ./.venv/Scripts/python.exe demo_mcp.py                      # the MCP server over stdio against the fake Zoho
 ```
 
-- **Mutation harness:** each of 325 guards (the original 11, 14 for customer memory, 40 for enquiry routing, lead capture and the Zoho client, 27 for the chat server and widget, 39 for the MCP tools, the Zoho reads and the Zia client, 74 for the Claude API provider, 120 for the watsonx.ai provider) is deleted from the real source. The suite is run. The file is restored byte-exact. All 325 mutants are caught. Six guards each have a test that fails without them. They are the identity check, the throttle-as-HTTP-200 handling, the legal-threat rule, the grounding guard, the number-word check and `status:active` product filtering.
+- **Mutation harness:** each of 344 guards (the per-feature counts are in [docs/mutation-groups.md](docs/mutation-groups.md)) is deleted from the real source. The suite is run. The file is restored byte-exact. All 344 mutants are caught.
 - **Live transcript:** `demo_transcript.md`. Nine messages including three hostile ones (a refund demand, a prompt injection asking for a 50% discount code, a legal threat). 7 answered and 2 escalated. No promise, invented figure or foreign order detail reached a customer. The live runs changed stemming, active products only, unsupported outcomes and number words. Details: [docs/live-runs.md](docs/live-runs.md).
 - **Through n8n:** `n8n/workflow.json` (webhook, agent, "needs a person?" branch, handoff ticket, reply) was imported into a real n8n 2.41.6 server. It was called over its webhook with an answered message, a wrong-email message and a legal threat. Regenerate it with `python n8n/build_workflow.py`.
 
@@ -56,11 +56,11 @@ It works for a sales site as well as a shop. The agent sorts each enquiry and ro
 ./.venv/Scripts/python.exe demo_enquiry.py          # transcript in demo_enquiry_transcript.md
 ```
 
-**Scope and next steps.** Built and tested against a stand-in that follows the saved Zoho pages. The next step is a run against a Zoho account to confirm every field name. One CRM. The ledger and dialogue state are in memory (one process). The Task owner is not set because no saved page names that key. Consent is an English-keyword check. `serve.py` has it (when `ZOHO_*` variables are set). The console does not.
+**Scope and next steps.** Built and tested against a stand-in that follows the saved Zoho pages. The limits and the next step are in [docs/enquiry-routing.md](docs/enquiry-routing.md).
 
 ## One chat widget for two websites, a Zoho MCP server and a Zia client (tested against stand-ins)
 
-- **Widget.** One script tag (`data-site`) and vanilla JavaScript in a Shadow DOM, served by `serve.py` for several websites. Each site is a tenant. It has its own theme, greeting, allowed origins, routing table and Zoho settings. Quote requests go to `estimating` on one site and `trade-accounts` on the other. Guards: per-origin CORS, a site key that only selects the tenant, signed conversation ids, per-IP and per-conversation rate limits, size caps and text-only rendering. The yes and no buttons send the same words the consent code already reads. Chromium tests drive both demo sites at 1280 and 360 pixels. [docs/chat-widget.md](docs/chat-widget.md)
+- **Widget.** One script tag (`data-site`) and vanilla JavaScript in a Shadow DOM, served by `serve.py` for several websites. Each site is a tenant with its own theme, origins, routing table and Zoho settings. Guards (per-origin CORS, signed conversation ids, rate limits, text-only rendering) and the Chromium tests at 1280 and 360 pixels are in [docs/chat-widget.md](docs/chat-widget.md)
 - **MCP server.** Five tools over the lead desk and the Zoho client, on the official `mcp` SDK over stdio. Schemas are strict. Credentials come from the environment only. Every write takes `confirm` and an idempotency key. Answers are small. CRM text is returned as data. Zoho hosts its own MCP servers. This one adds tenant routing and consent. [docs/zoho-mcp.md](docs/zoho-mcp.md)
 - **Zia Agents client.** The Agent API is documented enough (endpoint, headers, body, answer, OAuth). So a small client with a fake is built from the saved pages. Nothing else is guessed. There are no retries and no error shapes.
 
@@ -70,6 +70,17 @@ It works for a sales site as well as a shop. The agent sorts each enquiry and ro
 ```
 
 **Scope and next steps.** Tested against stand-in Zoho and Zia servers and the two demo sites. The limits are in [docs/chat-widget.md](docs/chat-widget.md).
+
+## Discord handoff: an escalated turn becomes one staff message with Take and Resolve buttons (tested against a stand-in)
+
+An escalated turn posts one message to a staff channel with Take and Resolve buttons. Retries cannot double post (nonce), the channel never holds customer words or contact details, and the interactions endpoint verifies an Ed25519 signature on every click. [docs/discord-handoff.md](docs/discord-handoff.md)
+
+```
+./.venv/Scripts/python.exe -m pytest tests/test_discord_handoff.py -q   # 76 tests, 40 seeded random worlds with faults
+./.venv/Scripts/python.exe tests/mutation_check.py Discord               # 19 mutants, all caught
+```
+
+**Scope and next steps.** Tested against a stand-in written from Discord's saved pages. The next step is a run in a real server. Not yet wired into `serve.py`.
 
 ## Claude API and watsonx.ai providers (tested against stand-ins)
 

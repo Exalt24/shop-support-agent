@@ -686,6 +686,44 @@ MUTANTS = [
      "watsonx: WATSONX_URL is never read"),
     ("agent/config.py", '(os.environ.get("WATSONX_MODEL_ID") or WATSONX_DEFAULT_MODEL_ID).strip()', 'WATSONX_DEFAULT_MODEL_ID',
      "watsonx: WATSONX_MODEL_ID is never read"),
+    ('agent/discord_handoff.py', '"allowed_mentions": NO_MENTIONS, "components": buttons(tid, state)}', '"components": buttons(tid, state)}',
+     'Discord: a mention in a reason pings everyone in the staff channel'),
+    ('agent/discord_handoff.py', '.replace("@", "at ").replace("<", "(").replace(">", ")")', '',
+     'Discord: mention syntax survives into the message text'),
+    ('agent/discord_handoff.py', "f\"Why: {_clean(ticket.get('reason', 'needs a person'), 120)}\"", "f\"Why: {_clean(ticket.get('reason', 'needs a person'), 5000)}\"",
+     'Discord: a long reason makes Discord refuse the post'),
+    ('agent/discord_handoff.py', '.hexdigest()[:MAX_NONCE]', '.hexdigest()',
+     'Discord: the nonce is over 25 characters and Discord refuses the post'),
+    ('agent/discord_handoff.py', '"nonce": nonce_for(tid), "enforce_nonce": True}', '"nonce": nonce_for(tid), "enforce_nonce": False}',
+     'Discord: a retry after a lost answer posts the ticket twice'),
+    ('agent/discord_handoff.py', 'if tid in self.posted:', 'if False:',
+     'Discord: a second post of the same ticket makes a second message'),
+    ('agent/discord_handoff.py', 'self._sleep(min(self._retry_after(r), MAX_RETRY_WAIT))', 'self._sleep(self._retry_after(r))',
+     'Discord: a huge retry_after stalls the whole handoff'),
+    ('agent/discord_handoff.py', 'if r.status_code == 429:', 'if r.status_code == 4290:',
+     'Discord: a rate limit is treated as a final refusal'),
+    ('agent/discord_handoff.py', 'if r.status_code >= 500:', 'if r.status_code >= 600:',
+     'Discord: a Discord outage is treated as a final refusal'),
+    ('agent/discord_handoff.py', 'return PostResult("refused", None, attempt, f"http_{r.status_code}")   # 400, 401, 403, 404: a retry cannot fix it', 'continue',
+     'Discord: a wrong token or bad payload is retried until the attempts run out'),
+    ('agent/discord_handoff.py', 'self.posted[tid] = mid', 'pass',
+     'Discord: a posted ticket is forgotten, so the next post sends it again'),
+    ('agent/discord_handoff.py', 'timestamp.encode("utf-8") + body)', 'body)',
+     'Discord: the timestamp is not part of what is signed, so a captured request replays forever'),
+    ('agent/discord_handoff.py', 'if not sig or not ts or not verify_signature(self.public_key_hex, sig, ts, body):', 'if False:',
+     'Discord: anyone can click a button by posting to the endpoint'),
+    ('agent/discord_handoff.py', 'if event.get("type") == PING:', 'if False:',
+     'Discord: Discord cannot validate the endpoint (a PING is not answered with a PONG)'),
+    ('agent/discord_handoff.py', 'if st.state == "resolved":', 'if False:',
+     'Discord: a resolved ticket can be taken again'),
+    ('agent/discord_handoff.py', '            if st.state == "taken":', '            if False:',
+     'Discord: two people can take the same ticket'),
+    ('agent/discord_handoff.py', 'self.audit({"discord": action, "ticket": tid[:40], "actor": who, "state": st.state})', 'pass',
+     'Discord: a button click leaves no trace of who did it'),
+    ('agent/discord_handoff.py', 'if action not in ("take", "resolve") or st is None:', 'if st is None:',
+     'Discord: an unknown button is treated as a resolve'),
+    ('agent/discord_handoff.py', 'take["disabled"] = True', 'pass',
+     'Discord: the Take button stays live after someone took the ticket'),
 ]
 
 
@@ -698,7 +736,10 @@ CLAUDE_TESTS = ["tests/test_anthropic_llm.py", "tests/test_anthropic_chat_path.p
 # The watsonx mutants work the same way, with their own two files (about 7 s).
 WATSONX_PREFIX = "watsonx: "
 WATSONX_TESTS = ["tests/test_watsonx_llm.py", "tests/test_watsonx_chat_path.py"]
-TARGETED = {CLAUDE_PREFIX: CLAUDE_TESTS, WATSONX_PREFIX: WATSONX_TESTS}
+# The Discord mutants run their own file first (under a second).
+DISCORD_PREFIX = "Discord: "
+DISCORD_TESTS = ["tests/test_discord_handoff.py"]
+TARGETED = {CLAUDE_PREFIX: CLAUDE_TESTS, WATSONX_PREFIX: WATSONX_TESTS, DISCORD_PREFIX: DISCORD_TESTS}
 
 
 def targeted_files(consequence: str) -> list[str] | None:

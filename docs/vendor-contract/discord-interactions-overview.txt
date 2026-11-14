@@ -1,0 +1,146 @@
+URL: https://docs.discord.com/developers/interactions/overview
+STATUS: 200
+
+Documentation Index
+
+Fetch the complete documentation index at: /llms.txt
+
+Use this file to discover all available pages before exploring further.
+
+Skip to main content
+Documentation - Discord home page
+Search...
+Ctrl K
+Help Center
+Developer Portal
+Home
+Bots & Companion Apps
+Social SDK
+Activities
+Guides
+Change Log
+Reference
+Developer Portal
+API & SDK Reference
+Developer Community
+Bots & Companion Apps
+Overview
+Build Your First Bot
+Interactions
+Interactions Overview
+Receiving and Responding
+Application Commands
+Components
+Components Overview
+Using Message Components
+Using Modal Components
+Component Reference
+Monetization
+App Monetization
+Enabling Monetization
+Managing SKUs
+Implementing App Subscriptions
+Implementing One-Time Purchases
+Discovery
+App Directory
+Enabling Discovery
+Best Practices
+Tutorials
+Configuring App Metadata for Linked Roles
+Developing A User-Installable App
+Hosting on Cloudflare Workers
+Using Community Invites
+You Might Not Need a Privileged Intent
+Getting Started with Privileged Intent Review
+close
+On this page
+Types of Interactions
+Commands
+Message Components
+Modals
+Preparing for Interactions
+Configuring an Interactions Endpoint URL
+Setting Up an Endpoint
+Acknowledging PING requests
+Adding an Interactions Endpoint URL
+Handling Interactions
+Interactions
+Interactions Overview
+Copy page
+
+Learn about Discord’s interactive features including commands and message components.
+
+Interactive features like commands and message components allows users to invoke an app natively within Discord. When a user engages with one of your app’s interactive features, your app will receive an interaction.
+This overview includes an overview of the main types of interactions, and steps for you to prepare your app to use and receive interactions. Reference documentation and details about handling interactions are in Receiving and Responding.
+Types of Interactions
+There are different types of interactions in your app’s toolbelt that can pick and choose to build engaging, interactive experiences in Discord.
+Commands
+Application commands provide users a native way to invoke an app in Discord. They often map to an app’s core features or functionality.
+When an app creates a command it can choose the command’s type, which determines where it appears in the Discord client and the metadata the app will receive when the command is invoked. There are three types for application commands:
+Slash commands are the most common type of command and are accessed by typing / in the chat input, or by opening the command picker.
+Message commands are commands related to a message or a message’s content. They’re accessed by clicking on the context menu (the three dots) at the top-right of a message (or right clicking on a message), then navigating to the “Apps” section.
+User commands are commands that related to a user in Discord. They’re accessed by right clicking on a user profile, then navigating to the “Apps” section.
+Entry Point commands are commands used as the primary way to launch Activities from the App Launcher.
+Details about creating commands and handling command interactions are in the Application Commands documentation.
+Message Components
+Message components are interactive elements that can be included in the content of a message that your app sends in Discord.
+The main interactive components that apps can send in messages include:
+Buttons are clickable components that can be customized with different styles, texts, and emoji.
+Static select menus are components that a user can open to see a list of developer-defined select options with custom labels and descriptions.
+Auto-populated select menus are a set of four different select components that are populated with contextual Discord resources, like a list of users or channels in a server.
+A list of all message components and details on sending and receiving component interactions is in the Message Components documentation.
+Modals
+Modals are single-user pop-up interfaces that allow apps to collect form-like data. Modals can only be opened in response to a user invoking one of your app’s commands or message components.
+The only interactive component that modals can contain are text inputs, which allow users to fill out single-or-multi line form inputs.
+Details about creating and using modals is in the Receiving and Responding documentation.
+Preparing for Interactions
+When a user interacts with your app, you have the option for your app to receive interactions in two mutually-exclusive ways:
+WebSocket-based Gateway connection
+HTTP via outgoing webhooks
+By default your app will receive interactions via a Gateway connection, but you can opt-in to HTTP-based interactions by adding a Interactions Endpoint URL to your app’s settings. Technical details about handling interactions is in the Receiving and Responding documentation.
+Configuring an Interactions Endpoint URL
+A Interactions Endpoint URL is a public endpoint for your app where Discord can send your app HTTP-based interactions. If your app is using Gateway-based interactions, you don’t need to configure an Interactions Endpoint URL.
+Setting Up an Endpoint
+Before you can add your Interactions Endpoint URL to your app, your endpoint must be prepared for two things ahead of time:
+Acknowledging PING requests from Discord
+Validate security-related request headers (X-Signature-Ed25519 and X-Signature-Timestamp)
+If either of these are not complete, your Interactions Endpoint URL will not be validated. Details on acknowledging PING requests and validating security-related headers are in the sections below.
+Acknowledging PING requests
+When adding your Interactions Endpoint URL, Discord will send a POST request with a PING payload with a type: 1 to your endpoint. Your app is expected to acknowledge the request by returning a 200 response with a PONG payload (which has the same type: 1). Details about interaction responses are in the Receiving and Responding documentation.
+You must provide a valid Content-Type when responding to PINGs. See here for further information.
+
+Responding to PING Requests
+
+Code example for acknowledging PING interactions
+
+Validating Security Request Headers
+The internet is a scary place, especially for people hosting public, unauthenticated endpoints. To receive interactions via HTTP, there are some security steps you must take before your app is eligible to receive requests.
+Each interaction is sent with the following headers:
+X-Signature-Ed25519 as a signature
+X-Signature-Timestamp as a timestamp
+Using your favorite security library, you must validate the request each time you receive an interaction. If the signature fails validation, your app should respond with a 401 error code.
+
+Validating Security Headers
+
+Code example for validating security-related request headers
+
+In addition to ensuring your app validates security-related request headers at the time of saving your endpoint, Discord will also perform automated, routine security checks against your endpoint, including purposefully sending you invalid signatures. If you fail the validation, we will remove your interactions URL and alert you via email and System DM.
+We highly recommend checking out our Community Resources and the libraries found there. They not only provide typing for Interactions data models, but also include decorators for API frameworks like Flask and Express to make validation easy.
+Adding an Interactions Endpoint URL
+After you have a public endpoint to use as your app’s Interactions Endpoint URL, you can add it to your app by going to your app’s settings.
+On the General Information page, look for the Interactive Endpoint URL field. Paste your public URL that is set up to acknowledge PING messages and correctly handles security-related signature headers.
+Handling Interactions
+Once your app is prepared for interactions, you can explore the Receiving and Responding documentation which goes into the technical details of handling interactions requests in your app.
+
+Was this page helpful?
+
+Yes
+No
+Building your first Discord Bot
+Previous
+Receiving and Responding to Interactions
+Next
+github
+discord
+youtube
+linkedin

@@ -116,3 +116,7 @@ Fetched 2026-10-30 with `Operations/tools/webread/webread.cjs` (real Chromium), 
 ./.venv/Scripts/python.exe tests/mutation_check.py         # every guard above is broken on purpose
 ./.venv/Scripts/python.exe demo_enquiry.py                 # five scripted enquiries against the fakes, writes demo_enquiry_transcript.md
 ```
+
+## Scope and next steps (moved from the README)
+
+Built and tested against a stand-in that follows the saved Zoho pages. The next step is a run against a Zoho account to confirm every field name. One CRM. The ledger and dialogue state are in memory (one process). The Task owner is not set because no saved page names that key. Consent is an English-keyword check. `serve.py` has it (when `ZOHO_*` variables are set). The console does not.

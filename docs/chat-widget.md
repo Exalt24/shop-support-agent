@@ -99,3 +99,7 @@ WIDGET_SCREENSHOT_DIR=docs ./.venv/Scripts/python.exe -m pytest tests/test_widge
 ## Scope and next steps
 
 Tested against stand-in Zoho and Zia servers and the two demo sites. The widget runs locally from `serve.py`, has no analytics, and its limits and chats are held in memory. The MCP consent flag is the caller's statement. Zia is tested as a standalone client.
+
+## Widget details (moved from the README)
+
+Each site is a tenant. It has its own theme, greeting, allowed origins, routing table and Zoho settings. Quote requests go to `estimating` on one site and `trade-accounts` on the other. Guards: per-origin CORS, a site key that only selects the tenant, signed conversation ids, per-IP and per-conversation rate limits, size caps and text-only rendering. The yes and no buttons send the same words the consent code already reads. Chromium tests drive both demo sites at 1280 and 360 pixels.
