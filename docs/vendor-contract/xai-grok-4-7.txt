@@ -1,0 +1,190 @@
+URL: https://docs.x.ai/developers/grok-4-7
+STATUS: 200
+
+API
+Grok Build
+Grok Bot
+Grok
+X Subscription
+
+Search
+
+Ctrl+
+K
+API Console
+PRODUCTS
+Grok
+Grok Bot
+Grok Build
+STATUS
+Available
+RESOURCES
+llms.txt
+Discord
+Email support
+Terms and Policies
+Get Started
+Overview
+Quickstart
+Grok 4.7
+Latest
+Models
+Pricing
+Release Notes
+Text
+Text Generation
+Streaming
+Reasoning
+Structured Outputs
+Image Understanding
+Multi Agent
+Best Practices Guide
+Image & Video
+Overview
+Image Generation
+Image Editing
+Multi-Image Editing
+Image Prompting Guide
+Video Generation
+Video Overview
+New
+Image-to-Video
+Reference-to-Video
+Video Editing
+Video Extension
+Voice
+Overview
+Speech to Speech
+Text to Speech
+Speech to Text
+New
+Custom Voices
+Ephemeral Tokens
+Files & Collections
+Files Overview
+Managing Files
+Public URLs
+New
+Chat with Files
+Collections
+Collections via API
+Collection Metadata
+Generated Media
+Tools
+Overview
+Function Calling
+Web Search
+X Search
+Code Execution
+Image Generation
+Collections Search (RAG)
+Remote MCP Tools
+In Depth
+Advanced API Usage
+Rate Limits
+Prompt Caching
+Context Compaction
+Priority Processing
+Custom Moderation Controls
+New
+Batch API
+Deferred Completions
+Async Requests
+WebSocket Mode
+mTLS Authentication
+Regional Endpoints
+New
+Output Watermarking
+New
+Cost Tracking
+Debugging Errors
+Cookbook
+Platforms
+Community Integrations
+Google Cloud Vertex AI
+Microsoft Foundry
+Docs MCP
+Migration Guides
+Image Quality Model Retirement (Nov 2, 2026)
+New
+Model Retirement (May 15, 2026)
+Migrating to Responses API
+Chat Completions (Legacy)
+FAQ
+Data & Privacy
+General
+Get Started
+Grok 4.7
+Copy for LLM
+View as Markdown
+Create API key
+Meet grok-4.7
+
+Grok 4.7 is SpaceXSI's frontier model built for coding, agentic tasks, and knowledge work.
+
+Using the API
+
+If you already have an API key, set the model name to grok-4.7:
+
+JavaScript
+JavaScript (OpenAI)
+Bash
+Python
+import { xai } from '@ai-sdk/xai';
+import { generateText } from 'ai';
+const { text } = await generateText({
+  model: xai.responses('grok-4.7'),
+  prompt:
+    'Find and fix the bug, then explain it: function median(a){a.sort();return a[a.length/2]}',
+});
+console.log(text);
+
+New to the xAI API? Follow the Quickstart to create an account and make your first request.
+
+At a glance
+Property	Value
+Model name	grok-4.7
+Context window	500,000 tokens
+Knowledge cutoff	May 2026
+Modalities	Text and image input; text output
+Output limit	No text output limit
+Input price	$2.00 / 1M tokens
+Output price	$6.00 / 1M tokens
+Reasoning	Low, medium, high (default), or xhigh 
+
+APIs	Responses API
+Tools	Function calling, web search, X search, code execution
+
+Rate limits and live pricing for your team are on the model detail page and Pricing.
+
+Important details
+We highly recommend setting a prompt_cache_key (Responses API; x-grok-conv-id header on Chat Completions). It routes a conversation's requests to the same server, making cache hits reliable; without it you often pay full input price on a cache-cold server. See What Breaks Caching for common mistakes.
+Long agent loops additionally benefit from context compaction; for tool-heavy workloads see function calling.
+Encrypted reasoning is always returned on the Responses API. POST /v1/responses responses from grok-4.7 include reasoning.encrypted_content even when include does not list it, so multi-turn conversations keep the model's reasoning without extra configuration. Pass the reasoning items back unchanged in the next request's input; see Encrypted reasoning content. Chat Completions is unchanged.
+Fast variant
+
+Grok 4.7 Fast is the same model served on faster infrastructure. It costs 2x the standard token rates, or 1.5x for long-context requests. It's available only in Cursor and Grok Build, and is billed through your plan there. It is not included in Grok Build's free tier. It is not available on the public xAI API. Rates are on the Pricing page.
+
+Where it runs
+xAI API: get a key from the console
+US regional endpoint: also served at https://us.api.x.ai/v1, which keeps inference in the United States, with token usage priced at a 10% premium; see Regional Endpoints
+Grok Build: the default model of the coding agent
+Cursor: available on all plans
+Model gateways: OpenRouter, Vercel, and Cloudflare
+Learn more
+Reasoning - controlling reasoning_effort, including "xhigh"
+Announcement - launch post with demos and full benchmark figures
+Models - compare available models and their capabilities
+Pricing - token pricing for all models
+
+Last updated: October 10, 2026
+
+On this page
+Using the API
+At a glance
+Important details
+Fast variant
+Where it runs
+Learn more
+Copy for LLM
+Share feedback

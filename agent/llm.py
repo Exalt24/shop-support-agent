@@ -64,6 +64,9 @@ def build_llm(settings: Settings) -> LLM:
         from .watsonx_llm import WatsonxLLM  # same reason: watsonx_llm imports LLMError from this file
         return WatsonxLLM(settings.watsonx_key, settings.watsonx_project_id, settings.watsonx_model_id, url=settings.watsonx_url,
                           iam_url=config.WATSONX_IAM_URL)
+    if settings.llm_provider == "xai":
+        from .xai_llm import XaiLLM  # same reason: xai_http imports LLMError from this file
+        return XaiLLM(settings.xai_key, settings.xai_model, base_url=settings.xai_base_url)
     if settings.llm_provider == "groq":
         return GroqLLM(settings)
     raise LLMError("unknown LLM provider: %r" % settings.llm_provider)

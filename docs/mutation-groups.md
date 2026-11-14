@@ -1,6 +1,6 @@
 # Mutation harness groups
 
-`tests/mutation_check.py` deletes one guard at a time from the real source, runs the suite and restores the file byte-exact. 429 mutants, all caught.
+`tests/mutation_check.py` deletes one guard at a time from the real source, runs the suite and restores the file byte-exact. 587 mutants, all caught.
 
 | Group | Mutants |
 |---|---|
@@ -17,3 +17,4 @@ Six guards each have a test that fails without them: the identity check, the thr
 | WhatsApp lane (`agent/whatsapp_lane.py`, run with `tests/mutation_check.py WhatsApp`) | 17 |
 | Notion ticket log (`agent/notion_log.py`, run with `tests/mutation_check.py Notion`) | 14 |
 | Google Calendar booking (`agent/gcal_booking.py` and the booking turn in `agent/core.py`, run with `tests/mutation_check.py GCal`) | 54 |
+| xAI Grok chat provider and the Grok Imagine client (`agent/xai_http.py`, `xai_llm.py`, `xai_imagine.py` and their `config.py` and `llm.py` lines, run with `tests/mutation_check.py xAI`): 76 chat and shared layer, 82 image and video | 158 |

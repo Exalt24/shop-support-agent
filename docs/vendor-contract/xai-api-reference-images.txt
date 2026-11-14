@@ -1,0 +1,498 @@
+URL: https://docs.x.ai/developers/rest-api-reference/inference/images.md
+STATUS: 200
+
+#### Inference API
+
+# Images
+
+## POST /v1/images/generations
+
+Generate an image based on a prompt. This is the endpoint for making generation requests to image generation models.
+
+### Request Body
+
+* `aspect_ratio` ("1:1" | "3:4" | "4:3" | "9:16" | "16:9" | "2:3" | "3:2" | "9:19.5" | "19.5:9" | "9:20" | "20:9" | "1:2" | "2:1" | "21:9" | "5:2" | "auto")
+
+* `deferred` (boolean | null) — If set, the request returns immediately with a \`request\_id\` and the
+  image is generated in the background. Poll \`GET /v1/images/\{request\_id}\`
+  for the result. Only \`response\_format: "url"\` is supported in this mode.
+
+* `model` (string | null) — Model to be used.
+
+* `n` (integer | null) — Number of images to be generated
+
+* `output` (object)
+
+  * `upload_urls` (array\<string>, required) — Signed URLs to upload the generated images via HTTP PUT, one per
+    image: the list length must equal \`n\` (default 1). Each PUT sends a
+    \`Content-Type\` equal to the image's \`mime\_type\` in the response
+    (\`image/jpeg\` unless the requested quality produces PNG), so sign the
+    URL for that type or without a Content-Type constraint. Azure Blob SAS
+    URLs also get \`x-ms-blob-type: BlockBlob\`.
+
+* `prompt` (string) — Prompt for image generation.
+
+* `resolution` ("1k" | "2k" | "1.5k")
+
+* `response_format` (string | null) — Response format to return the image in. Can be url or b64\_json. If b64\_json is specified, the image will be returned as a base64-encoded string instead of a url to the generated image file.
+
+* `storage_options` (object)
+
+  * `expires_after` (integer | null) — Seconds from now until the file auto-expires. Maximum 2592000 (30 days).
+    If omitted, the file does not expire.
+
+  * `filename` (string, required) — Filename for the stored file.
+
+  * `public_url` (boolean | object)
+
+* `user` (string | null) — A unique identifier representing your end-user, which can help xAI to monitor and detect abuse.
+
+### Response Body
+
+* `data` (array\<object>, required) — A list of generated image objects.
+
+  * `b64_json` (string | null) — A base64-encoded string representation of the generated image (without the data-URI prefix), if \`b64\_json\` is specified as \`response\_format\` in the request.
+
+  * `file_output` (object)
+
+    * `expires_at` (integer | null) — Unix timestamp (seconds) when the stored file expires and will be
+      automatically deleted. Only present when the file has an expiration.
+
+    * `file_id` (string, required) — Files API file\_id of the stored file.
+
+    * `filename` (string, required) — Filename of the stored file.
+
+    * `public_url` (string | null) — Public URL for the stored file. Only present when the request included
+      \`storage\_options.public\_url\` and creation succeeded.
+
+    * `public_url_error` (string | null) — Human-readable error when \`storage\_options.public\_url\` was set but
+      public URL creation failed. The file was stored successfully.
+
+    * `public_url_expires_at` (integer | null) — Unix timestamp (seconds) when the public URL expires. Present when
+      the public URL has an expiry, either from an explicit \`expires\_after\`
+      in the request or inherited from the file's TTL.
+
+  * `mime_type` (string | null) — The MIME type of the generated image (e.g. \`image/png\`, \`image/jpeg\`, \`image/webp\`).
+
+  * `storage_error` (string | null) — Human-readable error when \`storage\_options\` was set but the upload
+    failed. Absent on success or when storage was not requested.
+
+  * `url` (string | null) — A url to the generated image, if \`response\_format\` is not specified or with \`url\` in the request.
+
+* `usage` (object)
+
+  * `cost_in_usd_ticks` (integer, required) — The cost of this request expressed in USD ticks.
+    One USD cent equals 100,000,000 ticks, so one US dollar equals
+    10,000,000,000 ticks.
+
+  * `input_tokens` (integer | null) — Total input tokens: prompt text tokens + input image tokens
+    (the sum of \`input\_tokens\_details\`, where \`cached\_tokens\` is a subset
+    of \`text\_tokens\`, not additive).
+
+  * `input_tokens_details` (object)
+
+    * `cached_tokens` (integer, required) — Text tokens served from cache from previous requests (a subset of
+      \`text\_tokens\`).
+
+    * `image_tokens` (integer, required) — Input image tokens, as reported by the image engine.
+
+    * `text_tokens` (integer, required) — Prompt text tokens consumed by the prompt-rewriting (upsampler) LLM,
+      including any served from cache.
+
+  * `output_tokens` (integer | null) — Total output tokens: rewritten-prompt text tokens + reasoning tokens
+    \+ generated image tokens (the sum of \`output\_tokens\_details\`).
+
+  * `output_tokens_details` (object)
+
+    * `image_tokens` (integer, required) — Generated image tokens, as reported by the image engine.
+
+    * `reasoning_tokens` (integer, required) — Reasoning (thinking) tokens generated by the prompt-rewriting
+      (upsampler) LLM.
+
+    * `text_tokens` (integer, required) — Rewritten-prompt text tokens generated by the prompt-rewriting
+      (upsampler) LLM, excluding reasoning tokens.
+
+  * `total_tokens` (integer | null) — Total tokens (input + output).
+
+### Code Examples
+
+```pythonOpenAISDK
+import os
+
+from openai import OpenAI
+
+client = OpenAI(
+    api_key=os.environ["XAI_API_KEY"],
+    base_url="https://api.x.ai/v1",
+)
+
+response = client.images.generate(
+    model="grok-imagine-image-2.0",
+    prompt="A collage of London landmarks in a stenciled street‑art style",
+)
+
+print(response.model_dump_json(indent=2))
+```
+
+```bash
+curl -s https://api.x.ai/v1/images/generations \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $XAI_API_KEY" \
+  -d '{
+    "model": "grok-imagine-image-2.0",
+    "prompt": "A collage of London landmarks in a stenciled street‑art style"
+  }'
+```
+
+```javascriptOpenAISDK
+import OpenAI from "openai";
+
+const client = new OpenAI({
+  apiKey: process.env.XAI_API_KEY,
+  baseURL: "https://api.x.ai/v1",
+});
+
+const response = await client.images.generate({
+  model: "grok-imagine-image-2.0",
+  prompt: "A collage of London landmarks in a stenciled street‑art style",
+});
+
+console.log(JSON.stringify(response, null, 2));
+```
+
+\*\*Response example:\*\*
+
+```json
+{
+  "data": [
+    {
+      "url": "..."
+    },
+    {
+      "url": "..."
+    }
+  ]
+}
+```
+
+***
+
+## POST /v1/images/edits
+
+Edit an image based on a prompt. This is the endpoint for making edit requests to image generation models.
+
+### Request Body
+
+* `aspect_ratio` ("1:1" | "3:4" | "4:3" | "9:16" | "16:9" | "2:3" | "3:2" | "9:19.5" | "19.5:9" | "9:20" | "20:9" | "1:2" | "2:1" | "21:9" | "5:2" | "auto")
+
+* `deferred` (boolean | null) — If set, the request returns immediately with a \`request\_id\` and the
+  edit is generated in the background. Poll \`GET /v1/images/\{request\_id}\`
+  for the result. Only \`response\_format: "url"\` is supported in this mode.
+
+* `image` (object)
+
+  * `file_id` (string | null) — File ID from the xAI Files API. Mutually exclusive with \`url\`.
+    The file must be an image (JPEG, PNG, or WebP) and fully uploaded.
+
+  * `url` (string) — Public URL or base64-encoded data URL of the image (JPEG, PNG, or WebP).
+    Also accepts \`image\_url\` for compatibility.
+    Required when \`file\_id\` is not set.
+
+* `images` (array\<object>) — List of input images for multi-reference editing.
+  Mutually exclusive with \`image\`. When multiple images are provided,
+  refer to them as \\\<IMAGE\_0\\>, \\\<IMAGE\_1\\>, etc. in the prompt.
+
+  * `file_id` (string | null) — File ID from the xAI Files API. Mutually exclusive with \`url\`.
+    The file must be an image (JPEG, PNG, or WebP) and fully uploaded.
+
+  * `url` (string) — Public URL or base64-encoded data URL of the image (JPEG, PNG, or WebP).
+    Also accepts \`image\_url\` for compatibility.
+    Required when \`file\_id\` is not set.
+
+* `model` (string | null) — Model to be used.
+
+* `n` (integer | null) — Number of image edits to be generated.
+
+* `output` (object)
+
+  * `upload_urls` (array\<string>, required) — Signed URLs to upload the generated images via HTTP PUT, one per
+    image: the list length must equal \`n\` (default 1). Each PUT sends a
+    \`Content-Type\` equal to the image's \`mime\_type\` in the response
+    (\`image/jpeg\` unless the requested quality produces PNG), so sign the
+    URL for that type or without a Content-Type constraint. Azure Blob SAS
+    URLs also get \`x-ms-blob-type: BlockBlob\`.
+
+* `prompt` (string, required) — Prompt for image editing.
+
+* `resolution` ("1k" | "2k" | "1.5k")
+
+* `response_format` (string | null) — Response format to return the image in. Can be \`url\` or \`b64\_json\`. If \`b64\_json\` is specified, the image will be returned as a base64-encoded string instead of a url to the generated image file.
+
+* `storage_options` (object)
+
+  * `expires_after` (integer | null) — Seconds from now until the file auto-expires. Maximum 2592000 (30 days).
+    If omitted, the file does not expire.
+
+  * `filename` (string, required) — Filename for the stored file.
+
+  * `public_url` (boolean | object)
+
+* `user` (string | null) — A unique identifier representing your end-user, which can help xAI to monitor and detect abuse.
+
+### Response Body
+
+* `data` (array\<object>, required) — A list of generated image objects.
+
+  * `b64_json` (string | null) — A base64-encoded string representation of the generated image (without the data-URI prefix), if \`b64\_json\` is specified as \`response\_format\` in the request.
+
+  * `file_output` (object)
+
+    * `expires_at` (integer | null) — Unix timestamp (seconds) when the stored file expires and will be
+      automatically deleted. Only present when the file has an expiration.
+
+    * `file_id` (string, required) — Files API file\_id of the stored file.
+
+    * `filename` (string, required) — Filename of the stored file.
+
+    * `public_url` (string | null) — Public URL for the stored file. Only present when the request included
+      \`storage\_options.public\_url\` and creation succeeded.
+
+    * `public_url_error` (string | null) — Human-readable error when \`storage\_options.public\_url\` was set but
+      public URL creation failed. The file was stored successfully.
+
+    * `public_url_expires_at` (integer | null) — Unix timestamp (seconds) when the public URL expires. Present when
+      the public URL has an expiry, either from an explicit \`expires\_after\`
+      in the request or inherited from the file's TTL.
+
+  * `mime_type` (string | null) — The MIME type of the generated image (e.g. \`image/png\`, \`image/jpeg\`, \`image/webp\`).
+
+  * `storage_error` (string | null) — Human-readable error when \`storage\_options\` was set but the upload
+    failed. Absent on success or when storage was not requested.
+
+  * `url` (string | null) — A url to the generated image, if \`response\_format\` is not specified or with \`url\` in the request.
+
+* `usage` (object)
+
+  * `cost_in_usd_ticks` (integer, required) — The cost of this request expressed in USD ticks.
+    One USD cent equals 100,000,000 ticks, so one US dollar equals
+    10,000,000,000 ticks.
+
+  * `input_tokens` (integer | null) — Total input tokens: prompt text tokens + input image tokens
+    (the sum of \`input\_tokens\_details\`, where \`cached\_tokens\` is a subset
+    of \`text\_tokens\`, not additive).
+
+  * `input_tokens_details` (object)
+
+    * `cached_tokens` (integer, required) — Text tokens served from cache from previous requests (a subset of
+      \`text\_tokens\`).
+
+    * `image_tokens` (integer, required) — Input image tokens, as reported by the image engine.
+
+    * `text_tokens` (integer, required) — Prompt text tokens consumed by the prompt-rewriting (upsampler) LLM,
+      including any served from cache.
+
+  * `output_tokens` (integer | null) — Total output tokens: rewritten-prompt text tokens + reasoning tokens
+    \+ generated image tokens (the sum of \`output\_tokens\_details\`).
+
+  * `output_tokens_details` (object)
+
+    * `image_tokens` (integer, required) — Generated image tokens, as reported by the image engine.
+
+    * `reasoning_tokens` (integer, required) — Reasoning (thinking) tokens generated by the prompt-rewriting
+      (upsampler) LLM.
+
+    * `text_tokens` (integer, required) — Rewritten-prompt text tokens generated by the prompt-rewriting
+      (upsampler) LLM, excluding reasoning tokens.
+
+  * `total_tokens` (integer | null) — Total tokens (input + output).
+
+### Code Examples
+
+```bash
+curl -s https://api.x.ai/v1/images/edits \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $XAI_API_KEY" \
+  -d '{
+    "model": "grok-imagine-image-2.0",
+    "prompt": "Render this as a pencil sketch with detailed shading",
+    "image": {
+      "url": "https://docs.x.ai/assets/api-examples/images/style-realistic.png",
+      "type": "image_url"
+    }
+  }'
+```
+
+```javascriptWithoutSDK
+const response = await fetch("https://api.x.ai/v1/images/edits", {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${process.env.XAI_API_KEY}`,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    model: "grok-imagine-image-2.0",
+    prompt: "Render this as a pencil sketch with detailed shading",
+    image: {
+      url: "https://docs.x.ai/assets/api-examples/images/style-realistic.png",
+      type: "image_url",
+    },
+  }),
+});
+
+console.log(JSON.stringify(await response.json(), null, 2));
+```
+
+```pythonWithoutSDK
+import json
+import os
+
+import requests
+
+response = requests.post(
+    "https://api.x.ai/v1/images/edits",
+    headers={
+        "Authorization": f"Bearer {os.environ['XAI_API_KEY']}",
+        "Content-Type": "application/json",
+    },
+    json={
+        "model": "grok-imagine-image-2.0",
+        "prompt": "Render this as a pencil sketch with detailed shading",
+        "image": {
+            "url": "https://docs.x.ai/assets/api-examples/images/style-realistic.png",
+            "type": "image_url",
+        },
+    },
+)
+
+print(json.dumps(response.json(), indent=2))
+```
+
+\*\*Response example:\*\*
+
+```json
+{
+  "data": [
+    {
+      "url": "..."
+    }
+  ]
+}
+```
+
+***
+
+## GET /v1/images/\{request\_id}
+
+\`GET /v1/images/\{request\_id}\`: 202 while pending, 200 with \`data\` when
+done or with \`error\` when failed (a failed generation is a body, not an
+HTTP error, so pollers do not retry-storm).
+
+### Path Parameters
+
+* `request_id` (string, required) — The deferred request id returned by a previous image request.
+
+### Response Body
+
+* `data` (array | null) — The generated images. Present when done.
+
+* `error` (object)
+
+  * `code` (string, required) — Machine-readable error code: \`invalid\_argument\`, \`permission\_denied\`,
+    \`failed\_precondition\`, \`service\_unavailable\` or \`internal\_error\`.
+
+  * `message` (string, required) — Human-readable error message describing the failure.
+
+* `request_id` (string, required) — The polled request id.
+
+* `status` (string, required) — \`"pending"\`, \`"done"\` or \`"failed"\`.
+
+* `usage` (object)
+
+  * `cost_in_usd_ticks` (integer, required) — The cost of this request expressed in USD ticks.
+    One USD cent equals 100,000,000 ticks, so one US dollar equals
+    10,000,000,000 ticks.
+
+  * `input_tokens` (integer | null) — Total input tokens: prompt text tokens + input image tokens
+    (the sum of \`input\_tokens\_details\`, where \`cached\_tokens\` is a subset
+    of \`text\_tokens\`, not additive).
+
+  * `input_tokens_details` (object)
+
+    * `cached_tokens` (integer, required) — Text tokens served from cache from previous requests (a subset of
+      \`text\_tokens\`).
+
+    * `image_tokens` (integer, required) — Input image tokens, as reported by the image engine.
+
+    * `text_tokens` (integer, required) — Prompt text tokens consumed by the prompt-rewriting (upsampler) LLM,
+      including any served from cache.
+
+  * `output_tokens` (integer | null) — Total output tokens: rewritten-prompt text tokens + reasoning tokens
+    \+ generated image tokens (the sum of \`output\_tokens\_details\`).
+
+  * `output_tokens_details` (object)
+
+    * `image_tokens` (integer, required) — Generated image tokens, as reported by the image engine.
+
+    * `reasoning_tokens` (integer, required) — Reasoning (thinking) tokens generated by the prompt-rewriting
+      (upsampler) LLM.
+
+    * `text_tokens` (integer, required) — Rewritten-prompt text tokens generated by the prompt-rewriting
+      (upsampler) LLM, excluding reasoning tokens.
+
+  * `total_tokens` (integer | null) — Total tokens (input + output).
+
+### Code Examples
+
+```bash
+curl -s "https://api.x.ai/v1/images/$IMAGE_REQUEST_ID" \
+  -H "Authorization: Bearer $XAI_API_KEY"
+```
+
+```javascriptWithoutSDK
+const response = await fetch(
+  `https://api.x.ai/v1/images/${process.env.IMAGE_REQUEST_ID}`,
+  {
+    headers: {
+      Authorization: `Bearer ${process.env.XAI_API_KEY}`,
+    },
+  },
+);
+
+console.log(JSON.stringify(await response.json(), null, 2));
+```
+
+```pythonWithoutSDK
+import json
+import os
+
+import requests
+
+request_id = os.environ["IMAGE_REQUEST_ID"]
+
+response = requests.get(
+    f"https://api.x.ai/v1/images/{request_id}",
+    headers={
+        "Authorization": f"Bearer {os.environ['XAI_API_KEY']}",
+    },
+)
+
+print(json.dumps(response.json(), indent=2))
+```
+
+\*\*Response example:\*\*
+
+```json
+{
+  "request_id": "e5b1b4d4-7b6a-4a0e-9c0d-7f3c7d8a1b2c",
+  "status": "done",
+  "data": [
+    {
+      "url": "..."
+    }
+  ],
+  "usage": {
+    "total_tokens": 0,
+    "image_cost": 2000000
+  }
+}
+```

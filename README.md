@@ -8,7 +8,7 @@
 
 A customer-support agent for a Shopify store. It looks up orders and products through the Admin GraphQL API. It answers from the store's own policy file. It hands anything it should not decide to a person. Built as a working proof of the first of the five agents in an e-commerce AI-agent brief: support.
 
-**Register: built, tested and run live against a Shopify development store with sample customers. It runs locally, on one platform (Shopify).** The human handoff produces a ticket-shaped payload. Wiring it to a helpdesk is the next step. Enquiry routing, the chat widget, the Zoho MCP server, the Zia client and the Claude API and watsonx.ai providers are built and tested against stand-in servers. The servers are written from the vendors' saved documentation pages.
+**Register: built, tested and run live against a Shopify development store with sample customers. It runs locally, on one platform (Shopify).** The human handoff produces a ticket-shaped payload. Wiring it to a helpdesk is the next step. Enquiry routing, the chat widget, the Zoho MCP server, the Zia client and the Claude API, watsonx.ai and xAI Grok providers are built and tested against stand-in servers. The servers are written from the vendors' saved documentation pages.
 
 ## What it does
 
@@ -34,7 +34,7 @@ A customer-support agent for a Shopify store. It looks up orders and products th
 
 - **Mutation harness:** each of 375 guards (the per-feature counts are in [docs/mutation-groups.md](docs/mutation-groups.md)) is deleted from the real source. The suite is run. The file is restored byte-exact. All 375 mutants are caught.
 - **Live transcript:** `demo_transcript.md`. Nine messages including three hostile ones (a refund demand, a prompt injection asking for a 50% discount code, a legal threat). 7 answered and 2 escalated. No promise, invented figure or foreign order detail reached a customer. Details: [docs/live-runs.md](docs/live-runs.md).
-- **Through n8n:** `n8n/workflow.json` (webhook, agent, "needs a person?" branch, handoff ticket, reply) was imported into a real n8n 2.41.6 server. It was called over its webhook with an answered message, a wrong-email message and a legal threat. Regenerate it with `python n8n/build_workflow.py`.
+- **Through n8n:** `n8n/workflow.json` (webhook, agent, "needs a person?" branch, handoff ticket, reply) was imported into a real n8n 2.41.6 server. It was called over its webhook with an answered message, a wrong-email message and a legal threat.
 
 ## Customer memory
 
@@ -42,7 +42,7 @@ The agent remembers returning customers, and the design is about what memory is 
 
 ## Enquiry routing and Zoho CRM lead capture (tested against a stand-in Zoho)
 
-It works for a sales site as well as a shop. The agent sorts each enquiry and routes it to an owner queue. With the visitor's explicit yes, it puts the enquiry in Zoho CRM as a Lead, a follow-up Task and a Note. Details, field rules and the vendor citations are in `docs/enquiry-routing.md`. The Zoho pages it relies on are saved in `docs/vendor-contract/`.
+It works for a sales site as well as a shop. The agent sorts each enquiry and routes it to an owner queue. With the visitor's explicit yes, it puts the enquiry in Zoho CRM as a Lead, a follow-up Task and a Note. Details and the vendor citations are in `docs/enquiry-routing.md`; the Zoho pages are saved in `docs/vendor-contract/`.
 
 - **Same order as above.** The escalation floor runs first. The model only proposes an intent from a fixed list of seven, code checks it, and anything unlisted becomes `human_needed`. A routing table in code gives the owner queue and the follow-up.
 - **Consent is code, not the model.** The agent asks once whether it may pass the visitor's details to the team. Only an explicit yes in the visitor's own message, after the question, counts ("yes but don't share my phone" does not).
@@ -90,19 +90,20 @@ A visitor asks for an appointment, the agent offers the next three free times, t
 
 **Scope and next steps.** Tested against a stand-in, and run once for real on a temporary calendar that was deleted afterwards ([record](docs/test-runs/2026-11-14-gcal-real-run.txt)). The OAuth exchange is the caller's. Not wired into `serve.py`.
 
-## Claude API and watsonx.ai providers (tested against stand-ins)
+## Claude API, watsonx.ai and xAI Grok providers (tested against stand-ins)
 
-`LLM_PROVIDER=anthropic` makes the agent answer with Anthropic's Claude API (model `claude-sonnet-5-5`) instead of Groq. Groq stays the default when nothing is set. It is one switch for every path. The `/support` endpoint, the chat widget backend and the support console all build their model the same way. So the grounding guard and the escalation floor judge a Claude reply exactly as they judge a Groq one. `LLM_PROVIDER=watsonx` answers through IBM watsonx.ai the same way. It is written from IBM's documentation and tested against a stand-in server that follows it. A live run needs `WATSONX_API_KEY` and `WATSONX_PROJECT_ID` (see [docs/watsonx.md](docs/watsonx.md)).
+`LLM_PROVIDER=anthropic` answers with Anthropic's Claude API (`claude-sonnet-5-5`), `watsonx` with IBM watsonx.ai and `xai` with xAI's Grok (`grok-4.7`) instead of Groq, which stays the default. One switch moves every path, so the grounding guard and the escalation floor judge any provider's reply as they judge a Groq one.
 
-Both are plain HTTP clients with no vendor SDK. Each failure is a named error that ends in a person. That covers a refusal, a cut-off or empty reply, any HTTP error and a dropped connection. The key is kept out of every message. Both are tested against stand-in servers. The status tables, the retry rules and the open items are in [docs/claude-api-provider.md](docs/claude-api-provider.md) and [docs/watsonx.md](docs/watsonx.md).
+All three are plain HTTP clients with no vendor SDK. Each failure is a named error that ends in a person, and the key is kept out of every message. **Written from each vendor's documentation and tested against stand-in servers I wrote from the saved pages. The watsonx.ai and xAI providers have never been run against the live service** (no key exists). Status tables and open items: [Claude](docs/claude-api-provider.md), [watsonx](docs/watsonx.md), [xAI Grok](docs/xai-grok.md). The last also covers `agent/xai_imagine.py`, a small Grok Imagine client for images and image to video, a library not wired into the agent.
 
 ```
-LLM_PROVIDER=anthropic ANTHROPIC_API_KEY=... ./.venv/Scripts/python.exe -m uvicorn serve:app --port 8008
-LLM_PROVIDER=watsonx WATSONX_API_KEY=... WATSONX_PROJECT_ID=... ./.venv/Scripts/python.exe -m uvicorn serve:app --port 8008
+LLM_PROVIDER=xai XAI_API_KEY=... ./.venv/Scripts/python.exe -m uvicorn serve:app --port 8008   # or anthropic with ANTHROPIC_API_KEY, or watsonx with WATSONX_API_KEY and WATSONX_PROJECT_ID
 ./.venv/Scripts/python.exe -m pytest tests/test_anthropic_llm.py tests/test_anthropic_chat_path.py -q   # 142 tests against the Claude stand-in
 ./.venv/Scripts/python.exe -m pytest tests/test_watsonx_llm.py tests/test_watsonx_chat_path.py -q      # 211 tests against the IBM stand-in
+./.venv/Scripts/python.exe -m pytest tests/test_xai_llm.py tests/test_xai_chat_path.py tests/test_xai_imagine.py -q   # XAI_TESTS tests against the xAI stand-in
 ./.venv/Scripts/python.exe tests/mutation_check.py "Claude API"                                         # 74 mutants for the Claude provider
 ./.venv/Scripts/python.exe tests/mutation_check.py "watsonx"                                            # 120 mutants for the watsonx provider
+./.venv/Scripts/python.exe tests/mutation_check.py xAI                                                  # XAI_MUTANTS mutants for the xAI code
 ```
 
 ## The support console (login, roles, many stores)
@@ -139,7 +140,7 @@ Run the engine and console suites as two commands, not one. Two `conftest.py` fi
 ```
 python -m venv .venv && ./.venv/Scripts/python.exe -m pip install -r requirements.txt
 # keys: GROQ_API_KEY, SHOPIFY_SHOP, SHOPIFY_ACCESS_TOKEN in the environment (or the saved secret files, see agent/config.py)
-# for Claude or IBM watsonx.ai instead of Groq: LLM_PROVIDER=anthropic and ANTHROPIC_API_KEY, or LLM_PROVIDER=watsonx, WATSONX_API_KEY and WATSONX_PROJECT_ID
+# for Claude, watsonx.ai or xAI Grok instead of Groq: LLM_PROVIDER and that provider's key, see the providers section
 ./.venv/Scripts/python.exe seed_fulfillment.py              # marks one dev-store order shipped with tracking
 SUPPORT_AGENT_KEY=demo-key ./.venv/Scripts/python.exe -m uvicorn serve:app --port 8008
 ```

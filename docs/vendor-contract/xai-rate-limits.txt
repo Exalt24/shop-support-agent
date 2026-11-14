@@ -1,0 +1,523 @@
+URL: https://docs.x.ai/developers/rate-limits
+STATUS: 200
+
+API
+Grok Build
+Grok Bot
+Grok
+X Subscription
+
+Search
+
+Ctrl+
+K
+API Console
+PRODUCTS
+Grok
+Grok Bot
+Grok Build
+STATUS
+Available
+RESOURCES
+llms.txt
+Discord
+Email support
+Terms and Policies
+Get Started
+Overview
+Quickstart
+Grok 4.7
+Latest
+Models
+Pricing
+Release Notes
+Text
+Text Generation
+Streaming
+Reasoning
+Structured Outputs
+Image Understanding
+Multi Agent
+Best Practices Guide
+Image & Video
+Overview
+Image Generation
+Image Editing
+Multi-Image Editing
+Image Prompting Guide
+Video Generation
+Video Overview
+New
+Image-to-Video
+Reference-to-Video
+Video Editing
+Video Extension
+Voice
+Overview
+Speech to Speech
+Text to Speech
+Speech to Text
+New
+Custom Voices
+Ephemeral Tokens
+Files & Collections
+Files Overview
+Managing Files
+Public URLs
+New
+Chat with Files
+Collections
+Collections via API
+Collection Metadata
+Generated Media
+Tools
+Overview
+Function Calling
+Web Search
+X Search
+Code Execution
+Image Generation
+Collections Search (RAG)
+Remote MCP Tools
+In Depth
+Advanced API Usage
+Rate Limits
+Prompt Caching
+Context Compaction
+Priority Processing
+Custom Moderation Controls
+New
+Batch API
+Deferred Completions
+Async Requests
+WebSocket Mode
+mTLS Authentication
+Regional Endpoints
+New
+Output Watermarking
+New
+Cost Tracking
+Debugging Errors
+Cookbook
+Platforms
+Community Integrations
+Google Cloud Vertex AI
+Microsoft Foundry
+Docs MCP
+Migration Guides
+Image Quality Model Retirement (Nov 2, 2026)
+New
+Model Retirement (May 15, 2026)
+Migrating to Responses API
+Chat Completions (Legacy)
+FAQ
+Data & Privacy
+General
+Key Information
+Rate Limits
+Copy for LLM
+View as Markdown
+Create API key
+Meet grok-4.7
+
+Every xAI API team has per-model rate limits on two dimensions: requests per second (RPS) and tokens per minute (TPM). Your per-second limit is derived from your per-minute request budget (RPM / 48, with a minimum of 2): you cannot spend a full minute's requests in a single second, which protects the API from sudden bursts. These limits scale with your team's tier, which is determined by cumulative spend on the API.
+
+You can view your team's current tier and per-model limits on the Models page in the xAI Console.
+
+Rate limit tiers
+
+Your tier is based on cumulative spend on the xAI API since January 1, 2026. Tiers unlock automatically as your spend increases.
+
+Tier	Spend threshold
+Tier 0	$0 (default)
+Tier 1	$50
+Tier 2	$250
+Tier 3	$1,000
+Tier 4	$5,000
+Enterprise	Available on request
+
+Qualification is based on total revenue received through prepaid credit purchases or successfully fulfilled invoices. Once you qualify for a tier, you stay there permanently; tiers never downgrade.
+
+Rate limit tiers apply to text, embedding, and voice models. For increases to image & video model limits, contact sales@x.ai.
+
+Per-model limits
+
+Each tier sets hard RPS and TPM caps per model. Limits scale exponentially with tier. Exceeding any limit returns a 429 Too Many Requests error.
+
+The table below lists RPS and TPM limits at each tier for every model. Voice & Audio endpoints follow, limited by requests per second and concurrent sessions (CST) rather than tokens; Speech to Speech is limited by concurrent sessions alone. You can also view your team's personalized limits on the Models page in the xAI Console.
+
+Language Models
+Model	Tier	
+RPS
+	
+TPM
+
+grok-4.20-0309-non-reasoning	
+T0
+T1
+T2
+T3
+T4
+	
+37
+50
+75
+125
+208
+	
+10M
+15M
+25M
+45M
+85M
+
+grok-4.20-0309-reasoning	
+T0
+T1
+T2
+T3
+T4
+	
+37
+50
+75
+125
+208
+	
+10M
+15M
+25M
+45M
+85M
+
+grok-4.20-multi-agent-0309	
+T0
+T1
+T2
+T3
+T4
+	
+9
+12
+18
+31
+56
+	
+2.5M
+3.7M
+6.2M
+11M
+21M
+
+grok-4.3	
+T0
+T1
+T2
+T3
+T4
+	
+37
+50
+75
+125
+208
+	
+10M
+15M
+25M
+45M
+85M
+
+grok-4.5	
+T0
+T1
+T2
+T3
+T4
+	
+150
+172
+208
+312
+500
+	
+50M
+53M
+60M
+74M
+100M
+
+grok-4.6	
+T0
+T1
+T2
+T3
+T4
+	
+150
+172
+208
+312
+500
+	
+50M
+53M
+60M
+74M
+100M
+
+grok-4.7	
+T0
+T1
+T2
+T3
+T4
+	
+150
+172
+208
+312
+500
+	
+50M
+53M
+60M
+74M
+100M
+
+grok-build-0.1	
+T0
+T1
+T2
+T3
+T4
+	
+37
+50
+75
+125
+208
+	
+10M
+15M
+25M
+45M
+85M
+
+Image Generation
+Model	Tier	
+RPS
+	
+TPM
+
+grok-imagine-image	
+T0
+T1
+T2
+T3
+T4
+	
+6
+12
+25
+50
+100
+	
+—
+—
+—
+—
+—
+
+grok-imagine-image-2.0	
+T0
+T1
+T2
+T3
+T4
+	
+6
+12
+25
+50
+100
+	
+—
+—
+—
+—
+—
+
+Video Generation
+Model	Tier	
+RPS
+	
+TPM
+
+grok-imagine-video	
+T0
+T1
+T2
+T3
+T4
+	
+10
+20
+39
+79
+158
+	
+—
+—
+—
+—
+—
+
+grok-imagine-video-1.5	
+T0
+T1
+T2
+T3
+T4
+	
+10
+20
+39
+79
+158
+	
+—
+—
+—
+—
+—
+
+grok-imagine-video-1.5-lite	
+T0
+T1
+T2
+T3
+T4
+	
+10
+20
+39
+79
+158
+	
+—
+—
+—
+—
+—
+
+Voice & Audio
+Model	Tier	
+RPS
+	
+CST
+
+grok-voice-3.0	
+T0
+T1
+T2
+T3
+T4
+	
+—
+—
+—
+—
+—
+	
+10
+20
+50
+100
+200
+
+Text to Speech	
+T0
+T1
+T2
+T3
+T4
+	
+50
+50
+100
+250
+500
+	
+100
+200
+200
+300
+500
+
+Speech to Text	
+T0
+T1
+T2
+T3
+T4
+	
+10
+10
+20
+30
+40
+	
+100
+200
+200
+300
+500
+What counts toward TPM
+
+All tokens consumed by a request count toward the TPM limit for that model:
+
+Prompt tokens (text, image, and audio)
+Completion tokens
+Reasoning tokens (on reasoning models)
+Cached prompt tokens (still count toward TPM, though they are billed at a reduced rate)
+
+For details on how tokens are counted and priced, see Models and Pricing. For per-request cost tracking, see Cost Tracking.
+
+Handling rate limit errors
+
+When you exceed your rate limit, the API returns HTTP 429. Implement exponential backoff to handle this gracefully:
+
+Python (OpenAI)
+Python
+import os
+import time
+from openai import OpenAI, RateLimitError
+client = OpenAI(base_url="https://api.x.ai/v1", api_key=os.getenv("XAI_API_KEY"))
+def request_with_backoff(messages, max_retries=5):
+    for attempt in range(max_retries):
+        try:
+            return client.chat.completions.create(
+                model="grok-4.7",
+                messages=messages,
+            )
+        except RateLimitError:
+            if attempt == max_retries - 1:
+                raise
+            wait = 2 ** attempt
+            time.sleep(wait)
+Increasing your limits
+Spend more. Tiers upgrade automatically based on cumulative spend. No action required on your part.
+Request an increase. Submit a request through the xAI Console if you need higher limits without additional spend, or limits beyond Tier 4.
+Contact sales. For enterprise-grade capacity, please email sales@x.ai.
+
+Last updated: November 13, 2026
+
+On this page
+Rate limit tiers
+Per-model limits
+What counts toward TPM
+Handling rate limit errors
+Increasing your limits
+Copy for LLM
+Share feedback

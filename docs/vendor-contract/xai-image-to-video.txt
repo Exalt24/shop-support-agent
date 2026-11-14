@@ -1,0 +1,28 @@
+URL: https://docs.x.ai/developers/model-capabilities/video/image-to-video.md
+STATUS: 200
+
+#### Model Capabilities
+
+# Image-to-Video
+
+Transform a still image into a video by providing a source image along with an optional prompt. The model animates the image content based on your instructions. On `grok-imagine-video-1.5`, image-to-video supports native 1080p. Sending `image` alone is image-to-video. Combining it with `last_frame`, `keyframes`, or `reference_images` is reference-to-video with that image as the pinned first frame. See [First & Last frame](/developers/model-capabilities/video/reference-to-video#first--last-frame) and [Keyframes](/developers/model-capabilities/video/reference-to-video#keyframes).
+
+You can provide the source image as:
+
+* A **public URL** pointing to an image
+* A **base64-encoded data URI** (e.g., `data:image/jpeg;base64,...`)
+* A **`file_id`** from the [Files API](/developers/files) — see [Files API integration for image & video requests](/developers/model-capabilities/imagine/files/inputs)
+
+The demo below shows this in action; hold to animate a still image:
+
+In the Vercel AI SDK, the `prompt` parameter accepts an object with `image` and `text` fields for image-to-video generation. The `image` field can be a URL string, base64-encoded string, `Uint8Array`, `ArrayBuffer`, or `Buffer`.
+
+## Related
+
+* [Video Generation](/developers/model-capabilities/video/generation) — Generate videos from text prompts
+* [Reference-to-Video](/developers/model-capabilities/video/reference-to-video) — Guide a video with reference images, or pin the first & last frame
+* [Model page: grok-imagine-video-1.5](/developers/models/grok-imagine-video-1.5)
+* [Videos API](/developers/rest-api-reference/inference/videos) — Video generation endpoints
+* [Video Editing](/developers/model-capabilities/video/editing) — Edit existing videos
+* [API Reference](/developers/rest-api-reference) — Full endpoint documentation
+* [Image & Video API Landing Page](https://x.ai/api/imagine) — Showcase of the image & video API in action
