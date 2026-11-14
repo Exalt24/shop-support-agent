@@ -758,6 +758,34 @@ MUTANTS = [
      'WhatsApp: the phone number becomes the conversation id'),
     ('agent/whatsapp_lane.py', 'return got if isinstance(got, list) else []', 'return got or []',
      'WhatsApp: a wrongly typed notification level crashes the endpoint'),
+    ('agent/notion_log.py', '"Notion-Version": NOTION_VERSION, ', '',
+     'Notion: Notion refuses every request because the version header is missing'),
+    ('agent/notion_log.py', 'RETRY_STATUSES = (429, 529)', 'RETRY_STATUSES = (429,)',
+     'Notion: a Notion overload (529) is treated as a final refusal'),
+    ('agent/notion_log.py', 'self._sleep(min(self._retry_after(r), MAX_RETRY_WAIT))', 'self._sleep(self._retry_after(r))',
+     'Notion: a huge Retry-After stalls the whole ticket log'),
+    ('agent/notion_log.py', 'if self._blocked(r):', 'if False:',
+     'Notion: a blocked connection is retried until the attempts run out'),
+    ('agent/notion_log.py', 'if tid in self.pages:', 'if False:',
+     'Notion: a second record of the same ticket makes more calls'),
+    ('agent/notion_log.py', '        if found:', '        if False:',
+     'Notion: a new process creates a second row for a ticket that already has one'),
+    ('agent/notion_log.py', 'if attempt > 1 and recheck is not None:', 'if False:',
+     'Notion: a create whose answer was lost is repeated and the ticket gets two rows'),
+    ('agent/notion_log.py', 'return (str(results[0]["id"]) if results else ""), None', 'return "", None',
+     'Notion: the lookup never finds the existing row'),
+    ('agent/notion_log.py', '"Reason": {"rich_text": _text(ticket.get("reason", "needs a person"), 300)}', '"Reason": {"rich_text": _text(ticket.get("reason", "needs a person"), 30000)}',
+     'Notion: a long reason makes Notion refuse the row'),
+    ('agent/notion_log.py', 'if state not in STATES:', 'if False:',
+     'Notion: an unknown status is sent to Notion'),
+    ('agent/notion_log.py', 'if r is not None and r.status_code < 500:', 'if r is not None and r.status_code < 600:',
+     'Notion: a Notion 5xx is treated as a final refusal'),
+    ('agent/notion_log.py', '                wait *= 2', '                pass',
+     'Notion: 5xx retries hammer at a fixed pace'),
+    ('agent/notion_log.py', '"filter": {"property": "Ticket", "title": {"equals": tid}}', '"filter": {"property": "Ticket", "title": {"contains": tid}}',
+     'Notion: T-1 matches the row of T-10'),
+    ('agent/discord_handoff.py', '        except Exception:\n            self.audit({"discord": "on_change_failed"', '        except ZeroDivisionError:\n            self.audit({"discord": "on_change_failed"',
+     'Notion: a failing Notion log turns a Discord click into an error'),
 ]
 
 
@@ -775,7 +803,9 @@ DISCORD_PREFIX = "Discord: "
 DISCORD_TESTS = ["tests/test_discord_handoff.py"]
 WHATSAPP_PREFIX = "WhatsApp: "
 WHATSAPP_TESTS = ["tests/test_whatsapp_lane.py"]
-TARGETED = {CLAUDE_PREFIX: CLAUDE_TESTS, WATSONX_PREFIX: WATSONX_TESTS, DISCORD_PREFIX: DISCORD_TESTS, WHATSAPP_PREFIX: WHATSAPP_TESTS}
+NOTION_PREFIX = "Notion: "
+NOTION_TESTS = ["tests/test_notion_log.py"]
+TARGETED = {CLAUDE_PREFIX: CLAUDE_TESTS, WATSONX_PREFIX: WATSONX_TESTS, DISCORD_PREFIX: DISCORD_TESTS, WHATSAPP_PREFIX: WHATSAPP_TESTS, NOTION_PREFIX: NOTION_TESTS}
 
 
 def targeted_files(consequence: str) -> list[str] | None:

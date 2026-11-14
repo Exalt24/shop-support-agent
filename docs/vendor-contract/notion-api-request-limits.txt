@@ -1,0 +1,197 @@
+URL: https://developers.notion.com/reference/request-limits
+STATUS: 200
+
+Documentation Index
+
+Fetch the complete documentation index at: /llms.txt
+
+Use this file to discover all available pages before exploring further.
+
+Skip to main content
+Notion Docs home page
+Search...
+Ctrl K
+Ask Assistant
+Ctrl+I
+Log in
+Developer portal
+Guides
+API Reference
+CLI Reference
+Workers
+Admin API
+Changelog
+Examples
+Notion API
+Introduction
+Pagination
+Connection capabilities
+Webhooks
+Request limits
+Workspace block limits
+Status codes
+Versioning
+Objects
+Block
+Page
+Database
+Data source
+View
+Comment
+File
+User
+Parent
+Emoji and icon
+Unfurl attribute (Link Previews)
+Endpoints
+Authentication
+Async tasks
+Blocks
+Pages
+Databases
+Data sources
+Databases (deprecated)
+Comments
+Views
+File Uploads
+Search
+Users
+Custom emojis
+Agents
+Agent Skills
+Webhook events
+Pages
+Databases
+Data sources
+Comments
+File uploads
+Views
+On this page
+Rate limits
+Per-connection limit
+Per-workspace limit
+Rate limit responses
+Retry rate-limited requests
+Retry a write that returns 503
+Size limits
+Limits for property values
+Notion API
+Request limits
+Copy page
+
+To ensure a consistent developer experience for all API users, the Notion API is rate limited and basic size limits apply to request parameters.
+
+Workspace plan limits are separate from request limits. See Workspace block limits for the Free workspace limit that takes effect on September 8, 2026.
+Rate limits
+The Notion API enforces two rate limits: a per-connection limit and a per-workspace limit. Some endpoints also have their own limit.
+Per-connection limit
+Each connection has a fixed budget of requests per 60-second window, based on the workspace’s plan:
+Workspace plan	Limit
+Business and Enterprise	600 requests per minute (an average of 10 per second)
+All other plans	180 requests per minute (an average of 3 per second)
+The budget can be spent at any pace within the window — spread out evenly or in a single burst. When a request exceeds this limit, the Retry-After value is the time until the window resets, so it is at most 60 seconds.
+Querying a data source has a separate limit of about 3 requests per second per connection. A request over this limit returns an HTTP 429 response with a Retry-After header. The JavaScript SDK waits for Retry-After and retries for you. If you call the REST API directly, see Retry rate-limited requests.
+Per-workspace limit
+A separate limit is shared across all of the workspace’s connections and scaled to the workspace’s plan. Because it’s shared, requests can be rate limited even when each individual connection is within its per-connection limit. Retry-After for this limit can be longer than a minute.
+Rate limit responses
+Requests that exceed a limit return a "rate_limited" error code and an HTTP 429 response. additional_data.rate_limit_reason says which limit was exceeded:
+rate_limit_reason	What to do
+public_api_request_rate_limit	This connection is sending requests too fast. Wait for Retry-After.
+public_api_space_request_rate_limit	The workspace’s shared budget is used up. Wait for Retry-After.
+public_api_endpoint_rate_limit	This endpoint has its own limit. Wait for Retry-After.
+mcp_tool_rate_limit	An MCP tool reached its own limit. Wait for Retry-After, which is usually under 10 seconds.
+collection_router_too_many_requests	A data source query was throttled. Wait for Retry-After.
+collection_router_upstream_429	A data source query was throttled upstream. Wait for Retry-After.
+public_api_request_blocked	This connection’s API access has been restricted. Retrying won’t help. Contact Notion support.
+Other rate_limit_reason values can appear. Handle them like any other 429 and wait for Retry-After.
+To see which limits a connection reached in the last 24 hours, check the Rate limits list on its Health tab.
+Connections should handle HTTP 429 and 529 responses and respect the Retry-After response header. The header value is an integer number of seconds. Use the returned value rather than assuming a fixed wait. A 529 response carries the "service_overload" code and means Notion is temporarily overloaded; retry it the same way as a 429. Whenever a response includes Retry-After, the body repeats the wait as additional_data.retry_after, a string of whole seconds, for clients that can’t read response headers.
+Retry rate-limited requests
+Put outgoing requests through a queue so a burst from one job does not consume the connection’s full request budget. When Notion returns 429 or 529:
+Read Retry-After and pause new requests for at least that many seconds.
+Retry the failed request after the pause.
+If another 429 or 529 arrives, increase the delay with exponential backoff and jitter.
+Set a retry limit. Log or surface the final error when the limit is reached.
+Do not retry every error. Retry 429 and 529 responses, except a 429 with public_api_request_blocked. Retry 500, 502, 503, and 504 responses only when the request is idempotent, such as GET or DELETE, unless your application has its own idempotency protection. A write that returns 503 needs an extra check first; see Retry a write that returns 503. Fix the request before retrying most 400 responses. A 401 means authentication failed. A 403 can mean a permission failure or a workspace block limit; check the error message before retrying.
+The JavaScript SDK retries 429 rate_limited and 529 service_overload responses for every method. It also retries 500 and 503 responses for GET and DELETE requests. It never retries 502 or 504. It waits for Retry-After, capped at 60 seconds by default, uses exponential backoff with jitter when the header is missing, and limits retries. If you call the REST API directly, use the same safeguards. These examples show the same policy in several common HTTP clients:
+JavaScript
+Python
+Go
+Java
+async function notionRequest(url, options = {}, attempt = 0) {
+  const response = await fetch(url, options)
+  const method = (options.method ?? "GET").toUpperCase()
+  const isIdempotent = method === "GET" || method === "DELETE"
+  const retryable =
+    response.status === 429 ||
+    response.status === 529 ||
+    (isIdempotent && [500, 502, 503, 504].includes(response.status))
+
+  if (!retryable || attempt >= 5) {
+    return response
+  }
+
+  const retryAfter = response.headers.get("retry-after")
+  const retryAfterSeconds = Number(retryAfter)
+  const exponentialDelaySeconds = Math.min(2 ** attempt, 30)
+  const baseDelaySeconds = retryAfter !== null && Number.isFinite(retryAfterSeconds)
+    ? retryAfterSeconds
+    : exponentialDelaySeconds
+  const jitterMs = Math.random() * 250
+
+  await new Promise(resolve =>
+    setTimeout(resolve, baseDelaySeconds * 1000 + jitterMs),
+  )
+
+  return notionRequest(url, options, attempt + 1)
+}
+
+The same rules apply in other languages: centralize retries in the HTTP client, respect Retry-After, add jitter, and cap the fallback delay and attempt count. Avoid independent retry loops in each worker; they can create a second traffic spike when the delay expires.
+Rate limits may change
+In the future, Notion plans to adjust rate limits to balance for demand and reliability.
+Retry a write that returns 503
+A write can save its change and still return 503 when Notion runs out of time building the response. Repeating that write applies the change twice, so read additional_data.retry_guidance before you retry. When the change was already saved, the guidance tells you to read the object instead.
+503 response example
+{
+  "object": "error",
+  "status": 503,
+  "code": "service_unavailable",
+  "message": "The change was saved, but the response could not be built in time. Read the object again instead of repeating the write.",
+  "additional_data": {
+    "from": "publicApi.pageObjectPointerToPageObject.beforePreload",
+    "elapsed_ms": "55012",
+    "deadline_ms": "55000",
+    "retry_guidance": [
+      "Read the object again to confirm the saved change.",
+      "Do not repeat the write."
+    ]
+  }
+}
+
+When the request created a page or a database, additional_data.committed_resource_id holds the ID of the new object. Use it to retrieve the object, since the timed-out response never returned that ID. Other requests that change an existing object omit the field, because you already have its ID.
+When the request appended block children, committed_resource_id holds the parent block ID. additional_data.committed_child_ids lists the direct children created by this request, in request order. It excludes nested descendants. Retrieve each block with GET /v1/blocks/:id, using an ID from that list. These IDs distinguish your new blocks from identical existing blocks or blocks appended by another request. Do not repeat the write.
+Other 503 responses carry different guidance, or none at all. Notion cannot always tell you whether a write was saved, so check the object’s current state before you retry it.
+Size limits
+Notion limits the size of certain parameters, and the depth of children in requests. A requests that exceeds any of these limits will return "validation_error" error code (HTTP response status 400) and contain more specific details in the "message" property.
+Connections should avoid sending requests beyond these limits proactively. It may be helpful to use test data in your own test suite which intentionally contains large parameters to verify that the errors are handled appropriately. For example, if the connection reads a URL from an external system to put into a Notion page property, the connection should have a plan to deal with URLs that are beyond the length limit of 2000 characters. The connection might choose to log the error, or send an alert to the user who set up the connection via an email, or some other action.
+Note that in addition to the property limits below, payloads have a maximum size of 1000 block elements and 500KB overall.
+Limits for property values
+Property value type	Inner property	Size limit
+Rich text object	text.content	2000 characters
+Rich text object	text.link.url	2000 characters
+Rich text object	equation.expression	1000 characters
+Any array of all block types, including rich text objects		100 elements
+Any URL		2000 characters
+Any email		200 characters
+Any phone number		200 characters
+Any multi-select		100 options
+Any relation		100 related pages
+Any people		100 users
+Request size limits
+These cap the size of a single request, not how much a property can hold. A relation property can contain far more than 100 related pages — the limit only governs how many you add or set in one request. Responses have separate limits; use Retrieve a page property item to paginate through large values.
+Event types & delivery
+Previous
+Workspace block limits
+Next
+x
+slack

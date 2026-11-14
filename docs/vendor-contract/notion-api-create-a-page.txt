@@ -1,0 +1,480 @@
+URL: https://developers.notion.com/reference/post-page
+STATUS: 200
+
+Documentation Index
+
+Fetch the complete documentation index at: /llms.txt
+
+Use this file to discover all available pages before exploring further.
+
+Skip to main content
+Notion Docs home page
+Search...
+Ctrl K
+Ask Assistant
+Ctrl+I
+Log in
+Developer portal
+Guides
+API Reference
+CLI Reference
+Workers
+Admin API
+Changelog
+Examples
+Notion API
+Introduction
+Pagination
+Connection capabilities
+Webhooks
+Request limits
+Workspace block limits
+Status codes
+Versioning
+Objects
+Block
+Page
+Database
+Data source
+View
+Comment
+File
+User
+Parent
+Emoji and icon
+Unfurl attribute (Link Previews)
+Endpoints
+Authentication
+Async tasks
+Blocks
+Pages
+POST
+Create a page
+GET
+Retrieve a page
+GET
+Retrieve a page property item
+POST
+Move a page
+Update page
+Markdown content
+Databases
+Data sources
+Databases (deprecated)
+Comments
+Views
+File Uploads
+Search
+Users
+Custom emojis
+Agents
+Agent Skills
+Webhook events
+Pages
+Databases
+Data sources
+Comments
+File uploads
+Views
+TypeScript SDK
+
+JavaScript
+
+import { Client } from "@notionhq/client"
+
+const notion = new Client({ auth: process.env.NOTION_API_KEY })
+
+const response = await notion.pages.create({
+  parent: {
+    data_source_id: "d9824bdc-8445-4327-be8b-5b47500af6ce"
+  },
+  properties: {
+    Name: {
+      title: [{ text: { content: "New Page Title" } }]
+    }
+  }
+})
+200
+202
+400
+401
+403
+404
+406
+409
+429
+500
+503
+504
+529
+{
+  "object": "page",
+  "id": "3c90c3cc-0d44-4b50-8888-8dd25736052a",
+  "created_time": "2023-11-07T05:31:56Z",
+  "last_edited_time": "2023-11-07T05:31:56Z",
+  "in_trash": true,
+  "is_archived": true,
+  "is_locked": true,
+  "url": "<string>",
+  "public_url": "<string>",
+  "parent": {
+    "type": "database_id",
+    "database_id": "3c90c3cc-0d44-4b50-8888-8dd25736052a"
+  },
+  "properties": {},
+  "icon": {
+    "type": "emoji",
+    "emoji": "😀"
+  },
+  "cover": {
+    "type": "file",
+    "file": {
+      "url": "<string>",
+      "expiry_time": "2023-11-07T05:31:56Z"
+    }
+  },
+  "created_by": {
+    "id": "3c90c3cc-0d44-4b50-8888-8dd25736052a",
+    "object": "user"
+  },
+  "last_edited_by": {
+    "id": "3c90c3cc-0d44-4b50-8888-8dd25736052a",
+    "object": "user"
+  }
+}
+Pages
+Create a page
+
+Use this API to create a new page as a child of an existing page or data source.
+
+Copy page
+POST
+/
+v1
+/
+pages
+Try it
+Use cases
+Choosing a parent
+In most cases, provide a page_id or data_source under the parent parameter to create a page under an existing page, or data source, respectively.
+There is a 3rd option, available for public connections and personal access tokens: creating a private page at the workspace level. To do this, omit the parent parameter, or provide parent[workspace]=true. This can be useful for quickly creating pages that can then be organized manually in the Notion app later, helping you get to your life’s work faster.
+For internal connections, a page or data source parent is currently required in the API, because there is no one specific Notion user associated with them that could be used as the “owner” of the new private page.
+Setting up page properties
+If the new page is a child of another page, title is the only valid property in properties.
+For a page in a data source, property names or IDs must match the parent data source’s schema. See Page property values for input examples and clearing rules.
+Setting up page content
+This endpoint can be used to create a new page with or without content using the children option. To add content to a page after creating it, use the Append block children endpoint.
+Templates: As an alternative to building up page content manually, the template body parameter can be used to specify an existing data source template to be used to populate the content and properties of the new page.
+When omitted, the default is template[type]=none, which means no template is applied. The other options for template[type] are:
+default: Apply the data source’s default template.
+This is only allowed for pages created under a data source that has a default template configured in the Notion app.
+template_id: Provide a specific template_id to use as the blueprint for your page.
+The API bot must have access to the template page, and it must be within the same workspace.
+Although any valid page ID can be used as the template[template_id], we recommend only using pages that are configured as actual database templates under the same data source as the parent of your new page to make sure that page properties can get merged in correctly.
+When using default or template_id, you can optionally provide template[timezone], an IANA time zone such as America/New_York, to control the timezone used when resolving template variables like @now and @today. If omitted, the associated user’s timezone is used for public connections and personal access tokens, or UTC for internal connections. An invalid timezone returns a validation_error.
+When applying a template, the children parameter is not allowed. The page is returned as blank initially in the API response, and then Notion’s systems apply the template asynchronously after the API request finishes. For more information, see our full guide on creating pages from templates.
+General behavior
+Returns a new page object.
+When creating a page with the markdown body parameter, set markdown_version: "v2" to write Notion-flavored Markdown instead of enhanced markdown. v2 is recommended. v1 is deprecated. It’s the default on current Notion-Versions. Sending markdown_version without markdown returns a 400 validation_error. See Markdown versions.
+When creating a page with the markdown body parameter, you can set allow_async: true to receive an HTTP 202 response with an async_task object instead of waiting for the page creation to finish in the original request. This is useful for high-block markdown requests that may take longer than typical HTTP client timeout budgets.
+If allow_async is omitted or false, this endpoint keeps its existing synchronous response behavior. allow_async changes response behavior only; it does not change validation, permissions, or which operation runs. See Retrieve an async task and Working with markdown content for polling examples.
+Newlines in markdown content
+When using the markdown body parameter, newlines must be encoded as \n in the JSON string. For example, "# Heading\n\nParagraph". The interactive API explorer on this page does not support multiline input, so use cURL, an SDK, or any HTTP client that sends properly encoded JSON. When using cURL, wrap the --data body in single quotes ('...') so that \n is preserved for the JSON parser.
+Some page properties are not supported via the API
+Formula, rollup, ID, creation, and last-edit values are set by Notion. Button actions cannot be set through a page write. Omit these fields from properties; see the read-only property types.
+Control notifications from page writes
+Set notifications.mode to silent to skip the notifications Notion sends people about the change:
+Page update notifications to people who get updates for the page through Notify me.
+Notifications to people the content @mentions.
+Notifications to people the change adds to a Person property.
+Set it to default, or omit notifications, to use the standard behavior.
+Some effects of the change happen in either mode:
+Database automations that the change triggers still run, including Send notification to actions.
+Reminders set by the change still go off at their scheduled time.
+Connection webhooks still receive events for the change.
+Page history, page activity, and workspace audit logs still record the change.
+Requirements
+Your connection must have Insert Content capabilities on the target parent page or database in order to call this endpoint. To update your connection’s capabilities, navigate to the Developer portal, select your connection, open the Configuration tab, and scroll to the Capabilities section.
+Attempting a query without update content capabilities returns an HTTP response with a 403 status code.
+Errors
+Each Public API endpoint can return several possible error codes. See the Error codes section of the Status codes documentation for more information.
+Authorizations
+Authorization
+stringheaderrequired
+
+Bearer authentication header of the form Bearer <token>, where <token> is your auth token.
+
+Headers
+Notion-Version
+enum<string>required
+
+The API version to use for this request. The latest version is 2026-03-11.
+
+Available options: 2026-03-11 
+Query Parameters
+filter_properties
+string[]
+
+Property names or IDs to include in each page's properties object. Other properties are left out. Repeat the parameter to pass more than one value, for example filter_properties=title&filter_properties=Status. Pages that aren't in a data source always return only title.
+
+Body
+application/json
+parent
+Page Id · object
+Page Id
+Database Id
+Data Source Id
+Workspace
+
+Show child attributes
+
+properties
+object
+
+Show child attributes
+
+icon
+File Upload · object
+File Upload
+Emoji
+External
+Custom Emoji
+Icon
+
+Show child attributes
+
+cover
+File Upload · object
+File Upload
+External
+
+Show child attributes
+
+content
+(Embed · object | Bookmark · object | Image · object | Video · object | Pdf · object | File · object | Audio · object | Code · object | Equation · object | Divider · object | Breadcrumb · object | Tab · object | Table Of Contents · object | Link To Page · object | Table Row · object | Table · object | Column List · object | Column · object | Heading 1 · object | Heading 2 · object | Heading 3 · object | Heading 4 · object | Paragraph · object | Bulleted List Item · object | Numbered List Item · object | Quote · object | To Do · object | Toggle · object | Template · object | Callout · object | Synced Block · object)[]
+Maximum array length: 100
+Embed
+Bookmark
+Image
+Video
+Pdf
+File
+Audio
+Code
+Equation
+Divider
+Breadcrumb
+Tab
+Table Of Contents
+Link To Page
+Table Row
+Table
+Column List
+Column
+Heading 1
+Heading 2
+Heading 3
+Heading 4
+Paragraph
+Bulleted List Item
+Numbered List Item
+Quote
+To Do
+Toggle
+Template
+Callout
+Synced Block
+
+Show child attributes
+
+children
+(Embed · object | Bookmark · object | Image · object | Video · object | Pdf · object | File · object | Audio · object | Code · object | Equation · object | Divider · object | Breadcrumb · object | Tab · object | Table Of Contents · object | Link To Page · object | Table Row · object | Table · object | Column List · object | Column · object | Heading 1 · object | Heading 2 · object | Heading 3 · object | Heading 4 · object | Paragraph · object | Bulleted List Item · object | Numbered List Item · object | Quote · object | To Do · object | Toggle · object | Template · object | Callout · object | Synced Block · object)[]
+Maximum array length: 100
+Embed
+Bookmark
+Image
+Video
+Pdf
+File
+Audio
+Code
+Equation
+Divider
+Breadcrumb
+Tab
+Table Of Contents
+Link To Page
+Table Row
+Table
+Column List
+Column
+Heading 1
+Heading 2
+Heading 3
+Heading 4
+Paragraph
+Bulleted List Item
+Numbered List Item
+Quote
+To Do
+Toggle
+Template
+Callout
+Synced Block
+
+Show child attributes
+
+markdown
+string
+
+Page content as Markdown, in the syntax set by markdown_version: Notion-flavored Markdown (v2, recommended) or enhanced markdown (v1, deprecated, the default on current Notion-Versions). Mutually exclusive with content/children.
+
+allow_async
+boolean
+
+Set to true to receive an async_task response for markdown page creation. Only supported when markdown is provided.
+
+markdown_version
+enum<string>
+
+The Markdown syntax to use. v2 is Notion-flavored Markdown and is recommended. v1 is enhanced markdown. It's deprecated. It's the default on current Notion-Versions. The next Notion-Version rejects v1 with a 400 validation_error.
+
+Available options: v1, v2 
+template
+object
+Option 1
+Option 2
+Option 3
+
+Show child attributes
+
+position
+object
+Option 1
+Option 2
+Option 3
+
+Show child attributes
+
+notifications
+object
+
+Controls the notifications Notion sends people about this change. Set mode to "silent" to skip page update notifications, @mention notifications, and notifications to people added to a Person property, or "default" to use the standard behavior. Database automations, reminders, and connection webhooks still work as usual. Page history, page activity, and workspace audit logs still record the change.
+
+Show child attributes
+
+Response
+200
+application/json
+Option 1
+Option 2
+object
+stringrequired
+
+The page object type name.
+
+Allowed value: "page"
+id
+string<uuid>required
+
+The ID of the page.
+
+created_time
+string<date-time>required
+
+Date and time when this page was created.
+
+last_edited_time
+string<date-time>required
+
+Date and time when this page was last edited.
+
+in_trash
+booleanrequired
+
+Whether the page is in trash.
+
+is_archived
+booleanrequired
+
+Whether the page has been archived.
+
+is_locked
+booleanrequired
+
+Whether the page is locked from editing in the Notion app UI.
+
+url
+stringrequired
+
+The URL of the Notion page.
+
+public_url
+string | nullrequired
+
+The public URL of the Notion page, if it has been published to the web.
+
+parent
+objectrequired
+
+Information about the page's parent.
+
+Option 1
+Option 2
+Option 3
+Option 4
+Option 5
+Option 6
+
+Show child attributes
+
+properties
+objectrequired
+
+Property values of this page.
+
+Show child attributes
+
+icon
+Emoji · objectrequired
+
+Page icon.
+
+Emoji
+File
+External
+Custom Emoji
+Icon
+
+Show child attributes
+
+cover
+File · objectrequired
+
+Page cover image.
+
+File
+External
+
+Show child attributes
+
+created_by
+objectrequired
+
+User who created the page.
+
+Show child attributes
+
+last_edited_by
+objectrequired
+
+User who last edited the page.
+
+Show child attributes
+
+Query meeting notes
+Previous
+Retrieve a page
+Next
+x
+slack

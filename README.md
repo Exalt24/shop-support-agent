@@ -24,15 +24,15 @@ A customer-support agent for a Shopify store. It looks up orders and products th
 ## Proof
 
 ```
-./.venv/Scripts/python.exe -m pytest tests -q              # 994 tests, offline (scripted model, stand-in shop, Zoho, Discord, WhatsApp, Claude API and IBM watsonx.ai; the widget tests drive Chromium and skip without it)
-./.venv/Scripts/python.exe tests/mutation_check.py         # 361 mutants: each guard broken on purpose
+./.venv/Scripts/python.exe -m pytest tests -q              # 1059 tests, offline (scripted model, stand-in shop, Zoho, Discord, WhatsApp, Notion, Claude API and IBM watsonx.ai; the widget tests drive Chromium and skip without it)
+./.venv/Scripts/python.exe tests/mutation_check.py         # 375 mutants: each guard broken on purpose
 ./.venv/Scripts/python.exe demo.py                         # nine messages, live store + live model
 ./.venv/Scripts/python.exe demo_memory.py                  # five turns with memory, live store + model + Postgres
 ./.venv/Scripts/python.exe demo_enquiry.py                 # five enquiries, scripted model + fake Zoho (no live anything)
 ./.venv/Scripts/python.exe demo_mcp.py                      # the MCP server over stdio against the fake Zoho
 ```
 
-- **Mutation harness:** each of 361 guards (the per-feature counts are in [docs/mutation-groups.md](docs/mutation-groups.md)) is deleted from the real source. The suite is run. The file is restored byte-exact. All 361 mutants are caught.
+- **Mutation harness:** each of 375 guards (the per-feature counts are in [docs/mutation-groups.md](docs/mutation-groups.md)) is deleted from the real source. The suite is run. The file is restored byte-exact. All 375 mutants are caught.
 - **Live transcript:** `demo_transcript.md`. Nine messages including three hostile ones (a refund demand, a prompt injection asking for a 50% discount code, a legal threat). 7 answered and 2 escalated. No promise, invented figure or foreign order detail reached a customer. Details: [docs/live-runs.md](docs/live-runs.md).
 - **Through n8n:** `n8n/workflow.json` (webhook, agent, "needs a person?" branch, handoff ticket, reply) was imported into a real n8n 2.41.6 server. It was called over its webhook with an answered message, a wrong-email message and a legal threat. Regenerate it with `python n8n/build_workflow.py`.
 
@@ -71,16 +71,16 @@ It works for a sales site as well as a shop. The agent sorts each enquiry and ro
 
 **Scope and next steps.** Tested against stand-in Zoho and Zia servers and the two demo sites. The limits are in [docs/chat-widget.md](docs/chat-widget.md).
 
-## WhatsApp and Discord lanes: a customer message in, a staff ticket out (tested against stand-ins)
+## WhatsApp, Discord and Notion lanes: a customer message in, a staff ticket out (tested against stand-ins)
 
-A WhatsApp message reaches the agent and the reply goes back. An escalated turn posts one staff message in Discord with Take and Resolve buttons. Both verify the vendor's signature on every request, answer a retried delivery once, and keep customer words and contact details out of logs and the staff channel. [docs/whatsapp-lane.md](docs/whatsapp-lane.md), [docs/discord-handoff.md](docs/discord-handoff.md)
+A WhatsApp message reaches the agent and the reply goes back. An escalated turn posts one staff message in Discord with Take and Resolve buttons and one row in a Notion ticket log, and a click moves the row's status. Each answers a retried delivery once and keeps customer words and contact details out of logs and the staff channel. [WhatsApp](docs/whatsapp-lane.md), [Discord](docs/discord-handoff.md), [Notion](docs/notion-log.md)
 
 ```
-./.venv/Scripts/python.exe -m pytest tests/test_whatsapp_lane.py tests/test_discord_handoff.py -q   # 158 tests, 80 seeded random worlds with faults
-./.venv/Scripts/python.exe tests/mutation_check.py WhatsApp                                          # 17 mutants (Discord: 19), all caught
+./.venv/Scripts/python.exe -m pytest tests/test_whatsapp_lane.py tests/test_discord_handoff.py tests/test_notion_log.py -q   # 223 tests, 120 seeded random worlds
+./.venv/Scripts/python.exe tests/mutation_check.py Notion                                                                   # 14 mutants (WhatsApp 17, Discord 19), all caught
 ```
 
-**Scope and next steps.** Tested against stand-ins written from the saved vendor pages. The next step is a run on a live WhatsApp number and in a real Discord server. Not yet wired into `serve.py`.
+**Scope and next steps.** Tested against stand-ins written from the saved vendor pages. Next: a live run of each. Not wired into `serve.py`.
 
 ## Claude API and watsonx.ai providers (tested against stand-ins)
 

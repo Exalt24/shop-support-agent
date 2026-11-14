@@ -1,0 +1,408 @@
+URL: https://developers.notion.com/reference/query-a-data-source
+STATUS: 200
+
+Documentation Index
+
+Fetch the complete documentation index at: /llms.txt
+
+Use this file to discover all available pages before exploring further.
+
+Skip to main content
+Notion Docs home page
+Search...
+Ctrl K
+Ask Assistant
+Ctrl+I
+Log in
+Developer portal
+Guides
+API Reference
+CLI Reference
+Workers
+Admin API
+Changelog
+Examples
+Notion API
+Introduction
+Pagination
+Connection capabilities
+Webhooks
+Request limits
+Workspace block limits
+Status codes
+Versioning
+Objects
+Block
+Page
+Database
+Data source
+View
+Comment
+File
+User
+Parent
+Emoji and icon
+Unfurl attribute (Link Previews)
+Endpoints
+Authentication
+Async tasks
+Blocks
+Pages
+Databases
+Data sources
+POST
+Create a data source
+GET
+Retrieve a data source
+GET
+List data source templates
+Update a data source
+Query a data source
+POST
+Query a data source
+Filter data source entries
+Sort data source entries
+Databases (deprecated)
+Comments
+Views
+File Uploads
+Search
+Users
+Custom emojis
+Agents
+Agent Skills
+Webhook events
+Pages
+Databases
+Data sources
+Comments
+File uploads
+Views
+TypeScript SDK
+
+JavaScript
+
+import { Client } from "@notionhq/client"
+
+const notion = new Client({ auth: process.env.NOTION_API_KEY })
+
+const response = await notion.dataSources.query({
+  data_source_id: "d9824bdc-8445-4327-be8b-5b47500af6ce",
+  filter: {
+    property: "Status",
+    select: { equals: "Done" }
+  },
+  sorts: [
+    {
+      property: "Created",
+      direction: "descending"
+    }
+  ]
+})
+200
+400
+401
+403
+404
+406
+409
+429
+500
+503
+504
+529
+{
+  "type": "page_or_data_source",
+  "page_or_data_source": {},
+  "object": "list",
+  "next_cursor": "<string>",
+  "has_more": true,
+  "results": [
+    {
+      "object": "page",
+      "id": "3c90c3cc-0d44-4b50-8888-8dd25736052a",
+      "created_time": "2023-11-07T05:31:56Z",
+      "last_edited_time": "2023-11-07T05:31:56Z",
+      "in_trash": true,
+      "is_archived": true,
+      "is_locked": true,
+      "url": "<string>",
+      "public_url": "<string>",
+      "parent": {
+        "type": "database_id",
+        "database_id": "3c90c3cc-0d44-4b50-8888-8dd25736052a"
+      },
+      "properties": {},
+      "icon": {
+        "type": "emoji",
+        "emoji": "😀"
+      },
+      "cover": {
+        "type": "file",
+        "file": {
+          "url": "<string>",
+          "expiry_time": "2023-11-07T05:31:56Z"
+        }
+      },
+      "created_by": {
+        "id": "3c90c3cc-0d44-4b50-8888-8dd25736052a",
+        "object": "user"
+      },
+      "last_edited_by": {
+        "id": "3c90c3cc-0d44-4b50-8888-8dd25736052a",
+        "object": "user"
+      }
+    }
+  ],
+  "request_status": {
+    "type": "complete",
+    "incomplete_reason": "query_result_limit_reached"
+  }
+}
+Query a data source
+Query a data source
+Copy page
+POST
+/
+v1
+/
+data_sources
+/
+{data_source_id}
+/
+query
+Try it
+Overview
+Gets a list of pages contained in the data source, filtered and ordered according to the filter conditions and sort criteria provided in the request. The response may contain fewer than page_size of results. If the response includes a next_cursor value, refer to the pagination reference for details about how to use a cursor to iterate through the list.
+Databases, data sources, and wikis
+Wiki data sources can contain either pages or databases as children. In all other cases, the children can only be pages.
+For wikis, instead of directly returning any database results, this API returns all data sources that are children of that database. Surfacing the data source instead of the direct database child helps make it easier to craft your next API request (for example, retrieving the data source or listing its children.)
+Another tip for wikis is to use the result_type filter of "page" or "data_source" if you’re only looking for query results that are one of those two types instead of both.
+Filtering
+Use filters to match property values. Combine conditions with and or or. This filter returns rows where Done is checked and Tags contains A or B.
+
+The above filters in the UI can be represented as the following filter object
+
+Filter object
+{
+  "and": [
+    { "property": "Done", "checkbox": { "equals": true } },
+    {
+      "or": [
+        { "property": "Tags", "multi_select": { "contains": "A" } },
+        { "property": "Tags", "multi_select": { "contains": "B" } }
+      ]
+    }
+  ]
+}
+
+In addition to chained filters, data sources can be queried with single filters.
+JSON
+{
+    "property": "Done",
+    "checkbox": {
+        "equals": true
+   }
+}
+
+Archived pages
+By default, this endpoint returns non-archived pages. To query archived pages instead, set the top-level is_archived body parameter to true:
+{
+  "is_archived": true
+}
+
+Set is_archived to false, or omit it, to query non-archived pages. The archive selector is applied before property filters and sorts, so filters only match rows in the selected archive partition.
+is_archived is separate from in_trash. Page objects include is_archived to indicate whether a page is archived, while in_trash indicates trash status and is used by page/block/data source update APIs. in_trash is not a supported query body parameter for this endpoint.
+Sorting
+Sorts are similar to the sorts provided in the Notion UI. Sorts operate on database properties or page timestamps and can be combined. The order of the sorts in the request matter, with earlier sorts taking precedence over later ones.
+Notion doesn’t guarantee any particular sort order when no sort parameters are provided.
+Pagination limit
+This endpoint supports paginating through up to 10,000 results per query. If a data source contains more matching entries than this limit, pagination stops at the 10,000th result: has_more becomes false, and every response page served from the capped result includes a request_status marking the result as incomplete:
+{
+  "request_status": {
+    "type": "incomplete",
+    "incomplete_reason": "query_result_limit_reached"
+  }
+}
+
+Check request_status.type === "incomplete" on every response page to know whether a query was cut off. Any page with that status means the whole query result was capped. The limit is per query (a query is defined by its filter and sort), not per data source.
+For connections that need to process all pages in a large data source, we recommend:
+Reading every row past the limit by partitioning the query into created_time windows. See Query large data sources for the technique and a runnable cookbook example.
+Using filters to narrow the result set (e.g. filter by last_edited_time to fetch only recently changed pages).
+Setting up connection webhooks for incremental sync instead of polling the full data source on a schedule.
+Incremental sync via webhooks
+If your connection polls this endpoint on a recurring schedule to detect changes, consider switching to connection webhooks instead. Webhooks notify your connection of changes in real time, eliminating the need to paginate through the entire data source. This is faster, more efficient, and avoids hitting the pagination limit.
+Recommendations for performance
+Pass filter_properties once per property in the query string, or pass an array of strings in the SDK. Use property names or IDs from Retrieve a data source. For example, for a data source with a Status property:
+curl
+JavaScript
+curl -X POST "https://api.notion.com/v1/data_sources/$NOTION_DATA_SOURCE_ID/query?filter_properties=title&filter_properties=Status" \
+  -H "Authorization: Bearer $NOTION_API_KEY" \
+  -H "Notion-Version: 2026-03-11" \
+  -H "Content-Type: application/json" \
+  --data '{}'
+
+Using filter_properties can speed up the query and reduce its response size, especially for data sources with many properties, formulas, rollups, or relations. Use this endpoint to find pages and return only the properties your list shows. Fetch more data after you select a page:
+Call Retrieve a page with the returned page ID to get more properties from one page. You can also pass filter_properties to that endpoint.
+Call Retrieve a page property with the page and property IDs to retrieve one property. Use it when a formula, rollup, or relation contains more than 25 references.
+Don’t fetch every property for every result unless you need all of them.
+If you’re still running into long query times with this API, other tips include:
+Using more specific filter conditions to reduce the result set, e.g. a more specific title query or a shorter time window.
+Dividing large data sources (ones with more than several dozen thousand pages) into multiple; e.g. splitting a “tasks” database into “Tasks” and “Bugs”.
+Pruning data source schemas to remove any complex formulas, rollups, two-way relations, or other properties that are no longer in use.
+Setting up connection webhooks to reduce the need for polling this API by instead automatically notifying your system of incremental workspace events.
+For more information, visit our help center article on optimizing database load times.
+Other important details and tips
+Permissions
+Before a connection can query a data source, its parent database must be shared with the connection. Attempting to query a data source in a database that has not been shared will return an HTTP response with a 404 status code.
+To share a database with a connection, click the ••• menu at the top right of a database page, scroll to Add connections, and use the search bar to find and select the connection from the dropdown list.
+Connection capabilities
+This endpoint requires a connection to have read content capabilities. Attempting to call this API without read content capabilities will return an HTTP response with a 403 status code. For more information on connection capabilities, see the capabilities guide.
+To display the page titles of related pages rather than just the ID:
+Add a rollup property to the data source which uses a formula to get the related page’s title. This works well if you have access to update the data source’s schema.
+Otherwise, retrieve the individual related pages using each page ID.
+Formula and rollup limitations
+If a formula depends on a page property that is a relation, and that relation has more than 25 references, only 25 will be evaluated as part of the formula.
+Rollups and formulas that depend on multiple layers of relations may not return correct results.
+Notion recommends individually retrieving each page property item to get the most accurate result.
+Errors
+Returns a 404 HTTP response if the data source doesn’t exist, or if the connection doesn’t have access to the data source.
+Returns a 400 or a 429 HTTP response if the request exceeds the request limits.
+Returns a 503 HTTP response if the data source query is temporarily unavailable due to backend datastore timeouts. The response body includes an additional_data object with retry guidance:
+503 response example
+{
+  "object": "error",
+  "status": 503,
+  "code": "service_unavailable",
+  "message": "Public API data source query is temporarily unavailable due to backend datastore timeouts. Retry with exponential backoff; if retries continue to fail, reduce page_size or narrow filters/sorts.",
+  "additional_data": {
+    "endpoint_name": "public_queryDataSource",
+    "notion_error_name": "PgPoolWaitConnectionTimeout",
+    "retry_guidance": [
+      "Use exponential backoff with jitter",
+      "Reduce page_size",
+      "Narrow query filters/sorts"
+    ]
+  }
+}
+
+Note: Each Public API endpoint can return several possible error codes. See the Error codes section of the Status codes documentation for more information.
+Authorizations
+Authorization
+stringheaderrequired
+
+Bearer authentication header of the form Bearer <token>, where <token> is your auth token.
+
+Headers
+Notion-Version
+enum<string>required
+
+The API version to use for this request. The latest version is 2026-03-11.
+
+Available options: 2026-03-11 
+Path Parameters
+data_source_id
+stringrequired
+Query Parameters
+filter_properties
+string[]
+
+Property names or IDs to include in each page's properties object. Other properties are left out. Repeat the parameter to pass more than one value, for example filter_properties=title&filter_properties=Status. Pages that aren't in a data source always return only title.
+
+Body
+application/json
+sorts
+object[]
+
+Sort by property name or ID, or by timestamp.
+
+Option 1
+Option 2
+
+Show child attributes
+
+filter
+object
+
+A property filter, timestamp filter, or compound and/or filter.
+
+Option 1
+Option 2
+Title
+Rich Text
+Number
+Checkbox
+Select
+Multi Select
+Status
+Date
+People
+Files
+Url
+Email
+Phone Number
+Relation
+Created By
+Created Time
+Last Edited By
+Last Edited Time
+Formula
+Unique Id
+Rollup
+Verification
+Created Time
+Last Edited Time
+
+Show child attributes
+
+start_cursor
+string
+page_size
+integer
+Required range: x >= 1
+is_archived
+boolean
+
+Whether to return archived pages. When omitted or false, returns non-archived pages. When true, returns archived pages.
+
+result_type
+enum<string>
+
+Optionally filter the results to only include pages or data sources. Regular, non-wiki databases only support page children. The default behavior is no result type filtering, in other words, returning both pages and data sources for wikis.
+
+Available options: page, data_source 
+Response
+200
+application/json
+type
+stringrequired
+Allowed value: "page_or_data_source"
+page_or_data_source
+objectrequired
+object
+stringrequired
+Allowed value: "list"
+next_cursor
+string | nullrequired
+has_more
+booleanrequired
+results
+object[]required
+Option 1
+Option 2
+Option 3
+Option 4
+
+Show child attributes
+
+request_status
+object
+
+Show child attributes
+
+Update data source properties
+Previous
+Filter data source entries
+Next
+x
+slack

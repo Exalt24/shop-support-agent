@@ -177,6 +177,7 @@ class InteractionDesk:
     """The endpoint a Discord application points at. One click changes one ticket once; a repeat click changes nothing."""
     public_key_hex: str
     audit: Callable[[dict], None] = lambda record: None
+    on_change: Callable[[str, str, str], None] = lambda ticket_id, state, actor: None   # e.g. move a Notion row's Status
     tickets: dict[str, Mapping[str, Any]] = field(default_factory=dict)
     states: dict[str, TicketState] = field(default_factory=dict)
 
@@ -216,6 +217,10 @@ class InteractionDesk:
         else:
             st.state = "resolved"
         self.audit({"discord": action, "ticket": tid[:40], "actor": who, "state": st.state})
+        try:
+            self.on_change(tid, st.state, who)       # a failing downstream log must never turn a click into an error
+        except Exception:
+            self.audit({"discord": "on_change_failed", "ticket": tid[:40]})
         note = "Taken by a staff member." if st.state == "taken" else "Resolved."
         return {"type": UPDATE_MESSAGE, "data": ticket_message(self.tickets[tid], st.state, note)}
 
