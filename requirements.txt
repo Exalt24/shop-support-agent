@@ -6,7 +6,7 @@ psycopg[binary,pool]>=3.3.9
 bcrypt>=5.0.0
 itsdangerous>=2.2
 cryptography>=50.0.2
-playwright>=1.65.1
+playwright>=1.65.2
 mcp>=2.3
 jsonschema>=4.26.0
 tzdata>=2026.6; sys_platform == "win32"
